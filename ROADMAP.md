@@ -4,13 +4,11 @@ Ordered, not scheduled. The order is the point: each step is what makes the next
 
 ## Now
 
-**2 — Controller network.** Link the drawer to a Storage Controller with the Linking Tool. Confirm
-at the profiler that no per-tick network rebuild fires with 50+ drawers. The invariant that prevents
-it is proven arithmetically and at unit scale; it is not proven at scale.
-
 **3 — `BigEnergyStorage`, properly.** The current one is the spike's seed. Model it on Functional
 Storage's `BigFluidHandler`: void, creative and locked inherited from the drawer's own options
-rather than reimplemented.
+rather than reimplemented. Right now `isDrawerVoid` and `isDrawerCreative` are wired but
+`setCapacity` spills silently and nothing guards removing an upgrade — Functional Storage's
+`canChangeMultiplier` is the shape to copy.
 
 **4 — Storage upgrades.** `getStorageUpgradesConstructor()` on the model of `FluidDrawerTile`, and
 capacity actually derived from `getStorageMultiplier()`. `BASE_CAPACITY` and `ENERGY_DIVISOR` stay
@@ -56,7 +54,8 @@ registry end to end, then:
 - **X_1 only for energy.** FE has one kind of content; the 2- and 4-slot geometries would have
   nothing to put in the other slots.
 - **No mixin into Functional Storage.** The zero-slot item handler solves the same problem inside
-  the public contract, and it is a mixin into a mod with 56M downloads.
+  the public contract, and it is a mixin into a mod with 56M downloads. Proven at network scale:
+  50 drawers on one controller, no per-tick rebuild.
 - **Titanium by composition, not inheritance.** `PoweredTile` and `ControllableDrawerTile` are
   sibling subclasses of `ActiveTile` and the drawer half is not negotiable.
 - **Chemical Drawer (Mekanism) is v2 of this mod, not a separate one.** It is the first content that

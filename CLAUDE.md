@@ -251,6 +251,21 @@ des positions connectées pour agréger le FE nous-mêmes, sans toucher au code 
 Un mixin dans `ConnectedDrawers` reste possible en dernier recours, mais c'est un mixin dans un
 mod tiers à 56M de téléchargements : rejeté tant qu'une solution dans le contrat public existe.
 
+### [vérifié] Tâche 2 — 50 tiroirs sur un contrôleur, aucun rebuild
+
+`aWallOfDrawersDoesNotRebuildTheControllerEveryTick` : 50 Energy Drawers liés à un Storage
+Controller par `addConnectedDrawers(ADD, …)` — l'appel exact du Linking Tool. Les 50 sont comptés
+dans `itemHandlers`, et la liste n'est pas remplacée pendant 60 ticks d'inactivité. L'invariant
+tient. **Le contournement du §7 fonctionne en réseau, pas seulement à l'unité.**
+
+**Piège trouvé en route, à ne pas reperdre :** *lier ne construit pas le réseau.*
+`ConnectedDrawers` est construit dans le constructeur du tile, où `getLevel()` est encore `null`,
+et son `rebuild()` ne fait rien sans level. Le `rebuild()` déclenché par `addConnectedDrawers`
+laisse donc les listes vides. C'est le `serverTick` du contrôleur qui appelle `setLevel()` puis
+reconstruit pour de bon. **L'invariant est faux pendant un ou deux ticks après un linking, par
+construction** — tout test ou diagnostic qui mesure immédiatement après le linking mesure le
+mauvais moment.
+
 ---
 
 ## 8. ✅ Le risque n°1 — RÉSOLU
@@ -442,7 +457,7 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâche 1 faite (22 août 2026, `SPIKE.md`). La suivante est la tâche 2.**
+**État : tâches 1 et 2 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 3.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -460,10 +475,14 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
 
    *Si le test échoue, s'arrêter et rediscuter de l'architecture.* — il est passé, 4 tests sur 4.
 
-2. **← ICI. Réseau contrôleur.** Lier le bloc au Storage Controller via le Linking Tool.
-   Vérifier au profiler qu'aucun rebuild ne se déclenche à chaque tick sur 50+ tiroirs.
+2. ✅ **[FAIT] Réseau contrôleur.** Lier le bloc au Storage Controller via le Linking Tool.
+   Vérifier qu'aucun rebuild ne se déclenche à chaque tick sur 50+ tiroirs.
 
-3. **`BigEnergyStorage`** calqué sur `BigFluidHandler` (void / creative / locked hérités).
+   Fait en GameTest plutôt qu'au profiler : `addConnectedDrawers` est public, donc le linking est
+   scriptable, et l'invariant qui déclenche le rebuild est une expression qu'on peut asserter
+   directement. Un profiler aurait montré le symptôme ; le test montre la cause et reste. Voir §7.
+
+3. **← ICI. `BigEnergyStorage`** calqué sur `BigFluidHandler` (void / creative / locked hérités).
 
 4. **Storage Upgrades** — `getStorageUpgradesConstructor()` sur le modèle de `FluidDrawerTile`.
 
@@ -552,14 +571,13 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 - ✅ **Les coordonnées maven** — Modrinth remplace CurseMaven pour FS (§4). Titanium `1.21-4.0.34`
   existe bien sur BlameJared et est la version que FS utilise.
 - ✅ **Le slug `immaterial-drawers` est libre sur Modrinth** (404 sur l'API).
+- ✅ **Le comportement en réseau réel (tâche 2)** — 50 tiroirs liés à un Storage Controller, tous
+  comptés dans `itemHandlers`, aucun rebuild pendant 60 ticks. Voir §7 et `SPIKE.md`.
 
 ### Toujours non vérifié
 
 - **Le slug sur CurseForge.** Leur site répond 403 à une vérification automatisée : ni libre ni
   pris, juste inconnu. À confirmer à la main avant la release.
-- **Le comportement en réseau réel** — aucun Storage Controller n'a jamais été lié à ce bloc.
-  L'invariant du tick est prouvé arithmétiquement et à l'échelle d'un bloc, pas sur un mur de 50.
-  C'est la tâche 2.
 - **Le scaling par upgrades** — `getStorageMultiplier()` n'est pas branché sur la capacité, donc
   `BASE_CAPACITY` et `ENERGY_DIVISOR` restent des estimations (tâche 4).
 - **Tout le client** — aucun blockstate, modèle, texture ni lang n'existe. Le serveur de game tests

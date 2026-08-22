@@ -10,6 +10,8 @@ Newest first. Versions are `{mod}+{minecraft}`.
 - Game tests covering the two third-party readings the architecture rests on — the second
   capability provider, and the zero-slot item handler that keeps the Storage Controller's per-tick
   invariant true.
+- A network-scale game test: 50 energy drawers on one Storage Controller, all counted as item
+  handlers, no network rebuild across 60 idle ticks.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and
   Functional Storage as hard dependencies.
 

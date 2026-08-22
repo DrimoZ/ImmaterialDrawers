@@ -1,5 +1,9 @@
 package dev.drimoz.immaterialdrawers.gametest;
 
+import com.buuz135.functionalstorage.FunctionalStorage;
+import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
+import com.buuz135.functionalstorage.item.LinkingToolItem;
+import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
@@ -12,6 +16,10 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.IItemHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The blocking spike of CLAUDE.md §12, written as a test rather than as something to check by hand.
@@ -44,8 +52,28 @@ public final class IDGameTests {
     /** Matches src/main/resources/data/immaterialdrawers/structure/energy_platform.nbt. */
     private static final String PLATFORM = "energy_platform";
 
+    /** Matches src/main/resources/data/immaterialdrawers/structure/drawer_wall.nbt — 11 x 5 x 11. */
+    private static final String WALL = "drawer_wall";
+
+    private static final int WALL_SIZE = 11;
+
+    /**
+     * Comfortably more than the point at which a per-tick rebuild stops being a rounding error and
+     * starts being the server's frame budget, and well inside the controller's linking range of 8.
+     */
+    private static final int WALL_DRAWERS = 50;
+
+    /** Ticks allowed for the controller to notice the new drawers and build its network once. */
+    private static final int SETTLE_TICKS = 10;
+
+    /** Ticks of doing nothing at all, during which no rebuild is allowed to happen. */
+    private static final int IDLE_TICKS = 60;
+
     /** One block above the platform's floor, in the middle. */
     private static final BlockPos DRAWER = new BlockPos(1, 1, 1);
+
+    /** Middle of the wall structure, so every drawer around it is within linking range. */
+    private static final BlockPos CONTROLLER = new BlockPos(5, 1, 5);
 
     private IDGameTests() {
     }
@@ -132,6 +160,95 @@ public final class IDGameTests {
         helper.assertValueEqual(tile.getStorage().getSlots(), 0, "item slots on an energy drawer");
 
         helper.succeed();
+    }
+
+    /**
+     * The real shape of the §7 risk: a wall of energy drawers on one Storage Controller, ticking.
+     *
+     * <p>The test above proves the drawer is <em>counted</em>. This one proves the count stays
+     * balanced while the controller is actually running, which is the thing that matters — the
+     * failure it guards against does not look like a bug. If our drawers were in the network
+     * without contributing to {@code itemHandlers}, {@code StorageControllerTile.serverTick} would
+     * find its invariant false on every tick and rebuild the entire network every tick, forever,
+     * on every controller in the world. The drawers would keep working. The server would not.
+     *
+     * <p>Detection is by identity, not by arithmetic: {@code ConnectedDrawers.rebuild()} assigns
+     * {@code this.itemHandlers = new ArrayList<>()}, so a rebuild between two observations shows up
+     * as a different list object. That catches a rebuild even in the case where the invariant is
+     * restored by the time we look at it.
+     *
+     * <p><b>Why the test idles before it asserts anything.</b> Linking does not build the network.
+     * {@code ConnectedDrawers} is constructed in the tile's constructor, where {@code getLevel()}
+     * is still null, and its {@code rebuild()} is a no-op without a level — so the rebuild that
+     * {@code addConnectedDrawers} triggers leaves the handler lists empty. The controller's own
+     * {@code serverTick} is what calls {@code setLevel} and rebuilds for real. The invariant being
+     * false for a tick or two after linking is therefore normal and is not what this test is
+     * about; being false <em>forever</em> is.
+     */
+    @GameTest(template = WALL, timeoutTicks = 300)
+    public static void aWallOfDrawersDoesNotRebuildTheControllerEveryTick(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+
+        List<BlockPos> placed = new ArrayList<>();
+        for (int y = 1; y <= 3 && placed.size() < WALL_DRAWERS; y++) {
+            for (int x = 0; x < WALL_SIZE && placed.size() < WALL_DRAWERS; x++) {
+                for (int z = 0; z < WALL_SIZE && placed.size() < WALL_DRAWERS; z++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    if (pos.equals(CONTROLLER)) {
+                        continue;
+                    }
+                    helper.setBlock(pos, IDContent.ENERGY_DRAWER.getBlock());
+                    placed.add(pos);
+                }
+            }
+        }
+        helper.assertValueEqual(placed.size(), WALL_DRAWERS, "drawers placed");
+
+        BlockEntity be = helper.getBlockEntity(CONTROLLER);
+        helper.assertTrue(be instanceof StorageControllerTile<?>, "no Storage Controller was placed");
+        StorageControllerTile<?> controller = (StorageControllerTile<?>) be;
+
+        // What the Linking Tool calls when a player drags a box over a wall of drawers. Absolute
+        // positions: the controller looks them up in the level, not in the test's frame.
+        controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
+                placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
+
+        ConnectedDrawers network = controller.getConnectedDrawers();
+        helper.assertValueEqual(network.getConnectedDrawers().size(), WALL_DRAWERS,
+                "drawers accepted into the controller network");
+
+        // Written to once the network has settled, read again after idling. A one-element array
+        // rather than a field: game tests run concurrently in the same level.
+        List<IItemHandler>[] settledHandlers = new List[1];
+
+        helper.startSequence()
+                .thenIdle(SETTLE_TICKS)
+                .thenExecute(() -> {
+                    assertNetworkInvariantHolds(helper, network, "once the network has settled");
+                    helper.assertValueEqual(network.getItemHandlers().size(), WALL_DRAWERS,
+                            "energy drawers counted as item handlers by the controller");
+                    settledHandlers[0] = network.getItemHandlers();
+                })
+                .thenIdle(IDLE_TICKS)
+                .thenExecute(() -> {
+                    assertNetworkInvariantHolds(helper, network, "after idling");
+                    helper.assertTrue(network.getItemHandlers() == settledHandlers[0],
+                            "The controller rebuilt its network while nothing happened. Its "
+                                    + "per-tick check is connectedDrawers == itemHandlers + "
+                                    + "fluidHandlers + extensions; an energy drawer that stops "
+                                    + "satisfying it makes every controller in the world rebuild "
+                                    + "on every tick. See CLAUDE.md §7.");
+                })
+                .thenSucceed();
+    }
+
+    /** The exact expression {@code StorageControllerTile.serverTick} tests before rebuilding. */
+    private static void assertNetworkInvariantHolds(GameTestHelper helper, ConnectedDrawers network, String when) {
+        int counted = network.getItemHandlers().size()
+                + network.getFluidHandlers().size()
+                + network.getExtensions();
+        helper.assertValueEqual(counted, network.getConnectedDrawers().size(),
+                "handlers+extensions counted against drawers in the network, " + when);
     }
 
     private static IEnergyStorage placeDrawerAndGetCapability(GameTestHelper helper, Direction side) {

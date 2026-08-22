@@ -101,12 +101,29 @@ Small things, all of them found by the compiler or by a lookup, none of them str
 
 ## Still unverified
 
-The spike proves the block exists, holds energy, and is reachable. It does not prove the drawer
-behaves in a *network*:
+The spike proves the block exists, holds energy, and is reachable.
 
-- **No controller was ever linked.** CLAUDE.md §12 task 2 — link a wall of drawers with the Linking
-  Tool and confirm at the profiler that no per-tick rebuild happens with 50+ drawers. The invariant
-  is proven arithmetically and by a unit-scale test; it is not proven at scale.
+**Task 2 landed the same day and is folded in here, because it answers the other half of the same
+question.** `aWallOfDrawersDoesNotRebuildTheControllerEveryTick`: 50 energy drawers linked to one
+Storage Controller through `addConnectedDrawers` — the exact call the Linking Tool makes — all 50
+counted in `itemHandlers`, and the handler list not replaced across 60 idle ticks. The §7 workaround
+holds in a network, not only per block.
+
+It was done as a game test rather than at the profiler, which is what the brief had assumed.
+`addConnectedDrawers` is public, so linking is scriptable, and the invariant that triggers the
+rebuild is an expression that can be asserted directly. A profiler would have shown the symptom;
+the test shows the cause, and stays.
+
+**One trap, found by the test failing first:** *linking does not build the network.*
+`ConnectedDrawers` is constructed in the tile's constructor, where `getLevel()` is still null, and
+its `rebuild()` is a no-op without a level — so the rebuild that `addConnectedDrawers` triggers
+leaves the handler lists empty. The controller's own `serverTick` is what calls `setLevel` and
+rebuilds for real. The invariant is legitimately false for a tick or two after any linking. Anything
+measuring immediately after linking measures the wrong moment, and reads a catastrophic failure that
+is not happening.
+
+Still open:
+
 - **No upgrades.** `getStorageMultiplier()` is not wired to the storage capacity yet, so
   `ENERGY_DIVISOR` and `BASE_CAPACITY` are both still guesses (task 4).
 - **Nothing renders.** No blockstate, model, texture or lang entry exists. The game test server does
