@@ -468,8 +468,11 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   `ModelData` du tile — le nôtre la fournit. Les enfants s'appellent `side` et `front` parce que
   ce sont les clés du design.
 
-  **C'est le seul morceau du mod qui n'a jamais tourné.** Un serveur de game tests ne charge aucun
-  modèle. Premier point à vérifier au `runClient`.
+  **[vérifié] Le client charge tout ça sans une seule plainte.** `./gradlew runClient`, 22 août 2026 :
+  0 erreur, 0 texture manquante, 0 ligne mentionnant `immaterialdrawers` autrement que pour dire
+  qu'il est chargé. Les 50 warnings du log sont les blocs de test de Titanium
+  (`titanium:block_test` et compagnie, sans modèle) et un son de corne de chèvre vanilla.
+  Le modèle framed passe donc bien par le loader de FS : c'était le risque, il n'en était pas un.
 - **Teinte du framed** — **[fait, non vérifié en client]** `client/FramedColors` enregistre ses
   handlers depuis `FunctionalStorage.FRAMED_BLOCKS`, une liste construite en scannant **le registre
   de blocs de FS uniquement** (`FunctionalStorage.java:404`). Notre bloc framed n'y sera jamais.
@@ -674,9 +677,13 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 - **Le slug sur CurseForge.** Leur site répond 403 à une vérification automatisée : ni libre ni
   pris, juste inconnu. À confirmer à la main avant la release.
-- **Tout le client.** Blockstates, modèles, textures et lang existent maintenant — et **rien de tout
-  ça n'a jamais tourné** : un serveur de game tests ne charge aucun modèle. Le point le plus fragile
-  est `framed_energy_drawer.json`, qui passe par le loader `functionalstorage:framedblock`. Un
-  modèle qui ne parse pas casse le chargement des ressources, pas juste l'affichage d'un bloc.
+- ✅ **Le chargement client (tâche 6, partie code)** — `./gradlew runClient` : blockstates, modèles,
+  textures et lang chargent sans erreur ni warning nous concernant, loader `functionalstorage:framedblock`
+  compris. Voir §11.
+
+### Toujours non vérifié
+
+- **À quoi ça ressemble.** Le client charge les modèles ; personne n'a encore regardé le résultat.
+  Les textures sont des placeholders générés et la jauge d'énergie n'existe pas.
 - **Les APIs NeoForge sensibles à la version** — vérifier sur `https://docs.neoforged.net/`
   avant d'écrire du code de registre ou de capability.

@@ -28,8 +28,9 @@ Newest first. Versions are `{mod}+{minecraft}`.
   block registry.
 
 ### Notes on this release
-- **No client has been launched.** Every asset here has been written and never loaded — a game test
-  server loads no models. Textures are flat generated placeholders.
+- The client loads every asset without an error or a warning of ours, framed model loader included.
+  Nobody has looked at the result yet: textures are flat generated placeholders and there is no
+  energy gauge.
 - Recipes: planks around a redstone block, and iron nuggets around a redstone block for the framed
   variant, mirroring the shapes Functional Storage uses for its fluid drawers.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and

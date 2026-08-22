@@ -9,10 +9,12 @@ loot tables, recipes and en_us are generated and committed, block models and tex
 hand-authored, and the framed drawer registers the tint handler Functional Storage cannot register
 for it.
 
-What is left is the art and the one thing no test here can reach. **No client has ever been
-launched** — a game test server loads no models — so every asset in this repo has been written and
-never read. `./gradlew runClient` is the next step, and the first suspect is the framed block model,
-which goes through Functional Storage's `framedblock` model loader.
+The client loads all of it cleanly — `./gradlew runClient`, no errors, no missing textures, and
+nothing in the log about this mod beyond it being loaded. That includes the framed block model going
+through Functional Storage's `framedblock` loader, which was the part most likely to break.
+
+What is left is the art, and looking at it. The client bakes the models; nobody has yet seen the
+result.
 
 Then the gauge itself: energy has no fluid texture to borrow, so it is designed from nothing. The
 current textures are flat generated placeholders and are meant to be thrown away.
