@@ -87,26 +87,51 @@ public class ControllerEnergyStorage implements IEnergyStorage {
     }
 
     /**
-     * Saturating, not wrapping. A wall of drawers can hold more between them than
-     * {@link Integer#MAX_VALUE} even though no single one can, and reporting a negative total to a
-     * cable is worse than reporting a capped one.
+     * The whole network's contents, summed in full.
+     *
+     * <p>Summing the drawers' <em>clamped</em> int views would cap each drawer at 2.1B before the
+     * addition even started, so a wall of maxed drawers would read as a handful of them. The
+     * addition runs on the long values and saturates once, at the end.
+     */
+    public long getStoredLong() {
+        long total = 0;
+        for (EnergyDrawerTile drawer : drawers()) {
+            total = saturatedAdd(total, drawer.getEnergyStorage().getStoredLong());
+        }
+        return total;
+    }
+
+    /** The whole network's capacity, summed the same way. */
+    public long getCapacityLong() {
+        long total = 0;
+        for (EnergyDrawerTile drawer : drawers()) {
+            total = saturatedAdd(total, drawer.getEnergyStorage().getCapacityLong());
+        }
+        return total;
+    }
+
+    /**
+     * Clamped to int for the capability, and knowingly wrong above 2.1B — the same trade
+     * {@code BigEnergyStorage} makes, for the same reason. {@link #getStoredLong()} is the truth.
      */
     @Override
     public int getEnergyStored() {
-        long total = 0;
-        for (EnergyDrawerTile drawer : drawers()) {
-            total += drawer.getEnergyStorage().getEnergyStored();
-        }
-        return (int) Math.min(Integer.MAX_VALUE, total);
+        return (int) Math.min(Integer.MAX_VALUE, getStoredLong());
     }
 
     @Override
     public int getMaxEnergyStored() {
-        long total = 0;
-        for (EnergyDrawerTile drawer : drawers()) {
-            total += drawer.getEnergyStorage().getMaxEnergyStored();
-        }
-        return (int) Math.min(Integer.MAX_VALUE, total);
+        return (int) Math.min(Integer.MAX_VALUE, getCapacityLong());
+    }
+
+    /**
+     * A long is enormous, but a network is unbounded: enough creative drawers, each reporting
+     * {@link Long#MAX_VALUE}, and a plain sum wraps negative. Saturating costs one comparison per
+     * drawer and removes the question.
+     */
+    private static long saturatedAdd(long running, long addition) {
+        long sum = running + addition;
+        return sum < running ? Long.MAX_VALUE : sum;
     }
 
     @Override

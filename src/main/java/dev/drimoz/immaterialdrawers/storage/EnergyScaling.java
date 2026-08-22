@@ -5,53 +5,50 @@ import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
 /**
  * How big an energy drawer gets, and why it stops there.
  *
- * <p>This is the whole of CLAUDE.md §11 in one place, because the numbers only make sense together
- * and getting them wrong is invisible: the drawer works, the last upgrade slot just silently does
- * nothing.
- *
- * <h3>The ceiling</h3>
+ * <h3>The ceiling is long, not int</h3>
  *
  * <p>{@link net.neoforged.neoforge.energy.IEnergyStorage} is an {@code int} API from end to end, so
- * a drawer cannot hold more than {@link Integer#MAX_VALUE} = 2,147,483,647 FE. Storing a
- * {@code long} internally and clamping on the way out is not an option: {@code getEnergyStored}
- * would lie to every cable, meter and tooltip in the game.
+ * anything speaking it is capped at {@link Integer#MAX_VALUE} = 2,147,483,647 FE. Every mod that
+ * stores more than that keeps a wider number internally and clamps at the boundary — Powah's own
+ * cable is declared {@code receiveEnergy(long, boolean, Direction)} and reaches the standard
+ * capability only through an adapter, which is how a Nitro Ender Cell advertises 18 billion FE.
  *
- * <p>Functional Storage's storage upgrades are <b>multiplicative</b> and there are four slots, so
- * the worst case is the fourth power of the best upgrade. With Netherite at x32 that is
- * x1,048,576 — anything with a base above ~2,000 FE saturates before the fourth slot is even used.
+ * <p>This mod does the same. Storage is {@code long}: 9,223,372,036,854,775,807 FE, about four
+ * billion times the int ceiling and more than any upgrade curve can reach. {@code BigInteger} would
+ * be unbounded, and is not worth an allocation per operation for headroom that is already absurd.
  *
- * <h3>The divisor</h3>
+ * <p><b>What the clamp costs.</b> A cable, a meter or Jade reading the standard capability sees at
+ * most 2.1B, because that is all an int can say. Powah accepts exactly that trade and shows the
+ * true figure in its own screens; so do we — {@code BigEnergyStorage} exposes long accessors, and
+ * every display in this mod uses them. Transfers are unaffected: nothing moves two billion FE in a
+ * single operation.
  *
- * <p>Functional Storage solves the same problem for fluids with {@code FLUID_DIVISOR = 2}: fluid
- * drawers get x16 per Netherite upgrade rather than x32, so 32,000 mB x 16^4 = 2,097,152,000 mB
- * lands just under the ceiling. That is not a coincidence, it is a calibration, and this is the
- * same calibration done for energy:
+ * <p>This reverses what CLAUDE.md §11 originally decided. That entry rejected long-with-clamp on
+ * the grounds that {@code getEnergyStored()} would lie to cables. It does lie. The alternative was
+ * a storage block smaller than the cells of the mod sitting next to it.
+ *
+ * <h3>The curve</h3>
  *
  * <pre>
- *   base     = BASE_UNITS x FE_PER_UNIT   = 500 x 1,000     =       500,000 FE
- *   factor   = (NETHERITE / DIVISOR)^4    = (32 / 4)^4       =         4,096
- *   maximum  = base x factor                                 = 2,048,000,000 FE
- *   ceiling  = Integer.MAX_VALUE                             = 2,147,483,647 FE
+ *   base    = BASE_UNITS x FE_PER_UNIT  = 500 x 1,000  =        500,000 FE
+ *   factor  = (NETHERITE / DIVISOR)^4   = (32 / 2)^4    =         65,536
+ *   maximum = base x factor                             = 32,768,000,000 FE
  * </pre>
  *
- * <p>All four upgrade slots do something, and the fourth one still fits with ~5% of headroom. That
- * headroom is deliberate — {@code NETHERITE_MULTIPLIER} is a config value a pack author can raise,
- * and {@link #capacityFor} clamps rather than overflows when they do.
- *
- * <p>A divisor of 2, matching fluids exactly, would have forced a base of ~32,000 FE — smaller than
- * a Powah Basic Energy Cell, which makes the block pointless before it is upgraded. A divisor of 8
- * would leave the top of the curve two thirds empty. Four is the value that uses the whole int.
+ * <p>{@link #ENERGY_DIVISOR} is 2, the value Functional Storage gives fluids. It used to be 4, and
+ * that number existed for exactly one reason: squeezing four Netherite upgrades under the int
+ * ceiling. With the ceiling gone the constraint is balance rather than arithmetic, and matching the
+ * sibling content type is the honest default — a fully upgraded energy drawer holds about 32.8B FE,
+ * in the region of a couple of Powah Nitro cells, which is where an endgame wall of them belongs.
  */
 public final class EnergyScaling {
 
     /**
      * Divides every storage upgrade's multiplier for energy, exactly as
-     * {@link FunctionalStorageConfig#FLUID_DIVISOR} does for fluids.
-     *
-     * <p>Ours rather than theirs: reusing {@code FLUID_STORAGE_MODIFIER} would have tied energy to
-     * the fluid curve and capped the base at ~32,000 FE. See CLAUDE.md §10.
+     * {@code FunctionalStorageConfig.FLUID_DIVISOR} does for fluids — and now with the same value,
+     * since energy is no longer fighting for room inside an int.
      */
-    public static final int ENERGY_DIVISOR = 4;
+    public static final int ENERGY_DIVISOR = 2;
 
     /**
      * Base size of an unupgraded drawer, in units — this is what goes into {@code DrawerProperties}
@@ -70,20 +67,25 @@ public final class EnergyScaling {
     /**
      * Turns the drawer's storage multiplier into a capacity in FE.
      *
-     * <p>Clamped, not wrapped. The Max Storage upgrade reports a multiplier of
-     * {@link Integer#MAX_VALUE} ({@code FunctionalStorageConfig.getLevelMult(-1)}), so an unclamped
-     * cast here would produce a negative capacity and a drawer that refuses every FE offered to it.
-     * The {@code long} in the multiplication is what keeps the {@code min} meaningful.
+     * <p>Still clamped, just much further out. The Max Storage upgrade reports a multiplier of
+     * {@link Integer#MAX_VALUE} ({@code FunctionalStorageConfig.getLevelMult(-1)}); multiplied by
+     * the base and by FE_PER_UNIT that overflows even a long, so the result is capped at
+     * {@link Long#MAX_VALUE} rather than allowed to wrap into a negative capacity — which would be
+     * a drawer that refuses every FE offered to it.
      */
-    public static int capacityFor(double storageMultiplier) {
-        return (int) Math.min(Integer.MAX_VALUE, Math.floor(storageMultiplier * (long) FE_PER_UNIT));
+    public static long capacityFor(double storageMultiplier) {
+        double capacity = storageMultiplier * FE_PER_UNIT;
+        if (capacity >= Long.MAX_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        return (long) Math.floor(capacity);
     }
 
     /**
      * The factor one storage upgrade of the given tier contributes to an energy drawer.
      *
      * @param levelMultiplier the tier's item multiplier, from
-     *                        {@code FunctionalStorageConfig.getLevelMult}
+     *                        {@link FunctionalStorageConfig#getLevelMult(int)}
      */
     public static float upgradeFactor(int levelMultiplier) {
         return levelMultiplier / (float) ENERGY_DIVISOR;

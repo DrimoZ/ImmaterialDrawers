@@ -13,10 +13,12 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  * drawer's void and creative options rather than to the plain capability contract.
  * Copyright (c) 2021 Buuz135, Rid — MIT. See NOTICE.
  *
- * <p><b>Why int and not long.</b> {@link IEnergyStorage} is an int API from end to end, so the
- * ceiling is {@link Integer#MAX_VALUE}. Storing a long internally and clamping on the way out would
- * make {@code getEnergyStored} lie to every cable, meter and Jade tooltip in the game. The cap is
- * respected instead, and the upgrade curve is calibrated to fit under it — see {@link EnergyScaling}.
+ * <p><b>Long inside, int at the boundary.</b> {@link IEnergyStorage} is an int API, so the standard
+ * capability cannot express more than {@link Integer#MAX_VALUE}. The amounts are kept in a
+ * {@code long} and clamped on the way out, which is what Powah does — its cable is declared
+ * {@code receiveEnergy(long, …)} and reaches the standard capability through an adapter. A cable or
+ * a meter therefore sees at most 2.1B; {@link #getStoredLong()} and {@link #getCapacityLong()} are
+ * the truth, and every display in this mod asks for those. See {@link EnergyScaling}.
  *
  * <p><b>What a drawer's options mean here.</b> Two of Functional Storage's three carry over:
  *
@@ -24,8 +26,8 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  *   <li><b>Void</b> — reports every FE offered as accepted and drops what does not fit. A void
  *       drawer must not apply backpressure, or the machine feeding it stalls instead of running.</li>
  *   <li><b>Creative</b> — bottomless and infinite, mirroring {@code CustomFluidTank}: capacity and
- *       stored both read {@link Integer#MAX_VALUE}, and extraction hands out whatever is asked for
- *       without depleting anything.</li>
+ *       stored both read the maximum, and extraction hands out whatever is asked for without
+ *       depleting anything.</li>
  *   <li><b>Locked</b> — deliberately absent. Locking a drawer pins it to the kind of thing it holds
  *       so an emptied drawer keeps its assignment. Forge Energy has exactly one kind of thing, so
  *       there is nothing to pin, and an energy drawer is never in the state locking exists to
@@ -34,10 +36,10 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  */
 public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<CompoundTag> {
 
-    private int capacity;
-    private int energy;
+    private long capacity;
+    private long energy;
 
-    public BigEnergyStorage(int capacity) {
+    public BigEnergyStorage(long capacity) {
         this.capacity = capacity;
     }
 
@@ -65,13 +67,14 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
             // Already infinite. Accepting is free and changes nothing, so no onChange either.
             return toReceive;
         }
-        int accepted = Math.min(capacity - energy, toReceive);
+        // capacity - energy cannot overflow: both are non-negative and capacity is the larger.
+        long accepted = Math.min(capacity - energy, toReceive);
         if (!simulate && accepted > 0) {
             energy += accepted;
             onChange();
         }
         // The void drawer's whole point: the sender is told it all went through.
-        return isDrawerVoid() ? toReceive : accepted;
+        return isDrawerVoid() ? toReceive : (int) accepted;
     }
 
     @Override
@@ -82,22 +85,26 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
         if (isDrawerCreative()) {
             return toExtract;
         }
-        int extracted = Math.min(energy, toExtract);
+        long extracted = Math.min(energy, toExtract);
         if (!simulate && extracted > 0) {
             energy -= extracted;
             onChange();
         }
-        return extracted;
+        return (int) extracted;
     }
 
+    /**
+     * Clamped to int, and knowingly wrong above 2.1B — see the class comment. Anything of ours that
+     * needs the real figure calls {@link #getStoredLong()}.
+     */
     @Override
     public int getEnergyStored() {
-        return isDrawerCreative() ? Integer.MAX_VALUE : energy;
+        return clampToInt(getStoredLong());
     }
 
     @Override
     public int getMaxEnergyStored() {
-        return isDrawerCreative() ? Integer.MAX_VALUE : capacity;
+        return clampToInt(getCapacityLong());
     }
 
     @Override
@@ -110,19 +117,29 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
         return true;
     }
 
+    /** What is stored, in full, with the creative upgrade taken into account. */
+    public long getStoredLong() {
+        return isDrawerCreative() ? Long.MAX_VALUE : energy;
+    }
+
+    /** What fits, in full, with the creative upgrade taken into account. */
+    public long getCapacityLong() {
+        return isDrawerCreative() ? Long.MAX_VALUE : capacity;
+    }
+
     /**
      * What is really stored, ignoring the creative upgrade.
      *
-     * <p>{@link #getEnergyStored()} answers the capability contract, and a creative drawer lies to
-     * it on purpose. Anything that needs the truth — deciding whether a broken drawer has contents
-     * worth keeping, or whether an upgrade can be pulled out — has to ask this instead.
+     * <p>A creative drawer lies to the capability on purpose. Anything that needs the truth —
+     * deciding whether a broken drawer has contents worth keeping, or whether an upgrade can be
+     * pulled out — has to ask this instead.
      */
-    public int getStoredRaw() {
+    public long getStoredRaw() {
         return energy;
     }
 
     /** The configured capacity, ignoring the creative upgrade. Counterpart to {@link #getStoredRaw()}. */
-    public int getCapacityRaw() {
+    public long getCapacityRaw() {
         return capacity;
     }
 
@@ -136,7 +153,7 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
      * between two sessions — where clamping is the only honest option, since the alternative is a
      * drawer reporting more stored than it can hold.
      */
-    public void setCapacity(int capacity) {
+    public void setCapacity(long capacity) {
         this.capacity = capacity;
         if (energy > capacity) {
             energy = capacity;
@@ -144,21 +161,25 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
         }
     }
 
+    private static int clampToInt(long value) {
+        return (int) Math.min(Integer.MAX_VALUE, value);
+    }
+
     @Override
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
-        tag.putInt("Energy", energy);
-        tag.putInt("Capacity", capacity);
+        tag.putLong("Energy", energy);
+        tag.putLong("Capacity", capacity);
         return tag;
     }
 
     @Override
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
-        this.energy = tag.getInt("Energy");
-        // A drawer saved before its capacity was written reads as zero; keeping the constructor's
-        // value is more useful than a drawer that suddenly holds nothing.
+        // getLong reads an int tag just as happily, so drawers saved before the move to long load
+        // with their contents intact.
+        this.energy = tag.getLong("Energy");
         if (tag.contains("Capacity")) {
-            this.capacity = tag.getInt("Capacity");
+            this.capacity = tag.getLong("Capacity");
         }
     }
 }

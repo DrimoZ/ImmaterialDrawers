@@ -5,7 +5,7 @@ import com.buuz135.functionalstorage.block.Drawer;
 import com.buuz135.functionalstorage.block.DrawerBlock;
 import com.buuz135.functionalstorage.block.FramedBlock;
 import com.buuz135.functionalstorage.item.FSAttachments;
-import com.buuz135.functionalstorage.util.NumberUtils;
+import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
@@ -92,12 +92,16 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
             return 0;
         }
         var storage = tile.getEnergyStorage();
-        if (storage.getMaxEnergyStored() <= 0 || storage.getEnergyStored() <= 0) {
+        // The long accessors, not the capability ones: above 2.1B the clamped view reads full at
+        // every fill level, so a comparator on a big drawer would sit at 15 from the first FE.
+        long capacity = storage.getCapacityLong();
+        long stored = storage.getStoredLong();
+        if (capacity <= 0 || stored <= 0) {
             return 0;
         }
         // Same shape as vanilla's container signal: anything at all lights the comparator to 1,
         // full reads 15.
-        return 1 + (int) ((storage.getEnergyStored() / (double) storage.getMaxEnergyStored()) * 14);
+        return 1 + (int) ((stored / (double) capacity) * 14);
     }
 
     /**
@@ -141,10 +145,10 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
 
             tooltip.add(Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY));
             tooltip.add(Component.literal(" - ")
-                    .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getInt("Energy")))
+                    .append(Component.literal(EnergyFormat.format(energy.getLong("Energy")))
                             .withStyle(ChatFormatting.YELLOW))
                     .append(Component.literal(" / ").withStyle(ChatFormatting.WHITE))
-                    .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getInt("Capacity")) + " FE")
+                    .append(Component.literal(EnergyFormat.format(energy.getLong("Capacity")) + " FE")
                             .withStyle(ChatFormatting.GOLD)));
 
             tooltip.add(Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY));

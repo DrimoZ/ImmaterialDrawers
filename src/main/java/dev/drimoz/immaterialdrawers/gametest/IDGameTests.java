@@ -269,8 +269,8 @@ public final class IDGameTests {
     public static void unupgradedDrawerHoldsTheBaseCapacity(GameTestHelper helper) {
         EnergyDrawerTile tile = placeDrawer(helper);
 
-        helper.assertValueEqual(tile.getEnergyStorage().getMaxEnergyStored(),
-                EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT, "base capacity in FE");
+        helper.assertValueEqual(tile.getEnergyStorage().getCapacityLong(),
+                (long) EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT, "base capacity in FE");
         helper.succeed();
     }
 
@@ -291,11 +291,14 @@ public final class IDGameTests {
         EnergyDrawerTile tile = placeDrawer(helper);
         Item netherite = upgrade(StorageUpgradeItem.StorageTier.NETHERITE);
 
-        int previous = tile.getEnergyStorage().getMaxEnergyStored();
+        // The long accessor, not the capability one. Past the fourth Netherite upgrade the clamped
+        // int view saturates, and a test written against it would report the ceiling as a bug in
+        // the curve - which is the very thing the ceiling stopped being.
+        long previous = tile.getEnergyStorage().getCapacityLong();
         for (int slot = 0; slot < tile.getStorageSlotAmount(); slot++) {
             tile.getStorageUpgrades().insertItem(slot, new ItemStack(netherite), false);
 
-            int now = tile.getEnergyStorage().getMaxEnergyStored();
+            long now = tile.getEnergyStorage().getCapacityLong();
             helper.assertTrue(now > previous,
                     "Storage upgrade " + (slot + 1) + " of " + tile.getStorageSlotAmount()
                             + " did not change the capacity: still " + now + " FE. The int ceiling "
@@ -310,10 +313,13 @@ public final class IDGameTests {
     }
 
     /**
-     * The Max Storage upgrade saturates instead of wrapping.
+     * The Max Storage upgrade does not wrap the capacity negative.
      *
      * <p>It reports a multiplier of {@link Integer#MAX_VALUE}, so the cast to a capacity is where an
-     * energy drawer would go negative and start refusing every FE offered to it.
+     * energy drawer would go negative and start refusing every FE offered to it. In a long it lands
+     * around 5.4e14 and never reaches the clamp - which is the point of moving to long, and the
+     * reason this asserts the property rather than a number: the arithmetic has to stay positive and
+     * huge, and whether it saturates is a detail of where the curve happens to fall.
      */
     @GameTest(template = PLATFORM)
     public static void maxStorageUpgradeSaturatesWithoutOverflowing(GameTestHelper helper) {
@@ -321,8 +327,13 @@ public final class IDGameTests {
         tile.getStorageUpgrades().insertItem(0,
                 new ItemStack(upgrade(StorageUpgradeItem.StorageTier.MAX_STORAGE)), false);
 
-        helper.assertValueEqual(tile.getEnergyStorage().getMaxEnergyStored(), Integer.MAX_VALUE,
-                "capacity with the Max Storage upgrade");
+        long capacity = tile.getEnergyStorage().getCapacityLong();
+        helper.assertTrue(capacity > 0,
+                "The Max Storage upgrade wrapped the capacity to " + capacity
+                        + ". A drawer with a negative capacity refuses every FE offered to it.");
+        helper.assertTrue(capacity > (long) Integer.MAX_VALUE,
+                "The Max Storage upgrade left the capacity at " + capacity + ", inside an int. "
+                        + "Something is still clamping to int where it should not.");
         helper.succeed();
     }
 
@@ -339,19 +350,26 @@ public final class IDGameTests {
         tile.getStorageUpgrades().insertItem(0,
                 new ItemStack(upgrade(StorageUpgradeItem.StorageTier.NETHERITE)), false);
 
-        int upgradedCapacity = tile.getEnergyStorage().getMaxEnergyStored();
-        int base = EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
+        long upgradedCapacity = tile.getEnergyStorage().getCapacityLong();
+        long base = (long) EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
         helper.assertTrue(upgradedCapacity > base, "the upgrade did not enlarge the drawer");
 
         // More than the drawer could hold without the upgrade.
-        tile.getEnergyStorage().receiveEnergy(upgradedCapacity, false);
+        // receiveEnergy is an int API, so filling a long-sized drawer takes more than one call.
+        while (tile.getEnergyStorage().getStoredLong() < upgradedCapacity
+                && tile.getEnergyStorage().receiveEnergy(Integer.MAX_VALUE, false) > 0) {
+            // keep going until it stops accepting
+        }
 
         helper.assertTrue(tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
                 "The storage upgrade came out of a full drawer. Everything above the base capacity "
                         + "would have been deleted.");
 
         // Drained back under the base, it comes out.
-        tile.getEnergyStorage().extractEnergy(upgradedCapacity, false);
+        while (tile.getEnergyStorage().getStoredLong() > 0
+                && tile.getEnergyStorage().extractEnergy(Integer.MAX_VALUE, false) > 0) {
+            // and more than one to empty it again
+        }
         helper.assertTrue(!tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
                 "The storage upgrade is stuck in an empty drawer");
 

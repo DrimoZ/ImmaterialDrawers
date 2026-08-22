@@ -3,7 +3,7 @@ package dev.drimoz.immaterialdrawers.client;
 import com.buuz135.functionalstorage.client.BaseDrawerRenderer;
 import com.buuz135.functionalstorage.client.DrawerRenderer;
 import com.buuz135.functionalstorage.item.ConfigurationToolItem;
-import com.buuz135.functionalstorage.util.NumberUtils;
+import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
@@ -39,11 +39,13 @@ public class EnergyDrawerRenderer extends BaseDrawerRenderer<EnergyDrawerTile> {
     public void renderItems(EnergyDrawerTile tile, float partialTicks, PoseStack matrixStack,
                             MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         var storage = tile.getEnergyStorage();
-        int capacity = storage.getMaxEnergyStored();
+        // Long accessors throughout: the capability view saturates at 2.1B, which on a fully
+        // upgraded drawer would show a full bar and a frozen number.
+        long capacity = storage.getCapacityLong();
 
         matrixStack.translate(0.5, 0.5, 0.0005f);
 
-        float progress = capacity <= 0 ? 0f : Math.min(1f, storage.getEnergyStored() / (float) capacity);
+        float progress = capacity <= 0 ? 0f : (float) Math.min(1d, storage.getStoredLong() / (double) capacity);
         DrawerRenderer.renderIndicator(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn,
                 progress, tile.getDrawerOptions());
 
@@ -60,8 +62,7 @@ public class EnergyDrawerRenderer extends BaseDrawerRenderer<EnergyDrawerTile> {
             // Stored and capacity, not just stored. A count on an item drawer is progress on its
             // own, because the slot limit is common knowledge; "30.8M FE" is not, because the
             // capacity moves with whichever upgrades are in the drawer.
-            String amount = NumberUtils.getFormatedBigNumber(storage.getEnergyStored())
-                    + "/" + NumberUtils.getFormatedBigNumber(capacity);
+            String amount = EnergyFormat.format(storage.getStoredLong()) + "/" + EnergyFormat.format(capacity);
             DrawerRenderer.renderText(matrixStack, bufferIn, combinedOverlayIn,
                     Component.literal(ChatFormatting.WHITE + amount), Direction.NORTH, TEXT_SCALE);
         }

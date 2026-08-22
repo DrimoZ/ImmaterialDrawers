@@ -1,6 +1,6 @@
 package dev.drimoz.immaterialdrawers.client.gui;
 
-import com.buuz135.functionalstorage.util.NumberUtils;
+import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import com.hrznstudio.titanium.client.screen.addon.BasicScreenAddon;
 import com.hrznstudio.titanium.client.screen.asset.IAssetProvider;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
@@ -63,7 +63,7 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
         int x = guiX + getPosX();
         int y = guiY + getPosY();
         var energy = storage.get();
-        int capacity = energy.getMaxEnergyStored();
+        long capacity = energy.getCapacityLong();
 
         graphics.blit(front, x, y, 0, 0, SIZE, SIZE, SIZE, SIZE);
 
@@ -71,15 +71,14 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
         // front texture has a hole cut in the middle; ours is a flat placeholder with no alpha, so a
         // fill drawn underneath is a fill nobody ever sees. Painted into the recessed panel, so it
         // still reads as being inside the drawer rather than across its face.
-        if (capacity > 0 && energy.getEnergyStored() > 0) {
+        if (capacity > 0 && energy.getStoredLong() > 0) {
             int inner = SIZE - INSET * 2;
-            int filled = Math.max(1, Math.round(inner * Math.min(1f, energy.getEnergyStored() / (float) capacity)));
+            int filled = Math.max(1, (int) Math.round(inner * Math.min(1d, energy.getStoredLong() / (double) capacity)));
             graphics.fill(x + INSET, y + INSET + (inner - filled), x + INSET + inner, y + INSET + inner, 0xFFC4764A);
         }
 
         if (capacity > 0) {
-            String amount = NumberUtils.getFormatedBigNumber(energy.getEnergyStored())
-                    + "/" + NumberUtils.getFormatedBigNumber(capacity);
+            String amount = EnergyFormat.format(energy.getStoredLong()) + "/" + EnergyFormat.format(capacity);
             // Half scale, like the fluid drawer's amount, so a nine-digit number still fits.
             float scale = 0.5f;
             graphics.pose().translate(0, 0, 200);
@@ -104,10 +103,10 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
         var energy = storage.get();
         var lines = new ArrayList<Component>();
         lines.add(Component.translatable("gui.immaterialdrawers.energy").withStyle(ChatFormatting.GOLD)
-                .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getEnergyStored()) + " FE")
+                .append(Component.literal(EnergyFormat.format(energy.getStoredLong()) + " FE")
                         .withStyle(ChatFormatting.WHITE)));
         lines.add(Component.translatable("gui.immaterialdrawers.capacity").withStyle(ChatFormatting.GOLD)
-                .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getMaxEnergyStored()) + " FE")
+                .append(Component.literal(EnergyFormat.format(energy.getCapacityLong()) + " FE")
                         .withStyle(ChatFormatting.WHITE)));
         graphics.renderTooltip(Minecraft.getInstance().font, lines, Optional.empty(), mouseX - guiX, mouseY - guiY);
     }
