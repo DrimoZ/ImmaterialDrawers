@@ -21,6 +21,17 @@ Newest first. Versions are `{mod}+{minecraft}`.
   one content type, so there is nothing to lock a drawer to.
 - Framed Energy Drawer. Framable with Functional Storage's own recipe — its `FramedBlock` check is
   an interface test, so the recipe accepts a block from another mod unchanged.
+- Data generation: blockstates, item models, loot tables, recipes and en_us, generated and committed.
+  Block models and textures are hand-authored.
+- The framed drawer registers its own tint handler, reusing Functional Storage's implementation.
+  Theirs is generic; only their registration is not, since it is driven by a scan of their own
+  block registry.
+
+### Notes on this release
+- **No client has been launched.** Every asset here has been written and never loaded — a game test
+  server loads no models. Textures are flat generated placeholders.
+- Recipes: planks around a redstone block, and iron nuggets around a redstone block for the framed
+  variant, mirroring the shapes Functional Storage uses for its fluid drawers.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and
   Functional Storage as hard dependencies.
 

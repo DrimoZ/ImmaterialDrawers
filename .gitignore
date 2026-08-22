@@ -25,8 +25,9 @@ bin/
 Thumbs.db
 
 # Datagen output is committed on purpose (see build.gradle); only its cache is not.
-src/generated/client/.cache/
-src/generated/server/.cache/
+# 1.21.1 has a single datagen run, so a single output folder - the client/server split arrives
+# in 1.21.4.
+src/generated/resources/.cache/
 
 # Third-party sources cloned for reading only - Functional Storage and Titanium.
 # Not ours to vendor, and re-clonable in one command (see CLAUDE.md).

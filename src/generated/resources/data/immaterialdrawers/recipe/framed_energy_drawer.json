@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "immaterialdrawers:framed_energy_drawer"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "N": {
+      "item": "minecraft:iron_nugget"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "pattern": [
+    "NNN",
+    "NRN",
+    "NNN"
+  ],
+  "result": {
+    "count": 1,
+    "id": "immaterialdrawers:framed_energy_drawer"
+  }
+}

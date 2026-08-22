@@ -9,9 +9,13 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -85,6 +89,23 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
         // Same shape as vanilla's container signal: anything at all lights the comparator to 1,
         // full reads 15.
         return 1 + (int) ((storage.getEnergyStored() / (double) storage.getMaxEnergyStored()) * 14);
+    }
+
+    /**
+     * Planks around a redstone block, the same shape Functional Storage gives its fluid drawer
+     * (planks around an empty bucket).
+     *
+     * <p>The parallel is the point: a player who has made a fluid drawer can guess this one. The
+     * centre ingredient is what the drawer is for, and redstone is what vanilla means by power.
+     * The copper the block is built from is how it looks, not how it is made.
+     */
+    @Override
+    public void registerRecipe(RecipeOutput consumer) {
+        TitaniumShapedRecipeBuilder.shapedRecipe(this)
+                .pattern("PPP").pattern("PRP").pattern("PPP")
+                .define('P', ItemTags.PLANKS)
+                .define('R', Blocks.REDSTONE_BLOCK)
+                .save(consumer);
     }
 
     /**

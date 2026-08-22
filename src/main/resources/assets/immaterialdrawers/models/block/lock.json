@@ -1,0 +1,14 @@
+{
+  "textures": {
+    "lock_icon": "immaterialdrawers:block/lock"
+  },
+  "elements": [
+    {
+      "from": [7, 11, -0.01],
+      "to": [9, 13, 1],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#lock_icon", "cullface": "north"}
+      }
+    }
+  ]
+}

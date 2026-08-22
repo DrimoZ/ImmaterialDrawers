@@ -4,6 +4,10 @@ import com.buuz135.functionalstorage.block.FramedBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /**
@@ -25,6 +29,20 @@ public class FramedEnergyDrawerBlock extends EnergyDrawerBlock implements Framed
 
     public FramedEnergyDrawerBlock(Properties properties) {
         super(properties);
+    }
+
+    /**
+     * Iron nuggets around a redstone block, mirroring Functional Storage's framed fluid drawer
+     * (iron nuggets around a bucket). Nuggets rather than planks throughout their framed range,
+     * because the frame is meant to be the cheap shell you then dress with something else.
+     */
+    @Override
+    public void registerRecipe(RecipeOutput consumer) {
+        TitaniumShapedRecipeBuilder.shapedRecipe(this)
+                .pattern("NNN").pattern("NRN").pattern("NNN")
+                .define('N', Items.IRON_NUGGET)
+                .define('R', Blocks.REDSTONE_BLOCK)
+                .save(consumer);
     }
 
     /**

@@ -459,15 +459,42 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
 - **Jade / TOP** — `instanceof` en dur dans `compat/jade/DrawerComponentProvider.java` et
   `compat/top/FunctionalDrawerProvider.java`. Intégration à écrire.
 - **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.
-  Principal poste de travail artistique.
-- **Teinte du framed** — `client/FramedColors` enregistre ses handlers depuis
-  `FunctionalStorage.FRAMED_BLOCKS`, une liste construite en scannant **le registre de blocs de FS
-  uniquement** (`FunctionalStorage.java:404`). Notre bloc framed n'y sera jamais. Les deux méthodes
-  `getColor` sont pourtant génériques (`instanceof FramedTile` / `FramedBlock`) — il faut donc
-  enregistrer un handler de notre côté sur `RegisterColorHandlersEvent`. Sans ça le framed
-  s'affiche sans teinte, et c'est le seul morceau du framing qui ne vient pas gratuitement.
-- **Datagen** — FS a ses propres providers ; blockstates, modèles, loot tables, recettes, lang
-  à refaire entièrement.
+  Principal poste de travail artistique. **Textures actuelles = placeholders générés**
+  (`scratchpad/GenTextures.java`), volontairement plates, à remplacer entièrement.
+
+  **Le modèle framed passe par le loader de FS.** `models/block/framed_energy_drawer.json` déclare
+  `"loader": "functionalstorage:framedblock"`. `FramedModel` est générique : il indexe ses
+  `children` par nom et remplace leurs textures depuis `FramedDrawerModelData` lu sur la
+  `ModelData` du tile — le nôtre la fournit. Les enfants s'appellent `side` et `front` parce que
+  ce sont les clés du design.
+
+  **C'est le seul morceau du mod qui n'a jamais tourné.** Un serveur de game tests ne charge aucun
+  modèle. Premier point à vérifier au `runClient`.
+- **Teinte du framed** — **[fait, non vérifié en client]** `client/FramedColors` enregistre ses
+  handlers depuis `FunctionalStorage.FRAMED_BLOCKS`, une liste construite en scannant **le registre
+  de blocs de FS uniquement** (`FunctionalStorage.java:404`). Notre bloc framed n'y sera jamais.
+  Les deux méthodes `getColor` sont pourtant génériques (`instanceof FramedTile` / `FramedBlock`) :
+  `client/IDColors` **réutilise leur instance** et fait l'enregistrement de notre côté. Le handler
+  est le leur, l'enregistrement est le nôtre — deux implémentations qui doivent s'accorder sur la
+  couleur d'un bloc framed, autant n'en avoir qu'une.
+- **Datagen** — **[fait]** `datagen/IDDataGenerators` : blockstates, modèles d'item, loot tables,
+  recettes, lang. `./gradlew runData`, sortie committée (`src/generated/resources`).
+
+  Le provider de blockstates de FS **n'est pas réutilisable tel quel** : son constructeur code en
+  dur leur modid comme namespace de sortie, donc il écrirait nos blockstates dans
+  `assets/functionalstorage/`. `IDBlockStateProvider` en est une adaptation.
+
+  **Multipart, pas variants :** l'orientation d'un tiroir est deux propriétés (`facing` × `subfacing`)
+  plus `locked`, soit 6 × 6 × 2 variants qui doivent tous exister sous peine d'erreur de variant
+  manquant. Le multipart permet de poser le cadenas en part séparée.
+
+  Loot tables via `TitaniumLootTableProvider`, qui lit `BasicBlock.getLootTable` — `Drawer` renvoie
+  `droppingNothing()`, parce qu'un tiroir ne passe pas par la loot table : `Drawer.getDrops`
+  fabrique la stack lui-même pour que contenu et upgrades voyagent avec.
+
+  **Ce qui n'est pas généré : les modèles de bloc et les textures.** Hand-authorés sous
+  `src/main/resources`, comme chez FS. Un modèle de tiroir est de la géométrie ; l'exprimer via un
+  model builder revient à écrire un moins bon Blockbench.
 
 ### Dette permanente
 
@@ -494,8 +521,9 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâches 1 à 5 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 6 — et c'est la
-plus grosse : sans blockstate, modèle ni lang, le mod est aujourd'hui injouable en client.**
+**État : tâches 1 à 5 faites, tâche 6 entamée — datagen et teinte faits (22 août 2026,
+`SPIKE.md`). Reste la jauge d'énergie, la GUI, et surtout : lancer un client. Rien de ce qui a
+été écrit sous `assets/` n'a jamais été chargé par quoi que ce soit.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -548,7 +576,12 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    la première donne un tiroir qui se pose, s'affiche, rejoint un réseau — et que tous les câbles
    du jeu ignorent. Rater la seconde et il oublie ses textures au reload.
 
-6. **← ICI. Rendu + datagen + GUI.**
+6. **← ICI. Rendu + datagen + GUI.** Datagen et teinte faits ; il reste la jauge et la GUI.
+
+   **Aucun client n'a jamais été lancé.** Le serveur de game tests ne charge ni modèle ni texture,
+   donc tout `assets/` est écrit et jamais exécuté. `./gradlew runClient` est la prochaine chose
+   à faire, et le premier suspect est `models/block/framed_energy_drawer.json`, qui utilise le
+   loader `functionalstorage:framedblock`.
 
 7. **Augments** — enregistrer un premier `FunctionalUpgradeBehavior` trivial pour valider le
    registre de bout en bout, puis le **Wireless Charger**, puis les autres.
@@ -641,7 +674,9 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 - **Le slug sur CurseForge.** Leur site répond 403 à une vérification automatisée : ni libre ni
   pris, juste inconnu. À confirmer à la main avant la release.
-- **Tout le client** — aucun blockstate, modèle, texture ni lang n'existe. Le serveur de game tests
-  s'en moque, un client non.
+- **Tout le client.** Blockstates, modèles, textures et lang existent maintenant — et **rien de tout
+  ça n'a jamais tourné** : un serveur de game tests ne charge aucun modèle. Le point le plus fragile
+  est `framed_energy_drawer.json`, qui passe par le loader `functionalstorage:framedblock`. Un
+  modèle qui ne parse pas casse le chargement des ressources, pas juste l'affichage d'un bloc.
 - **Les APIs NeoForge sensibles à la version** — vérifier sur `https://docs.neoforged.net/`
   avant d'écrire du code de registre ou de capability.

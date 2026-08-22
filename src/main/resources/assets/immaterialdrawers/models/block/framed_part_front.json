@@ -1,0 +1,15 @@
+{
+  "textures": {
+    "particle": "immaterialdrawers:block/framed_front",
+    "front": "immaterialdrawers:block/framed_front"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 0.02],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#front", "tintindex": 0, "cullface": "north"}
+      }
+    }
+  ]
+}

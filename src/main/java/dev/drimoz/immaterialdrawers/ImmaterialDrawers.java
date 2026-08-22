@@ -10,6 +10,7 @@ import com.hrznstudio.titanium.nbthandler.NBTManager;
 import com.hrznstudio.titanium.tab.TitaniumTab;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
@@ -21,6 +22,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 
 import java.util.List;
@@ -64,6 +66,14 @@ public class ImmaterialDrawers extends ModuleController {
     protected void initModules() {
         IDContent.register(getRegistries());
         addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getBlock()), MOD_ID, TAB);
+    }
+
+    /**
+     * Datagen entry point. Titanium's ModuleController subscribes this to GatherDataEvent for us.
+     */
+    @Override
+    public void addDataProvider(GatherDataEvent event) {
+        IDDataGenerators.gather(event);
     }
 
     /**

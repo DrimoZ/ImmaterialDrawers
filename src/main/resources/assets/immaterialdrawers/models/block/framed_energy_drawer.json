@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/block",
+  "loader": "functionalstorage:framedblock",
+  "textures": {
+    "particle": "immaterialdrawers:block/framed_side"
+  },
+  "children": {
+    "side": {"parent": "immaterialdrawers:block/framed_part_side"},
+    "front": {"parent": "immaterialdrawers:block/framed_part_front"}
+  },
+  "item_render_order": ["front", "side"]
+}
