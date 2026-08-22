@@ -4,6 +4,7 @@ import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.DrawerProperties;
 import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
+import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
 import com.hrznstudio.titanium.annotation.Save;
@@ -15,10 +16,12 @@ import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -111,6 +114,55 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
         addGuiAddonFactory(() -> new EnergyDrawerInfoGuiAddon(64, 16,
                 ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "textures/block/energy_drawer_front.png"),
                 this::getEnergyStorage));
+    }
+
+    /**
+     * Takes the controller-rebuild-on-invalidate back off Functional Storage 1.5.7, because their
+     * version of it deadlocks the server thread while a chunk is loading.
+     *
+     * <p><b>The failure.</b> Loading a chunk that contains a linked drawer hangs the world at 100%,
+     * for good. {@code LevelChunk.setBlockEntity} → {@code clearRemoved} →
+     * {@code invalidateCapabilities}, and 1.5.7's override calls
+     * {@code Level.getBlockEntity(controllerPos)} to rebuild the controller's network. That is a
+     * <em>blocking</em> chunk fetch, issued from inside chunk post-load, on the thread that has to
+     * run the load: if the controller's chunk is in the same batch, the server thread ends up
+     * waiting for a task only it can execute.
+     *
+     * <p>Their {@code isLoaded} guard does not help. It answers for the chunk holder existing, not
+     * for the chunk being available to this thread right now.
+     *
+     * <p><b>Already fixed upstream, not released.</b> The {@code 1.21} branch replaced the lookup
+     * with {@code getChunkSource().getChunkNow(...)}, which returns null rather than waiting. This
+     * is that fix applied to our tiles only — their own drawers keep the bug until 1.5.8 ships, and
+     * fixing it for them would need a mixin. Delete this override when the floor moves to 1.5.8.
+     *
+     * <p><b>Why not {@code super}.</b> Calling it is the bug. The two things worth keeping are
+     * reimplemented: NeoForge's one-line invalidation, which
+     * {@code IBlockEntityExtension.invalidateCapabilities} is only a convenience for, and the
+     * controller rebuild with the non-blocking lookup. NeoForge marks that method
+     * {@code @NonExtendable} — advice Functional Storage did not take either, which is the reason
+     * this override has to exist at all.
+     */
+    @Override
+    public void invalidateCapabilities() {
+        if (level == null) {
+            return;
+        }
+        level.invalidateCapabilities(worldPosition);
+
+        BlockPos controllerPos = getControllerPos();
+        if (level.isClientSide() || controllerPos == null || level.isOutsideBuildHeight(controllerPos)) {
+            return;
+        }
+
+        LevelChunk chunk = level.getChunkSource().getChunkNow(
+                SectionPos.blockToSectionCoord(controllerPos.getX()),
+                SectionPos.blockToSectionCoord(controllerPos.getZ()));
+        if (chunk != null && chunk.getBlockEntity(controllerPos) instanceof StorageControllerTile<?> controller) {
+            controller.getConnectedDrawers().rebuild();
+        }
+        // If the chunk is not there yet, nothing is lost: the controller rebuilds its own network on
+        // its next tick, which is how it recovers from every other reason the invariant breaks.
     }
 
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */

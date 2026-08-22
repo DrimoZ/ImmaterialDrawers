@@ -539,6 +539,27 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   `src/main/resources`, comme chez FS. Un modèle de tiroir est de la géométrie ; l'exprimer via un
   model builder revient à écrire un moins bon Blockbench.
 
+### [vérifié] Le deadlock de chargement de FS 1.5.7
+
+**Symptôme :** monde bloqué à 100%, définitivement. Thread dump : le Server thread est parké dans
+`ServerChunkCache.getChunk` → `managedBlock`, appelé depuis
+`ControllableDrawerTile.invalidateCapabilities` (1.5.7:369), lui-même appelé par `clearRemoved`
+pendant `LevelChunk.setBlockEntity` du post-load de chunk.
+
+**Cause :** pour reconstruire le réseau du contrôleur, 1.5.7 fait `Level.getBlockEntity(controllerPos)`
+— un fetch de chunk **bloquant**, émis depuis le post-load, sur le thread qui doit exécuter ce
+post-load. Si le chunk du contrôleur est dans le même lot, le thread serveur attend une tâche que
+lui seul peut exécuter. Leur garde `isLoaded` ne protège pas : elle répond sur l'existence du chunk
+holder, pas sur la disponibilité du chunk pour ce thread à cet instant.
+
+**Déjà corrigé en amont, pas publié :** la branche `1.21` utilise `getChunkSource().getChunkNow(...)`,
+qui rend `null` au lieu d'attendre. `EnergyDrawerTile.invalidateCapabilities` reprend ce correctif
+**pour nos tuiles uniquement** — les tiroirs de FS gardent le bug jusqu'à 1.5.8, et le corriger chez
+eux demanderait un mixin. **Override à supprimer quand le plancher passera à 1.5.8.**
+
+Troisième instance de la dérive 1.5.7 / branche, et la première qui casse un monde plutôt qu'une
+compilation.
+
 ### Dette permanente
 
 54 références à `FluidDrawerTile` dans 15 fichiers. Chaque release de FS peut ajouter un
