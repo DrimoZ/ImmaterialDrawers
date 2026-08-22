@@ -65,15 +65,17 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
         var energy = storage.get();
         int capacity = energy.getMaxEnergyStored();
 
-        // The fill goes down first, so the drawer front is drawn over it and frames it - the same
-        // order the fluid drawer uses, and the reason the front texture has a recessed panel.
+        graphics.blit(front, x, y, 0, 0, SIZE, SIZE, SIZE, SIZE);
+
+        // On top of the front, not behind it. The fluid drawer draws its contents behind because its
+        // front texture has a hole cut in the middle; ours is a flat placeholder with no alpha, so a
+        // fill drawn underneath is a fill nobody ever sees. Painted into the recessed panel, so it
+        // still reads as being inside the drawer rather than across its face.
         if (capacity > 0 && energy.getEnergyStored() > 0) {
             int inner = SIZE - INSET * 2;
             int filled = Math.max(1, Math.round(inner * Math.min(1f, energy.getEnergyStored() / (float) capacity)));
             graphics.fill(x + INSET, y + INSET + (inner - filled), x + INSET + inner, y + INSET + inner, 0xFFC4764A);
         }
-
-        graphics.blit(front, x, y, 0, 0, SIZE, SIZE, SIZE, SIZE);
 
         if (capacity > 0) {
             String amount = NumberUtils.getFormatedBigNumber(energy.getEnergyStored())

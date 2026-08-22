@@ -3,16 +3,25 @@ package dev.drimoz.immaterialdrawers.block.energy;
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.Drawer;
 import com.buuz135.functionalstorage.block.DrawerBlock;
+import com.buuz135.functionalstorage.block.FramedBlock;
+import com.buuz135.functionalstorage.item.FSAttachments;
+import com.buuz135.functionalstorage.util.NumberUtils;
 import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -106,6 +115,62 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
                 .define('P', ItemTags.PLANKS)
                 .define('R', Blocks.REDSTONE_BLOCK)
                 .save(consumer);
+    }
+
+    /**
+     * Says how much FE the drawer in your hand is holding.
+     *
+     * <p>{@code Drawer.appendHoverText} writes a "Contents:" heading followed by two literal empty
+     * lines — placeholders for the two stored item stacks a normal drawer fills in. An energy
+     * drawer has none, so the inherited tooltip was a heading and two blank lines, which is what a
+     * bug looks like.
+     *
+     * <p>Replaced outright rather than appended to, the same way {@code FluidDrawerBlock} does it:
+     * calling {@code super} would print the empty section as well as ours. The upgrade lines below
+     * are theirs, kept identical so both drawers read the same.
+     *
+     * <p>The numbers come out of the tile NBT that {@code Drawer.copyTo} puts on the dropped stack,
+     * under the field name Titanium's {@code @Save} gave it.
+     */
+    @Override
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context,
+                                List<Component> tooltip, TooltipFlag flag) {
+        if (stack.has(FSAttachments.TILE)) {
+            CompoundTag tile = stack.get(FSAttachments.TILE);
+            CompoundTag energy = tile.getCompound("energyStorage");
+
+            tooltip.add(Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal(" - ")
+                    .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getInt("Energy")))
+                            .withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" / ").withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(NumberUtils.getFormatedBigNumber(energy.getInt("Capacity")) + " FE")
+                            .withStyle(ChatFormatting.GOLD)));
+
+            tooltip.add(Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY));
+            boolean anyUpgrade = false;
+            if (tile.getBoolean("isCreative")) {
+                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.translatable("drawer.block.upgrades.is_creative")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE)));
+                anyUpgrade = true;
+            }
+            if (tile.getBoolean("isVoid")) {
+                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.translatable("drawer.block.upgrades.is_void")
+                                .withStyle(ChatFormatting.BLUE)));
+                anyUpgrade = true;
+            }
+            if (!anyUpgrade) {
+                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
+                        .append(Component.translatable("drawer.block.upgrades.none")
+                                .withStyle(ChatFormatting.GRAY)));
+            }
+        }
+
+        if (this instanceof FramedBlock) {
+            tooltip.add(Component.translatable("frameddrawer.use").withStyle(ChatFormatting.GRAY));
+        }
     }
 
     /**

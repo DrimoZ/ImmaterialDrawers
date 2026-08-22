@@ -57,9 +57,13 @@ public class EnergyDrawerRenderer extends BaseDrawerRenderer<EnergyDrawerTile> {
             matrixStack.mulPose(Axis.YP.rotationDegrees(180));
             matrixStack.scale(0.665f, 0.665f, 0.665f);
 
+            // Stored and capacity, not just stored. A count on an item drawer is progress on its
+            // own, because the slot limit is common knowledge; "30.8M FE" is not, because the
+            // capacity moves with whichever upgrades are in the drawer.
+            String amount = NumberUtils.getFormatedBigNumber(storage.getEnergyStored())
+                    + "/" + NumberUtils.getFormatedBigNumber(capacity);
             DrawerRenderer.renderText(matrixStack, bufferIn, combinedOverlayIn,
-                    Component.literal(ChatFormatting.WHITE + NumberUtils.getFormatedBigNumber(storage.getEnergyStored())),
-                    Direction.NORTH, TEXT_SCALE);
+                    Component.literal(ChatFormatting.WHITE + amount), Direction.NORTH, TEXT_SCALE);
         }
 
         // BaseDrawerRenderer pushes; the subclass pops. Their contract, not a choice.
