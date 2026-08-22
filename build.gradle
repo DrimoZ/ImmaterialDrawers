@@ -1,0 +1,148 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    // ModDevGradle 2.x. Pinned to the version Functional Storage itself builds with, so a problem
+    // that shows up here can be compared against a known-good build of the mod we extend.
+    id 'net.neoforged.moddev' version '2.0.75'
+}
+
+version = "${mod_version}+${minecraft_version}"
+group = mod_group_id
+base { archivesName = mod_id }
+
+// 1.21.1 runs on Java 21.
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        minecraftVersion = project.parchment_minecraft_version
+        mappingsVersion = project.parchment_mappings_version
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('run')
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        server {
+            server()
+            gameDirectory = project.file('run')
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        // Runs every @GameTest headlessly and exits non-zero if any fails. This is the acceptance
+        // criterion for the capability spike (CLAUDE.md §12 task 1), not an optional extra: the
+        // whole point of writing the spike as a test is that it stays as a regression check
+        // against future Functional Storage and Titanium releases.
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            // Its own directory. Runs that share run/ share run/mods and each other's saves.
+            gameDirectory = project.file('run-gametest')
+        }
+        // 1.21.1 still has a single datagen run - the client/server split arrives in 1.21.4.
+        data {
+            data()
+            gameDirectory = project.file('run-data')
+            programArguments.addAll '--mod', mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources/').absolutePath,
+                    '--existing', file('src/main/resources/').absolutePath
+        }
+        configureEach {
+            // gameDirectory is set per run, not here: configureEach would overwrite the game test
+            // run's own directory depending on when each run is realised.
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'BlameJared (Titanium, JEI)'
+        url = 'https://maven.blamejared.com'
+    }
+    maven {
+        // Functional Storage publishes to no public maven at all - its own `publishing` block
+        // points at file('repo'). Modrinth's maven serves the released jar by version number,
+        // which beats CurseMaven here because it needs no opaque fileId to be looked up by hand
+        // every time the dependency moves.
+        name = 'Modrinth (Functional Storage)'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
+    maven {
+        // For Jade and The One Probe later (CLAUDE.md §11).
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
+dependencies {
+    // Both are hard dependencies, required at compile time and at runtime, and neither is
+    // bundled: Titanium is LGPLv3 and must stay a separate jar, and Functional Storage is the
+    // mod we extend - shipping a copy of it would be absurd.
+    implementation "com.hrznstudio:titanium:${titanium_version}"
+    implementation "maven.modrinth:functional-storage:${functionalstorage_version}"
+}
+
+// Expand gradle.properties into neoforge.mods.toml so versions live in one place.
+var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates'
+    into "${layout.buildDirectory.get()}/generated/sources/modMetadata"
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+// Generated resources are committed, so a clone builds without running datagen first.
+sourceSets.main.resources.srcDir 'src/generated/resources'
+neoForge.ideSyncTask generateModMetadata
+
+// Both licences travel with the jar. A distributed artifact that does not carry its own terms
+// leaves anyone who only has the file with no way to know them. NOTICE carries the Functional
+// Storage copyright line that MIT requires us to preserve (CLAUDE.md §4).
+tasks.named('jar', Jar) {
+    from(file('LICENSE')) { into 'META-INF' }
+    from(file('LICENSE-ASSETS')) { into 'META-INF' }
+    from(file('NOTICE')) { into 'META-INF' }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+    options.compilerArgs << '-Xlint:deprecation'
+}
+
+publishing {
+    publications.register('mavenJava', MavenPublication) {
+        from components.java
+    }
+    repositories {
+        maven { url = "file://${project.projectDir}/repo" }
+    }
+}

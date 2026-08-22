@@ -1,0 +1,48 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+issueTrackerURL = "https://github.com/DrimoZ/ImmaterialDrawers/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "${mod_authors}"
+displayURL = "https://github.com/DrimoZ/ImmaterialDrawers"
+logoFile = "logo.png"
+logoBlur = false
+description = '''${mod_description}'''
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# Functional Storage is the mod this one extends - without it there is nothing here to add to,
+# and half our class hierarchy has no supertype. AFTER, because our blocks are registered into
+# its drawer types and its registries must exist first.
+[[dependencies.${mod_id}]]
+modId = "functionalstorage"
+type = "required"
+versionRange = "[1.5.7,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Titanium ships as its own jar and is never bundled (LGPLv3). Functional Storage requires it
+# too, so in practice it is always present - it is declared here anyway so a missing copy is a
+# loader message and not a NoClassDefFoundError.
+[[dependencies.${mod_id}]]
+modId = "titanium"
+type = "required"
+versionRange = "[4.0.34,)"
+ordering = "AFTER"
+side = "BOTH"

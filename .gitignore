@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+repo/
+
+# Dev runtime
+run/
+run-data/
+run-gametest/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.eclipse/
+.settings/
+.classpath
+.project
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datagen output is committed on purpose (see build.gradle); only its cache is not.
+src/generated/client/.cache/
+src/generated/server/.cache/
+
+# Third-party sources cloned for reading only - Functional Storage and Titanium.
+# Not ours to vendor, and re-clonable in one command (see CLAUDE.md).
+.reference/

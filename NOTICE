@@ -1,0 +1,23 @@
+Immaterial Drawers
+Copyright (c) 2026 DrimoZ
+
+This product includes software developed as part of Functional Storage.
+
+    Functional Storage
+    Copyright (c) 2021 Buuz135, Rid
+    Licensed under the MIT License.
+    https://github.com/Buuz135/FunctionalStorage
+
+Functional Storage's MIT licence permits reuse and requires its copyright notice to be
+preserved. Files in this repository that are directly derived from Functional Storage carry an
+attribution header naming the file they came from; this notice covers the work as a whole.
+
+This product depends on, but does not include or modify, Titanium.
+
+    Titanium
+    Copyright (c) Horizon Studio / Innovative Online Industries
+    Licensed under the LGPL v3.
+    https://github.com/InnovativeOnlineIndustries/Titanium
+
+Titanium is never bundled into this mod's jar. Immaterial Drawers subclasses and calls Titanium's
+types, which the LGPL treats as a mode of using the interface rather than as a derived work.
