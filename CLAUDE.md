@@ -149,6 +149,25 @@ acceptait NeoForge 26.x. Leçon déjà tirée sur un mod précédent — ne pas 
 la persistance passe par `@Save` / `NBTManager`, l'enregistrement par `ModuleController` +
 `DeferredRegistryHelper`. On adopte le framework entier.
 
+### Mods de test dans le run de dev
+
+`runtimeOnly` uniquement — jamais compilés contre, jamais expédiés. Ils répondent à la seule
+question que les game tests ne peuvent pas poser : est-ce qu'un vrai câble, d'un vrai mod, fait
+vraiment entrer et sortir du FE de ce bloc ?
+
+| Mod | Pourquoi |
+|---|---|
+| **Powah** | Petit, énergie en FE pur sans conversion, et il a les trois choses nécessaires : un générateur, des câbles, et des cellules à comparer. Mekanism stocke des Joules et convertit à la frontière — un échec y serait ambigu. |
+| **Jade** | Lit la capability `EnergyStorage` de n'importe quel bloc et l'affiche au réticule. Le plus rapide pour voir si la capability répond du tout. |
+| GuideME, Cloth Config | Dépendances dures de Powah. |
+
+**Une coordonnée maven `runtimeOnly` amène le jar, pas les mods dont ce jar a besoin**, et FML fait
+échouer le lancement entier plutôt que de sauter le mod. D'où les deux dernières lignes.
+
+À noter : **JEI est déjà dans le run sans être déclaré nulle part** — il arrive par le pom de
+Titanium. C'est aussi la preuve que `runtimeOnly` suffit pour qu'un mod soit découvert par FML dans
+un run MDG, sans le détour par `run/mods` qu'utilise PortableBeacons.
+
 ### Dépendances / maven
 
 Functional Storage **ne publie sur aucun maven public** — son bloc `publishing` pointe sur
@@ -307,9 +326,12 @@ public void registerCapabilities(Holder<BlockEntityType<?>> type) {
 2. Utiliser `EnergyStorageComponent` de Titanium **par composition** (pas par héritage) —
    bonus : il fournit `getScreenAddons()`, donc la barre d'énergie dans la GUI est gratuite.
 
-Le point 1 est fait (`ImmaterialDrawers.registerCapabilities`). Le point 2 ne l'est pas :
-`EnergyStorageComponent` de Titanium n'est pas encore utilisé, et le sera à la tâche 6 pour la
-barre d'énergie dans la GUI — le stockage actuel est notre `BigEnergyStorage`.
+Le point 1 est fait (`ImmaterialDrawers.registerCapabilities`).
+
+**Le point 2 s'est révélé inutile.** Il n'y a pas besoin de tenir un `EnergyStorageComponent` par
+composition juste pour récupérer son `getScreenAddons()` : `EnergyBarScreenAddon` de Titanium prend
+un `IEnergyStorage` nu, donc notre propre `BigEnergyStorage` lui est passé directement
+(`EnergyDrawerTile.initClient`). Un objet énergie de moins à garder synchronisé avec l'autre.
 
 ---
 

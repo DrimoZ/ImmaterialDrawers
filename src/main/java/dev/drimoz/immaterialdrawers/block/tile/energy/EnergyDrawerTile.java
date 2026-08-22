@@ -8,6 +8,7 @@ import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
 import com.hrznstudio.titanium.annotation.Save;
 import com.hrznstudio.titanium.block.BasicTileBlock;
+import com.hrznstudio.titanium.client.screen.addon.EnergyBarScreenAddon;
 import com.hrznstudio.titanium.component.inventory.InventoryComponent;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
@@ -16,6 +17,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
@@ -87,6 +90,25 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
                 return isCreative();
             }
         };
+    }
+
+    /**
+     * Puts an energy bar in the drawer's screen.
+     *
+     * <p>CLAUDE.md §8 suggested holding a Titanium {@code EnergyStorageComponent} by composition
+     * just to borrow its {@code getScreenAddons}. That turned out to be unnecessary:
+     * {@link EnergyBarScreenAddon} takes a plain {@link net.neoforged.neoforge.energy.IEnergyStorage},
+     * so our own storage can be handed to it directly and there is no second energy object to keep
+     * in step with the first.
+     *
+     * <p>Left of the upgrade rows, which start at y=70. Without this the screen opens on nothing but
+     * empty slots and gives no sign the drawer holds anything at all.
+     */
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void initClient() {
+        super.initClient();
+        addGuiAddonFactory(() -> new EnergyBarScreenAddon(10, 20, energyStorage));
     }
 
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */

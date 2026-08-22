@@ -90,6 +90,16 @@ repositories {
 }
 
 dependencies {
+    // Dev environment only. Neither is required to play, neither is compiled against, and a
+    // mistake here cannot reach a player - see gradle.properties for why these two.
+    //
+    // runtimeOnly is enough: FML discovers mods on the dev runtime classpath, which is how JEI
+    // is already in the run without being declared anywhere (it arrives through Titanium's pom).
+    runtimeOnly "maven.modrinth:powah:${powah_version}"
+    runtimeOnly "maven.modrinth:guideme:${guideme_version}"
+    runtimeOnly "maven.modrinth:cloth-config:${cloth_config_version}"
+    runtimeOnly "maven.modrinth:jade:${jade_version}"
+
     // Both are hard dependencies, required at compile time and at runtime, and neither is
     // bundled: Titanium is LGPLv3 and must stay a separate jar, and Functional Storage is the
     // mod we extend - shipping a copy of it would be absurd.
