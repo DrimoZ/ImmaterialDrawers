@@ -84,17 +84,18 @@ Le futur Chemical Drawer doit pouvoir réutiliser la base sans refactor.
 
 ### Distribution
 
-| Plateforme | Slug | État |
-|---|---|---|
-| **CurseForge** | `immarterial-drawers` | **Projet créé** (23 août 2026), visible seulement via `/preview` tant qu'il n'est pas approuvé. |
-| **Modrinth** | `immaterial-drawers` | Libre (404 sur l'API), à réserver. |
+**Slug : `immaterial-drawers`, identique partout.**
 
-<https://www.curseforge.com/minecraft/mc-mods/immarterial-drawers>
+| Plateforme | État |
+|---|---|
+| **CurseForge** | Projet créé le 23 août 2026, visible seulement via `/preview` tant qu'il n'est pas approuvé. |
+| **Modrinth** | Libre (404 sur l'API), à réserver avec le même slug. |
 
-⚠️ **Les deux slugs ne s'écrivent pas pareil** — CurseForge est `imm**ar**terial`, Modrinth serait
-`imm**a**terial`. Un slug CurseForge se change difficilement une fois le projet approuvé et il
-apparaît dans chaque lien partagé ; si le `r` n'est pas voulu, c'est **maintenant** qu'il faut le
-corriger, pas après la première release.
+<https://www.curseforge.com/minecraft/mc-mods/immaterial-drawers>
+
+Le projet a d'abord été créé sous `immarterial-drawers` — un `r` de trop — et corrigé avant
+approbation. Noté parce que c'est la fenêtre où c'était encore gratuit : un slug CurseForge se
+change mal une fois le projet approuvé, et il apparaît dans chaque lien jamais partagé.
 
 Le slug n'a aucun effet sur le `modid`, qui reste `immaterialdrawers` et reste figé (voir plus
 haut).
@@ -792,9 +793,9 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 ### Toujours non vérifié
 
-- ✅ **Le slug sur CurseForge** — réglé autrement que prévu : le projet a été créé à la main sous
-  `immarterial-drawers` (23 août 2026), en preview. Voir §2 — l'orthographe diffère de celle du
-  slug Modrinth visé, et c'est à trancher avant l'approbation.
+- ✅ **Le slug sur CurseForge** — le projet existe sous `immaterial-drawers` (23 août 2026), en
+  preview jusqu'à approbation. Créé au départ avec une coquille, corrigée avant approbation. Même
+  slug visé sur Modrinth. Voir §2.
 - ✅ **Le chargement client (tâche 6, partie code)** — `./gradlew runClient` : blockstates, modèles,
   textures et lang chargent sans erreur ni warning nous concernant, loader `functionalstorage:framedblock`
   compris. Voir §11.
