@@ -4,6 +4,7 @@ import com.hrznstudio.titanium.module.BlockWithTile;
 import com.hrznstudio.titanium.module.DeferredRegistryHelper;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.energy.EnergyDrawerBlock;
+import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -28,7 +29,12 @@ public final class IDContent {
      */
     public static final String ENERGY_DRAWER_NAME = "energy_drawer";
 
+    /** Registry path of the framed variant. Permanent for the same reason. */
+    public static final String FRAMED_ENERGY_DRAWER_NAME = "framed_energy_drawer";
+
     public static BlockWithTile ENERGY_DRAWER;
+
+    public static BlockWithTile FRAMED_ENERGY_DRAWER;
 
     private IDContent() {
     }
@@ -36,11 +42,23 @@ public final class IDContent {
     public static void register(DeferredRegistryHelper registries) {
         // Copper, not the stone bricks Functional Storage gives its fluid drawers: a distinct
         // material makes the unframed variant readable at a glance, and copper is what every other
-        // mod already means by "this carries power". The Framed variant (task 5) is the real answer
-        // for blending into an existing wall.
+        // mod already means by "this carries power".
         ENERGY_DRAWER = registries.registerBlockWithTileItem(
                 ENERGY_DRAWER_NAME,
                 () -> new EnergyDrawerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK)),
+                block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
+                        (EnergyDrawerBlock) block.get(), new Item.Properties()),
+                ImmaterialDrawers.TAB);
+
+        // The framed variant is the real answer to blending into an existing wall - the player
+        // gives it the same textures as the drawers around it, instead of us shipping a variant per
+        // wood type and hoping one matches what they built with.
+        //
+        // Same properties as the unframed one: what it looks like is the player's business, but how
+        // long it takes to break should not depend on which one they chose.
+        FRAMED_ENERGY_DRAWER = registries.registerBlockWithTileItem(
+                FRAMED_ENERGY_DRAWER_NAME,
+                () -> new FramedEnergyDrawerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK)),
                 block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
                         (EnergyDrawerBlock) block.get(), new Item.Properties()),
                 ImmaterialDrawers.TAB);

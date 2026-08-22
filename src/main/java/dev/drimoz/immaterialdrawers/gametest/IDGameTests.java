@@ -1,12 +1,17 @@
 package dev.drimoz.immaterialdrawers.gametest;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
+import com.buuz135.functionalstorage.block.FramedDrawerBlock;
+import com.buuz135.functionalstorage.block.tile.FramedTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
+import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
+import com.buuz135.functionalstorage.recipe.FramedDrawerRecipe;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
@@ -15,6 +20,8 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -23,7 +30,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.items.IItemHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The blocking spike of CLAUDE.md §12, written as a test rather than as something to check by hand.
@@ -372,6 +381,102 @@ public final class IDGameTests {
         helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "first extraction");
         helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "second extraction");
         helper.assertValueEqual(storage.getEnergyStored(), Integer.MAX_VALUE, "contents after extracting");
+
+        helper.succeed();
+    }
+
+    /**
+     * The framed variant has its own block entity type, so it needs its own capability provider.
+     *
+     * <p>Providers are registered against a {@code BlockEntityType}, and
+     * {@code registerBlockWithTileItem} builds a fresh one per block. Registering only the unframed
+     * drawer leaves the framed one with no energy capability at all — it places, it renders, it
+     * joins a controller network, and every cable in the game ignores it.
+     */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerHasItsOwnEnergyCapability(GameTestHelper helper) {
+        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+
+        helper.assertTrue(
+                IDContent.FRAMED_ENERGY_DRAWER.type().get() != IDContent.ENERGY_DRAWER.type().get(),
+                "the two drawers share a block entity type, so this test proves nothing");
+
+        IEnergyStorage storage = capability(helper, null);
+        helper.assertTrue(storage != null,
+                "No EnergyStorage capability on the framed energy drawer. Its block entity type is "
+                        + "not the unframed one's, and a provider registered on that type does not "
+                        + "cover this one.");
+
+        helper.assertValueEqual(storage.receiveEnergy(1_000, false), 1_000, "energy accepted");
+        helper.succeed();
+    }
+
+    /**
+     * Functional Storage's own framing recipe accepts our drawer, with nothing added on our side.
+     *
+     * <p>This is the payoff of {@code FramedBlock} being an empty marker interface that
+     * {@code FramedDrawerRecipe} tests with {@code instanceof}: the recipe generalises to a block
+     * from another mod by accident of how it was written. It is the only extension point in
+     * Functional Storage that does — which is exactly why it is worth a test rather than an
+     * assumption, and why the test should fail loudly if a release ever narrows it to their own
+     * blocks.
+     */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerIsFramableByFunctionalStorage(GameTestHelper helper) {
+        ItemStack drawer = new ItemStack(IDContent.FRAMED_ENERGY_DRAWER.asItem());
+        CraftingInput grid = CraftingInput.of(2, 2, List.of(
+                new ItemStack(Items.OAK_PLANKS),   // sides and particle
+                new ItemStack(Items.STONE),        // front
+                drawer,
+                new ItemStack(Items.DEEPSLATE)));  // divider
+
+        helper.assertTrue(new FramedDrawerRecipe().matches(grid, helper.getLevel()),
+                "Functional Storage's framing recipe rejected our framed drawer");
+
+        ItemStack framed = FramedDrawerBlock.fill(grid.getItem(0), grid.getItem(1),
+                grid.getItem(2), grid.getItem(3));
+        FramedDrawerModelData design = FramedDrawerBlock.getDrawerModelData(framed);
+
+        helper.assertTrue(design != null, "framing produced a stack with no style on it");
+        helper.assertTrue(design.getDesign().get("front") == Items.STONE,
+                "the front of the framed drawer is not what it was framed with");
+        helper.assertTrue(design.getDesign().get("side") == Items.OAK_PLANKS,
+                "the sides of the framed drawer are not what it was framed with");
+
+        helper.succeed();
+    }
+
+    /**
+     * The placed drawer holds on to its design, and hands it to the renderer.
+     *
+     * <p>Two separate things, both easy to lose: the {@code @Save} field that survives a reload —
+     * Titanium's annotation scan is per class, and the framed tile adds a field the base tile does
+     * not have — and the {@code ModelData} the block model reads the textures out of.
+     */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerRemembersItsDesign(GameTestHelper helper) {
+        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+        BlockEntity be = helper.getBlockEntity(DRAWER);
+
+        helper.assertTrue(be instanceof FramedEnergyDrawerTile,
+                "the framed energy drawer has the wrong tile behind it");
+        helper.assertTrue(be instanceof FramedTile,
+                "the framed drawer is not a FramedTile, so none of Functional Storage's framing "
+                        + "code will see it");
+        FramedEnergyDrawerTile tile = (FramedEnergyDrawerTile) be;
+
+        Map<String, Item> design = new HashMap<>();
+        design.put("particle", Items.OAK_PLANKS);
+        design.put("side", Items.OAK_PLANKS);
+        design.put("front", Items.STONE);
+        design.put("front_divider", Items.DEEPSLATE);
+        tile.setFramedDrawerModelData(new FramedDrawerModelData(design));
+
+        helper.assertTrue(tile.getFramedDrawerModelData().getDesign().get("front") == Items.STONE,
+                "the drawer did not keep the design it was given");
+        helper.assertTrue(
+                tile.getModelData().get(FramedDrawerModelData.FRAMED_PROPERTY) != null,
+                "the drawer's ModelData carries no design, so the model has nothing to render with");
 
         helper.succeed();
     }

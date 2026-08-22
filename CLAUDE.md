@@ -460,6 +460,12 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   `compat/top/FunctionalDrawerProvider.java`. Intégration à écrire.
 - **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.
   Principal poste de travail artistique.
+- **Teinte du framed** — `client/FramedColors` enregistre ses handlers depuis
+  `FunctionalStorage.FRAMED_BLOCKS`, une liste construite en scannant **le registre de blocs de FS
+  uniquement** (`FunctionalStorage.java:404`). Notre bloc framed n'y sera jamais. Les deux méthodes
+  `getColor` sont pourtant génériques (`instanceof FramedTile` / `FramedBlock`) — il faut donc
+  enregistrer un handler de notre côté sur `RegisterColorHandlersEvent`. Sans ça le framed
+  s'affiche sans teinte, et c'est le seul morceau du framing qui ne vient pas gratuitement.
 - **Datagen** — FS a ses propres providers ; blockstates, modèles, loot tables, recettes, lang
   à refaire entièrement.
 
@@ -488,7 +494,8 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâches 1 à 4 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 5.**
+**État : tâches 1 à 5 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 6 — et c'est la
+plus grosse : sans blockstate, modèle ni lang, le mod est aujourd'hui injouable en client.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -526,9 +533,22 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    Fait avec la tâche 3, parce que c'est le même travail : un handler dont la capacité ne dépend
    pas encore de `getStorageMultiplier()` ne peut pas être calibré, et le calibrage *est* l'enjeu.
 
-5. **← ICI. Framed variant** — copier `FramedFluidDrawerBlock` / `FramedFluidDrawerTile`.
+5. ✅ **[FAIT] Framed variant** — copier `FramedFluidDrawerBlock` / `FramedFluidDrawerTile`.
 
-6. **Rendu + datagen + GUI.**
+   Moins cher que prévu : `FramedBlock` est une **interface marqueur vide**, et tout ce que FS fait
+   de spécifique au framing teste cette interface, jamais ses propres classes — recette,
+   tooltip, pick-block, copie du style sur l'item lâché. `FramedDrawerRecipe.matches` accepte
+   n'importe quel `BlockItem` dont le bloc implémente `FramedBlock` : **notre tiroir est framable
+   par la recette de FS sans une ligne de notre côté.** Couvert par
+   `framedDrawerIsFramableByFunctionalStorage`, parce que c'est le seul point d'extension de FS
+   qui généralise, et par accident d'écriture plutôt que par intention.
+
+   **Piège :** la variante framed a son **propre `BlockEntityType`**, donc sa propre
+   `registerBlockEntity` pour la capability, et son propre `scanTileClassForAnnotations`. Rater
+   la première donne un tiroir qui se pose, s'affiche, rejoint un réseau — et que tous les câbles
+   du jeu ignorent. Rater la seconde et il oublie ses textures au reload.
+
+6. **← ICI. Rendu + datagen + GUI.**
 
 7. **Augments** — enregistrer un premier `FunctionalUpgradeBehavior` trivial pour valider le
    registre de bout en bout, puis le **Wireless Charger**, puis les autres.

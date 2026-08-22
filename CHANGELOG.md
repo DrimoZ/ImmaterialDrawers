@@ -19,6 +19,8 @@ Newest first. Versions are `{mod}+{minecraft}`.
 - An upgrade cannot be pulled out of a drawer too full to do without it.
 - Void and creative behave as they do on a fluid drawer. Locking does not, deliberately: energy has
   one content type, so there is nothing to lock a drawer to.
+- Framed Energy Drawer. Framable with Functional Storage's own recipe — its `FramedBlock` check is
+  an interface test, so the recipe accepts a block from another mod unchanged.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and
   Functional Storage as hard dependencies.
 

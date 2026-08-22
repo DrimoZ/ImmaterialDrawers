@@ -4,10 +4,12 @@ import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
+import com.hrznstudio.titanium.module.BlockWithTile;
 import com.hrznstudio.titanium.module.ModuleController;
 import com.hrznstudio.titanium.nbthandler.NBTManager;
 import com.hrznstudio.titanium.tab.TitaniumTab;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
@@ -20,6 +22,8 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
+
+import java.util.List;
 
 /**
  * Drawers for what you can't hold.
@@ -44,7 +48,11 @@ public class ImmaterialDrawers extends ModuleController {
 
         // Titanium's @Save is reflective and opt-in per class. Without this scan the drawer's
         // energy is not written to disk at all, and the failure is silent.
+        // Both tile classes, not just the base one: the scan is per class and the framed variant
+        // adds a @Save field of its own. Miss it and the drawer keeps its energy but forgets the
+        // textures the player framed it with.
         NBTManager.getInstance().scanTileClassForAnnotations(EnergyDrawerTile.class);
+        NBTManager.getInstance().scanTileClassForAnnotations(FramedEnergyDrawerTile.class);
 
         IDComponents.DR.register(modBus);
 
@@ -110,11 +118,16 @@ public class ImmaterialDrawers extends ModuleController {
      * test: the reading is sound, and the test is what makes it a fact. See CLAUDE.md §8.
      */
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
-                IDContent.ENERGY_DRAWER.type().get(),
-                (blockEntity, side) -> blockEntity instanceof EnergyDrawerTile drawer
-                        ? drawer.getEnergyStorage()
-                        : null);
+        // Once per block entity type, because that is what a provider is registered against - the
+        // framed variant has its own type and would otherwise have no energy capability at all,
+        // which reads as a drawer that silently refuses every cable.
+        for (BlockWithTile drawer : List.of(IDContent.ENERGY_DRAWER, IDContent.FRAMED_ENERGY_DRAWER)) {
+            event.registerBlockEntity(
+                    Capabilities.EnergyStorage.BLOCK,
+                    drawer.type().get(),
+                    (blockEntity, side) -> blockEntity instanceof EnergyDrawerTile tile
+                            ? tile.getEnergyStorage()
+                            : null);
+        }
     }
 }

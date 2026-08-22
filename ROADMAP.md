@@ -4,14 +4,11 @@ Ordered, not scheduled. The order is the point: each step is what makes the next
 
 ## Now
 
-**5 — Framed variant.** ~100 lines, and the real answer to blending into an existing wall — better
-than guessing which wood the player used.
-
-## Then
-
 **6 — Rendering, datagen, GUI.** The largest art item: energy has no fluid texture to borrow, so the
 gauge is designed from nothing. Blockstates, models, loot tables, recipes and lang are all still
 missing.
+
+## Then
 
 **7 — Augments.** These are the product; the block is the support. A drawer that only holds FE
 duplicates a Powah energy cell. Register one trivial `FunctionalUpgradeBehavior` first to prove the
@@ -45,6 +42,8 @@ registry end to end, then:
   is ours, attached to their upgrades through `ModifyDefaultComponentsEvent`. Not a tidiness call:
   reusing their fluid component welds energy to `FLUID_DIVISOR` and caps the base at ~32,000 FE,
   which is less than the cheapest energy cell in any tech mod.
+- **The framed variant carries its own block entity type**, and therefore its own capability
+  registration and its own NBT scan. Sharing the unframed type would have been simpler and wrong.
 - **A drawer never locks.** Locking pins a drawer to the kind of thing it holds; FE has one kind,
   so there is nothing to pin and nothing to preserve.
 - **No mixin into Functional Storage.** The zero-slot item handler solves the same problem inside
