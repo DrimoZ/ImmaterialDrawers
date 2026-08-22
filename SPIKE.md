@@ -9,7 +9,8 @@ estimate was wrong. The gap between the two is the most useful thing in it.
 here is maintained. It is dated and it stays dated.
 
 - **Written:** 22 August 2026
-- **Verdict:** the design in CLAUDE.md §7 and §8 holds. Four game tests pass. No architecture change.
+- **Verdict:** the design in CLAUDE.md §7 and §8 holds. No architecture change. Ten game tests pass
+  (tasks 1 to 4 — this file was written after task 1 and extended as the later ones landed).
 
 ---
 
@@ -76,6 +77,13 @@ Small things, all of them found by the compiler or by a lookup, none of them str
    not worth a hard floor on the Functional Storage version. This is the "permanent tax" of
    CLAUDE.md §11 arriving on day one, in the mildest possible form.
 
+   It happened a second time on task 4: `canUseStorageUpgradeWithCreative`, which stops a creative
+   drawer taking further storage upgrades, is also branch-only. Left out rather than reimplemented —
+   1.5.7 fluid drawers do not have the guard either, and an energy drawer that behaved differently
+   from the drawer next to it in the wall would be the worse bug. Two instances in four tasks is the
+   rate to expect: compiling against a release while reading the branch costs about one small
+   surprise per feature.
+
 3. **CurseMaven is not needed for Functional Storage.** The brief assumed it, because Functional
    Storage publishes to no public maven. Modrinth's maven serves the released jar by version
    number — `maven.modrinth:functional-storage:1.21-1.5.7` — with no opaque `fileId` to look up by
@@ -124,7 +132,5 @@ is not happening.
 
 Still open:
 
-- **No upgrades.** `getStorageMultiplier()` is not wired to the storage capacity yet, so
-  `ENERGY_DIVISOR` and `BASE_CAPACITY` are both still guesses (task 4).
 - **Nothing renders.** No blockstate, model, texture or lang entry exists. The game test server does
   not care; a client will.

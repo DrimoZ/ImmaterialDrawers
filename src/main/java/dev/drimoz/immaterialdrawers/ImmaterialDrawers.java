@@ -1,10 +1,16 @@
 package dev.drimoz.immaterialdrawers;
 
+import com.buuz135.functionalstorage.FunctionalStorage;
+import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
+import com.buuz135.functionalstorage.item.StorageUpgradeItem;
+import com.buuz135.functionalstorage.item.component.SizeProvider;
 import com.hrznstudio.titanium.module.ModuleController;
 import com.hrznstudio.titanium.nbthandler.NBTManager;
 import com.hrznstudio.titanium.tab.TitaniumTab;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -13,6 +19,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 
 /**
  * Drawers for what you can't hold.
@@ -39,13 +46,52 @@ public class ImmaterialDrawers extends ModuleController {
         // energy is not written to disk at all, and the failure is silent.
         NBTManager.getInstance().scanTileClassForAnnotations(EnergyDrawerTile.class);
 
+        IDComponents.DR.register(modBus);
+
         modBus.addListener(this::registerCapabilities);
+        modBus.addListener(this::addEnergyScalingToStorageUpgrades);
     }
 
     @Override
     protected void initModules() {
         IDContent.register(getRegistries());
         addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getBlock()), MOD_ID, TAB);
+    }
+
+    /**
+     * Teaches Functional Storage's storage upgrades how much they scale an energy drawer.
+     *
+     * <p>Their upgrade items already carry a {@code SizeProvider} per resource — one for items, one
+     * for fluids, one for controller range. Energy needs a fourth, with a harsher divisor than any
+     * of them, or the fourth upgrade slot does nothing at all (see {@code EnergyScaling}).
+     * {@code ModifyDefaultComponentsEvent} is how NeoForge lets one mod add a default component to
+     * another mod's item, which is exactly this situation and needs no mixin.
+     *
+     * <p>The tiers are read from {@code FunctionalStorageConfig}, not copied: those multipliers are
+     * config values, and a pack that doubles Netherite should move our curve with it rather than
+     * leave energy quietly on the stock numbers.
+     */
+    private void addEnergyScalingToStorageUpgrades(ModifyDefaultComponentsEvent event) {
+        FunctionalStorage.STORAGE_UPGRADES.forEach((tier, item) -> {
+            SizeProvider provider = energyModifierFor(tier);
+            event.modify(item.get(), builder -> builder.set(IDComponents.ENERGY_STORAGE_MODIFIER.get(), provider));
+        });
+    }
+
+    /**
+     * The energy-side {@code SizeProvider} for one upgrade tier, mirroring what
+     * {@code StorageUpgradeItem} builds for items and fluids.
+     *
+     * <p>Iron is a downgrade, not an upgrade: it sets the base rather than multiplying it, which is
+     * how a player undoes an over-upgraded drawer. Everything else multiplies, divided by
+     * {@code ENERGY_DIVISOR}.
+     */
+    private static SizeProvider energyModifierFor(StorageUpgradeItem.StorageTier tier) {
+        if (tier == StorageUpgradeItem.StorageTier.IRON) {
+            return new SizeProvider.SetBase(1);
+        }
+        return new SizeProvider.ModifyFactor(
+                EnergyScaling.upgradeFactor(FunctionalStorageConfig.getLevelMult(tier.getLevel())));
     }
 
     /**

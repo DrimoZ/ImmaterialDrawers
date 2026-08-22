@@ -380,7 +380,17 @@ Deux options :
    FS via `ModifyDefaultComponentsEvent` (confirmé disponible en NeoForge 21.1 : FS l'importe
    lui-même). Nécessaire pour un scaling énergie indépendant du scaling fluide.
 
-Option 2 recommandée à terme, option 1 acceptable pour le premier jet.
+**[vérifié] Option 2 retenue, et ce n'était pas optionnel.** `immaterialdrawers:energy_storage_modifier`
+est enregistré dans `registry/IDComponents.java` et attaché aux upgrades de FS via
+`ModifyDefaultComponentsEvent` — confirmé disponible et suffisant en NeoForge 21.1, sans mixin.
+
+L'option 1 aurait été une ligne au lieu d'un fichier, mais elle soude l'énergie à la courbe des
+fluides : même `FLUID_DIVISOR` de 2, donc base plafonnée à ~32 000 FE (§11). Le point de bascule
+n'est pas la propreté, c'est que le diviseur *doit* différer.
+
+Les multiplicateurs sont **lus** dans `FunctionalStorageConfig`, pas recopiés : ce sont des valeurs
+de config, et un pack qui double le Netherite doit déplacer notre courbe avec, pas laisser
+l'énergie sur les valeurs d'origine.
 
 ### Fichiers FS à lire comme modèles
 
@@ -413,12 +423,33 @@ FLUID_DIVISOR = 2;   // les fluides divisent tous les multiplicateurs
 
 Avec une base de 1 000 000 FE : le 3ᵉ slot d'upgrade sature, le 4ᵉ ne fait **rien**.
 
-**Solution retenue :** constante de config `ENERGY_DIVISOR` calquée sur `FLUID_DIVISOR`,
-calibrée pour que 4 upgrades max restent sous `Integer.MAX_VALUE`.
-Ex. diviseur 4 + base 100 000 FE → 8⁴ × 100k = 409 M FE. Valeur exacte à caler plus tard.
+**[vérifié] Calibrage retenu — `storage/EnergyScaling.java`, tâches 3 et 4 :**
+
+```
+base    = BASE_UNITS × FE_PER_UNIT  = 500 × 1 000  =       500 000 FE
+facteur = (NETHERITE / DIVISOR)^4   = (32 / 4)^4   =         4 096
+max     = base × facteur                           = 2 048 000 000 FE
+plafond = Integer.MAX_VALUE                        = 2 147 483 647 FE
+```
+
+`ENERGY_DIVISOR = 4`. Les 4 slots d'upgrade servent tous, et le 4ᵉ passe encore avec ~5 % de marge.
+La marge est volontaire : `NETHERITE_MULTIPLIER` est une valeur de config qu'un moddeur de pack
+peut monter, et `EnergyScaling.capacityFor` **clampe** au lieu de déborder quand il le fait.
+
+Pourquoi pas 2 comme les fluides : ça imposait une base de ~32 000 FE, moins qu'une Basic Energy
+Cell de Powah — le bloc serait inutile avant d'être upgradé. Pourquoi pas 8 : le haut de la courbe
+resterait aux deux tiers vide. 4 est la valeur qui utilise tout l'int.
+
+**Le Max Storage upgrade renvoie un multiplicateur de `Integer.MAX_VALUE`**
+(`FunctionalStorageConfig.getLevelMult(-1)`). Sans clamp, le cast donne une capacité **négative** et
+un tiroir qui refuse tout FE. Couvert par `maxStorageUpgradeSaturatesWithoutOverflowing`.
 
 *Ne pas* stocker en `long` avec clamp à l'exposition en v1 — `getEnergyStored()` mentirait aux
 câbles et à Jade.
+
+Le test qui compte est `everyStorageUpgradeSlotChangesTheCapacity` : chaque slot doit **strictement**
+augmenter la capacité et rester positif. Un diviseur trop petit sature avant le 4ᵉ slot, un trop
+grand gâche le haut de la courbe — et les deux échouent en silence, sans crash ni log.
 
 ### À redéfinir manuellement
 
@@ -457,7 +488,7 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâches 1 et 2 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 3.**
+**État : tâches 1 à 4 faites (22 août 2026, `SPIKE.md`). La suivante est la tâche 5.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -482,11 +513,20 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    scriptable, et l'invariant qui déclenche le rebuild est une expression qu'on peut asserter
    directement. Un profiler aurait montré le symptôme ; le test montre la cause et reste. Voir §7.
 
-3. **← ICI. `BigEnergyStorage`** calqué sur `BigFluidHandler` (void / creative / locked hérités).
+3. ✅ **[FAIT] `BigEnergyStorage`** calqué sur `BigFluidHandler` (void / creative / locked hérités).
 
-4. **Storage Upgrades** — `getStorageUpgradesConstructor()` sur le modèle de `FluidDrawerTile`.
+   Void et creative repris à l'identique de `CustomFluidTank`. **Locked volontairement absent :**
+   verrouiller un tiroir le fixe sur le *type* de contenu qu'il détient pour qu'un tiroir vidé
+   garde son assignation. Le FE n'a qu'un type — il n'y a rien à fixer, et un tiroir d'énergie
+   n'est jamais dans l'état que le verrou empêche.
 
-5. **Framed variant** — copier `FramedFluidDrawerBlock` / `FramedFluidDrawerTile`.
+4. ✅ **[FAIT] Storage Upgrades** — `getStorageUpgradesConstructor()` sur le modèle de
+   `FluidDrawerTile`, avec notre composant (§10) et le calibrage du plafond `int` (§11).
+
+   Fait avec la tâche 3, parce que c'est le même travail : un handler dont la capacité ne dépend
+   pas encore de `getStorageMultiplier()` ne peut pas être calibré, et le calibrage *est* l'enjeu.
+
+5. **← ICI. Framed variant** — copier `FramedFluidDrawerBlock` / `FramedFluidDrawerTile`.
 
 6. **Rendu + datagen + GUI.**
 
@@ -571,6 +611,9 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 - ✅ **Les coordonnées maven** — Modrinth remplace CurseMaven pour FS (§4). Titanium `1.21-4.0.34`
   existe bien sur BlameJared et est la version que FS utilise.
 - ✅ **Le slug `immaterial-drawers` est libre sur Modrinth** (404 sur l'API).
+- ✅ **Le scaling par upgrades (tâches 3 et 4)** — capacité dérivée de `getStorageMultiplier()`, les
+  4 slots servent tous, le Max Storage sature sans déborder, et un upgrade ne sort pas d'un tiroir
+  trop plein pour s'en passer. Voir §11.
 - ✅ **Le comportement en réseau réel (tâche 2)** — 50 tiroirs liés à un Storage Controller, tous
   comptés dans `itemHandlers`, aucun rebuild pendant 60 ticks. Voir §7 et `SPIKE.md`.
 
@@ -578,8 +621,6 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 - **Le slug sur CurseForge.** Leur site répond 403 à une vérification automatisée : ni libre ni
   pris, juste inconnu. À confirmer à la main avant la release.
-- **Le scaling par upgrades** — `getStorageMultiplier()` n'est pas branché sur la capacité, donc
-  `BASE_CAPACITY` et `ENERGY_DIVISOR` restent des estimations (tâche 4).
 - **Tout le client** — aucun blockstate, modèle, texture ni lang n'existe. Le serveur de game tests
   s'en moque, un client non.
 - **Les APIs NeoForge sensibles à la version** — vérifier sur `https://docs.neoforged.net/`

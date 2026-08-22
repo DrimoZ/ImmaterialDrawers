@@ -12,6 +12,13 @@ Newest first. Versions are `{mod}+{minecraft}`.
   invariant true.
 - A network-scale game test: 50 energy drawers on one Storage Controller, all counted as item
   handlers, no network rebuild across 60 idle ticks.
+- Storage upgrades scale the drawer, through `immaterialdrawers:energy_storage_modifier` — our own
+  size component, attached to Functional Storage's upgrade items at load. 500,000 FE unupgraded,
+  2,048,000,000 FE with four Netherite upgrades, calibrated so all four slots do something and the
+  fourth still fits in the int that `IEnergyStorage` is built on.
+- An upgrade cannot be pulled out of a drawer too full to do without it.
+- Void and creative behave as they do on a fluid drawer. Locking does not, deliberately: energy has
+  one content type, so there is nothing to lock a drawer to.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and
   Functional Storage as hard dependencies.
 

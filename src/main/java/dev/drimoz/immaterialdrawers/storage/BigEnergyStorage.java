@@ -9,33 +9,30 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  * The energy a drawer holds.
  *
  * <p>Adapted from Functional Storage's {@code fluid/BigFluidHandler}, which plays the same role for
- * the Fluid Drawer: a storage object owned by the tile, saved with it, and answering to the drawer's
- * void / creative / locked options rather than to the plain capability contract.
- * Copyright (c) 2021 Buuz135, Rid - MIT. See NOTICE.
+ * the Fluid Drawer: a storage object owned by the tile, saved with it, and answering to the
+ * drawer's void and creative options rather than to the plain capability contract.
+ * Copyright (c) 2021 Buuz135, Rid — MIT. See NOTICE.
  *
  * <p><b>Why int and not long.</b> {@link IEnergyStorage} is an int API from end to end, so the
  * ceiling is {@link Integer#MAX_VALUE}. Storing a long internally and clamping on the way out would
  * make {@code getEnergyStored} lie to every cable, meter and Jade tooltip in the game. The cap is
- * respected instead, and the upgrade scaling is divided to stay under it - see
- * {@link #ENERGY_DIVISOR} and CLAUDE.md §11.
+ * respected instead, and the upgrade curve is calibrated to fit under it — see {@link EnergyScaling}.
+ *
+ * <p><b>What a drawer's options mean here.</b> Two of Functional Storage's three carry over:
+ *
+ * <ul>
+ *   <li><b>Void</b> — reports every FE offered as accepted and drops what does not fit. A void
+ *       drawer must not apply backpressure, or the machine feeding it stalls instead of running.</li>
+ *   <li><b>Creative</b> — bottomless and infinite, mirroring {@code CustomFluidTank}: capacity and
+ *       stored both read {@link Integer#MAX_VALUE}, and extraction hands out whatever is asked for
+ *       without depleting anything.</li>
+ *   <li><b>Locked</b> — deliberately absent. Locking a drawer pins it to the kind of thing it holds
+ *       so an emptied drawer keeps its assignment. Forge Energy has exactly one kind of thing, so
+ *       there is nothing to pin, and an energy drawer is never in the state locking exists to
+ *       prevent. See {@code EnergyDrawerTile#setLocked}.</li>
+ * </ul>
  */
 public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<CompoundTag> {
-
-    /**
-     * Base capacity of an unupgraded Energy Drawer.
-     *
-     * <p>Provisional. The number that matters is this one multiplied by the storage upgrades:
-     * four multiplicative netherite upgrades are x32^4, so a base of 1,000,000 FE saturates the
-     * int ceiling on the third slot and the fourth does nothing at all.
-     */
-    public static final int BASE_CAPACITY = 100_000;
-
-    /**
-     * Mirrors Functional Storage's {@code FLUID_DIVISOR}, which halves every storage multiplier for
-     * fluid drawers. Energy needs a harsher one for the reason above. Provisional until task 4
-     * wires the upgrades up and the real curve can be measured rather than guessed.
-     */
-    public static final int ENERGY_DIVISOR = 4;
 
     private int capacity;
     private int energy;
@@ -44,8 +41,8 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
         this.capacity = capacity;
     }
 
-    // Overridden by the tile, which knows its own drawer options. Defaults keep this class usable
-    // on its own - in a test, or in an item stack that has no tile behind it.
+    // Overridden by the tile, which knows its own drawer options. The defaults keep this class
+    // usable on its own - in a test, or one day in an item stack that has no tile behind it.
 
     public boolean isDrawerVoid() {
         return false;
@@ -61,27 +58,32 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
 
     @Override
     public int receiveEnergy(int toReceive, boolean simulate) {
-        if (toReceive <= 0 || !canReceive()) {
+        if (toReceive <= 0) {
             return 0;
         }
+        if (isDrawerCreative()) {
+            // Already infinite. Accepting is free and changes nothing, so no onChange either.
+            return toReceive;
+        }
         int accepted = Math.min(capacity - energy, toReceive);
-        // A void drawer reports the whole amount as accepted and drops the excess, which is what
-        // "void" means everywhere else in Functional Storage: the sender must not see backpressure.
-        int reported = isDrawerVoid() ? toReceive : accepted;
         if (!simulate && accepted > 0) {
             energy += accepted;
             onChange();
         }
-        return reported;
+        // The void drawer's whole point: the sender is told it all went through.
+        return isDrawerVoid() ? toReceive : accepted;
     }
 
     @Override
     public int extractEnergy(int toExtract, boolean simulate) {
-        if (toExtract <= 0 || !canExtract()) {
+        if (toExtract <= 0) {
             return 0;
         }
+        if (isDrawerCreative()) {
+            return toExtract;
+        }
         int extracted = Math.min(energy, toExtract);
-        if (!simulate && extracted > 0 && !isDrawerCreative()) {
+        if (!simulate && extracted > 0) {
             energy -= extracted;
             onChange();
         }
@@ -90,12 +92,12 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
 
     @Override
     public int getEnergyStored() {
-        return isDrawerCreative() ? capacity : energy;
+        return isDrawerCreative() ? Integer.MAX_VALUE : energy;
     }
 
     @Override
     public int getMaxEnergyStored() {
-        return capacity;
+        return isDrawerCreative() ? Integer.MAX_VALUE : capacity;
     }
 
     @Override
@@ -109,12 +111,30 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
     }
 
     /**
+     * What is really stored, ignoring the creative upgrade.
+     *
+     * <p>{@link #getEnergyStored()} answers the capability contract, and a creative drawer lies to
+     * it on purpose. Anything that needs the truth — deciding whether a broken drawer has contents
+     * worth keeping, or whether an upgrade can be pulled out — has to ask this instead.
+     */
+    public int getStoredRaw() {
+        return energy;
+    }
+
+    /** The configured capacity, ignoring the creative upgrade. Counterpart to {@link #getStoredRaw()}. */
+    public int getCapacityRaw() {
+        return capacity;
+    }
+
+    /**
      * Resizes the drawer when its storage upgrades change.
      *
-     * <p>Shrinking spills: energy above the new capacity is dropped rather than kept in a field
-     * that no longer reports it. Functional Storage guards the equivalent case by refusing to
-     * remove an upgrade that would not fit what is stored ({@code canChangeMultiplier}); until
-     * task 4 wires that guard up here, this at least keeps the object self-consistent.
+     * <p>Shrinking spills, and that is the caller's problem to prevent rather than this object's to
+     * hide: {@code EnergyDrawerTile} refuses to release an upgrade whose removal would not leave
+     * room, the same way Functional Storage's {@code canChangeMultiplier} does. What is left here
+     * is the case that guard cannot cover — a pack author lowering a multiplier in the config
+     * between two sessions — where clamping is the only honest option, since the alternative is a
+     * drawer reporting more stored than it can hold.
      */
     public void setCapacity(int capacity) {
         this.capacity = capacity;
@@ -135,8 +155,8 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
     @Override
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
         this.energy = tag.getInt("Energy");
-        // A drawer saved before its capacity was written back reads as zero; keeping the
-        // constructor's value is more useful than a drawer that holds nothing.
+        // A drawer saved before its capacity was written reads as zero; keeping the constructor's
+        // value is more useful than a drawer that suddenly holds nothing.
         if (tag.contains("Capacity")) {
             this.capacity = tag.getInt("Capacity");
         }

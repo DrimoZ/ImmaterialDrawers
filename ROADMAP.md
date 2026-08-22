@@ -4,22 +4,10 @@ Ordered, not scheduled. The order is the point: each step is what makes the next
 
 ## Now
 
-**3 — `BigEnergyStorage`, properly.** The current one is the spike's seed. Model it on Functional
-Storage's `BigFluidHandler`: void, creative and locked inherited from the drawer's own options
-rather than reimplemented. Right now `isDrawerVoid` and `isDrawerCreative` are wired but
-`setCapacity` spills silently and nothing guards removing an upgrade — Functional Storage's
-`canChangeMultiplier` is the shape to copy.
-
-**4 — Storage upgrades.** `getStorageUpgradesConstructor()` on the model of `FluidDrawerTile`, and
-capacity actually derived from `getStorageMultiplier()`. `BASE_CAPACITY` and `ENERGY_DIVISOR` stay
-guesses until this runs — the constraint is that four multiplicative upgrades must land under
-`Integer.MAX_VALUE`, because `IEnergyStorage` is an int API and clamping a long would make
-`getEnergyStored()` lie to every cable and tooltip.
-
-## Then
-
 **5 — Framed variant.** ~100 lines, and the real answer to blending into an existing wall — better
 than guessing which wood the player used.
+
+## Then
 
 **6 — Rendering, datagen, GUI.** The largest art item: energy has no fluid texture to borrow, so the
 gauge is designed from nothing. Blockstates, models, loot tables, recipes and lang are all still
@@ -39,9 +27,9 @@ registry end to end, then:
 
 - Which slug the mod gets. `immaterial-drawers` is free on Modrinth and appears free on CurseForge
   (403 to an automated check, so confirm by hand before release).
-- Whether to keep borrowing Functional Storage's `ITEM_STORAGE_MODIFIER` or register our own
-  `energy_storage_modifier` and attach it to their upgrades via `ModifyDefaultComponentsEvent`.
-  Needed the moment energy should scale on a different curve from items.
+- Whether `BASE_UNITS` and `ENERGY_DIVISOR` should be config values rather than constants. They are
+  calibrated against the int ceiling, so a pack author who moves them can break the top of the
+  curve — which argues for leaving them alone, or for validating them at load.
 - Jade and The One Probe integration. Both dispatch on Functional Storage's tile types by
   `instanceof`, so both need writing rather than inheriting.
 
@@ -53,6 +41,12 @@ registry end to end, then:
   of these blocks and can never change. Energy is the first module.
 - **X_1 only for energy.** FE has one kind of content; the 2- and 4-slot geometries would have
   nothing to put in the other slots.
+- **Energy scales on its own component, not Functional Storage's fluid one.** `energy_storage_modifier`
+  is ours, attached to their upgrades through `ModifyDefaultComponentsEvent`. Not a tidiness call:
+  reusing their fluid component welds energy to `FLUID_DIVISOR` and caps the base at ~32,000 FE,
+  which is less than the cheapest energy cell in any tech mod.
+- **A drawer never locks.** Locking pins a drawer to the kind of thing it holds; FE has one kind,
+  so there is nothing to pin and nothing to preserve.
 - **No mixin into Functional Storage.** The zero-slot item handler solves the same problem inside
   the public contract, and it is a mixin into a mod with 56M downloads. Proven at network scale:
   50 drawers on one controller, no per-tick rebuild.

@@ -3,14 +3,18 @@ package dev.drimoz.immaterialdrawers.gametest;
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
+import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -249,6 +253,138 @@ public final class IDGameTests {
                 + network.getExtensions();
         helper.assertValueEqual(counted, network.getConnectedDrawers().size(),
                 "handlers+extensions counted against drawers in the network, " + when);
+    }
+
+    /** An unupgraded drawer is worth having on its own, or the upgrades have nothing to scale. */
+    @GameTest(template = PLATFORM)
+    public static void unupgradedDrawerHoldsTheBaseCapacity(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+
+        helper.assertValueEqual(tile.getEnergyStorage().getMaxEnergyStored(),
+                EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT, "base capacity in FE");
+        helper.succeed();
+    }
+
+    /**
+     * All four upgrade slots do something, and the fourth one still fits in an int.
+     *
+     * <p>This is CLAUDE.md §11 turned into an assertion. {@code IEnergyStorage} is an int API, and
+     * Functional Storage's storage upgrades are multiplicative across four slots — so a base chosen
+     * without doing the arithmetic saturates on the third upgrade and the player's fourth Netherite
+     * upgrade, the most expensive item in the chain, does <em>nothing</em>. Nothing crashes, nothing
+     * logs, and the tooltip reads the same before and after.
+     *
+     * <p>Both halves are asserted deliberately: strictly increasing catches a divisor that is too
+     * small, and staying under the ceiling catches one that is too large.
+     */
+    @GameTest(template = PLATFORM)
+    public static void everyStorageUpgradeSlotChangesTheCapacity(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        Item netherite = upgrade(StorageUpgradeItem.StorageTier.NETHERITE);
+
+        int previous = tile.getEnergyStorage().getMaxEnergyStored();
+        for (int slot = 0; slot < tile.getStorageSlotAmount(); slot++) {
+            tile.getStorageUpgrades().insertItem(slot, new ItemStack(netherite), false);
+
+            int now = tile.getEnergyStorage().getMaxEnergyStored();
+            helper.assertTrue(now > previous,
+                    "Storage upgrade " + (slot + 1) + " of " + tile.getStorageSlotAmount()
+                            + " did not change the capacity: still " + now + " FE. The int ceiling "
+                            + "has been hit early — EnergyScaling.ENERGY_DIVISOR is too small for "
+                            + "the base, and the last upgrade slots are decoration.");
+            helper.assertTrue(now > 0,
+                    "Capacity overflowed to " + now + " FE after upgrade " + (slot + 1));
+            previous = now;
+        }
+
+        helper.succeed();
+    }
+
+    /**
+     * The Max Storage upgrade saturates instead of wrapping.
+     *
+     * <p>It reports a multiplier of {@link Integer#MAX_VALUE}, so the cast to a capacity is where an
+     * energy drawer would go negative and start refusing every FE offered to it.
+     */
+    @GameTest(template = PLATFORM)
+    public static void maxStorageUpgradeSaturatesWithoutOverflowing(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0,
+                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.MAX_STORAGE)), false);
+
+        helper.assertValueEqual(tile.getEnergyStorage().getMaxEnergyStored(), Integer.MAX_VALUE,
+                "capacity with the Max Storage upgrade");
+        helper.succeed();
+    }
+
+    /**
+     * An upgrade whose removal would not leave room for the stored energy stays in its slot.
+     *
+     * <p>Functional Storage guards the same case with {@code canChangeMultiplier}. Without it,
+     * pulling an upgrade silently deletes the difference, and from the player's side the drawer ate
+     * their power.
+     */
+    @GameTest(template = PLATFORM)
+    public static void anUpgradeCannotBeRemovedIfTheEnergyWouldNotFit(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0,
+                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.NETHERITE)), false);
+
+        int upgradedCapacity = tile.getEnergyStorage().getMaxEnergyStored();
+        int base = EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
+        helper.assertTrue(upgradedCapacity > base, "the upgrade did not enlarge the drawer");
+
+        // More than the drawer could hold without the upgrade.
+        tile.getEnergyStorage().receiveEnergy(upgradedCapacity, false);
+
+        helper.assertTrue(tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
+                "The storage upgrade came out of a full drawer. Everything above the base capacity "
+                        + "would have been deleted.");
+
+        // Drained back under the base, it comes out.
+        tile.getEnergyStorage().extractEnergy(upgradedCapacity, false);
+        helper.assertTrue(!tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
+                "The storage upgrade is stuck in an empty drawer");
+
+        helper.succeed();
+    }
+
+    /**
+     * A creative drawer is bottomless in both directions, the way a creative fluid drawer is.
+     *
+     * <p>Mirrors {@code BigFluidHandler.CustomFluidTank}: capacity and contents both read
+     * {@link Integer#MAX_VALUE}, and draining hands out whatever was asked for without depleting.
+     * The naive version of this — reporting the configured capacity and extracting
+     * {@code min(stored, asked)} — returns zero forever from a creative drawer nobody filled first.
+     */
+    @GameTest(template = PLATFORM)
+    public static void aCreativeDrawerIsBottomless(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0, new ItemStack(FunctionalStorage.CREATIVE_UPGRADE.get()), false);
+        helper.assertTrue(tile.isCreative(), "the creative upgrade did not take");
+
+        IEnergyStorage storage = capability(helper, null);
+        helper.assertTrue(storage != null, "no EnergyStorage capability on a creative drawer");
+        helper.assertValueEqual(storage.getMaxEnergyStored(), Integer.MAX_VALUE, "creative capacity");
+        helper.assertValueEqual(storage.getEnergyStored(), Integer.MAX_VALUE, "creative contents");
+
+        // Never filled, and it still pays out - twice.
+        helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "first extraction");
+        helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "second extraction");
+        helper.assertValueEqual(storage.getEnergyStored(), Integer.MAX_VALUE, "contents after extracting");
+
+        helper.succeed();
+    }
+
+    private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
+        return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
+    }
+
+    private static EnergyDrawerTile placeDrawer(GameTestHelper helper) {
+        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getBlock());
+        BlockEntity be = helper.getBlockEntity(DRAWER);
+        helper.assertTrue(be instanceof EnergyDrawerTile, "the energy drawer has no tile behind it");
+        return (EnergyDrawerTile) be;
     }
 
     private static IEnergyStorage placeDrawerAndGetCapability(GameTestHelper helper, Direction side) {
