@@ -4,6 +4,7 @@ import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.DrawerProperties;
 import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
+import com.buuz135.functionalstorage.block.tile.StorageControllerExtensionTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
@@ -16,14 +17,19 @@ import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +76,7 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
         // component is ours rather than Functional Storage's - energy needs a harsher divisor than
         // fluids or the fourth upgrade slot does nothing. See EnergyScaling and IDComponents.
         super(base, entityType, pos, state,
-                new DrawerProperties(EnergyScaling.BASE_UNITS, IDComponents.ENERGY_STORAGE_MODIFIER));
+                new DrawerProperties(EnergyScaling.baseUnits(), IDComponents.ENERGY_STORAGE_MODIFIER));
 
         this.energyStorage = new BigEnergyStorage(EnergyScaling.capacityFor(getStorageMultiplier())) {
             @Override
@@ -163,6 +169,75 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
         }
         // If the chunk is not there yet, nothing is lost: the controller rebuilds its own network on
         // its next tick, which is how it recovers from every other reason the invariant breaks.
+    }
+
+    /**
+     * Hands energy to whatever is next to the drawer that will take it.
+     *
+     * <p><b>Why a drawer pushes at all.</b> An item drawer never has to: hoppers, pipes and players
+     * all pull items out of it. A fluid drawer barely has to, for the same reason. Forge Energy has
+     * no such thing — nothing in the ecosystem pulls. Powah is the case in point: across
+     * {@code CableTile}, {@code AbstractEnergyStorage} and {@code ChargeUtil} the only call it ever
+     * makes on a neighbour is {@code receiveEnergy}, and the "extract" setting on a cable side means
+     * <em>the cable may output here</em>, not <em>the cable will drain what is here</em>. A drawer
+     * that only ever waits to be drained is a hole energy goes into.
+     *
+     * <p>So the drawer pushes, with no upgrade needed. That is a deliberate divergence from the
+     * fluid drawer, which needs a Pusher: the fluid drawer has a world full of things that pull, and
+     * this one does not. A directional upgrade can still come later to aim it.
+     *
+     * <p><b>What it will not push into.</b> Other energy drawers, controllers and extensions are
+     * skipped. All of them accept energy, so without the guard a wall would shuffle the same FE
+     * between its own blocks forever, and a drawer next to its controller would push into the
+     * aggregate that is itself.
+     */
+    @Override
+    public void serverTick(Level level, BlockPos pos, BlockState state, EnergyDrawerTile tile) {
+        super.serverTick(level, pos, state, tile);
+
+        if (!EnergyScaling.pushesToNeighbours()) {
+            return;
+        }
+        // Offset by position so a wall of drawers does not all scan on the same tick.
+        if ((level.getGameTime() + pos.asLong()) % EnergyScaling.pushIntervalTicks() != 0) {
+            return;
+        }
+        if (energyStorage.getStoredRaw() <= 0 && !isCreative()) {
+            return;
+        }
+        pushToNeighbours(level, pos);
+    }
+
+    private void pushToNeighbours(Level level, BlockPos pos) {
+        int budget = EnergyScaling.transferPerOperation(energyStorage.getCapacityRaw());
+
+        for (Direction side : Direction.values()) {
+            if (budget <= 0) {
+                return;
+            }
+            BlockPos target = pos.relative(side);
+            BlockEntity neighbour = level.getBlockEntity(target);
+            if (neighbour instanceof EnergyDrawerTile
+                    || neighbour instanceof StorageControllerTile<?>
+                    || neighbour instanceof StorageControllerExtensionTile<?>) {
+                continue;
+            }
+
+            IEnergyStorage other = level.getCapability(
+                    Capabilities.EnergyStorage.BLOCK, target, side.getOpposite());
+            if (other == null || !other.canReceive()) {
+                continue;
+            }
+
+            // Offered, then taken: receiveEnergy reports what it actually accepted, so the drawer
+            // only loses what arrived. Doing it the other way round drops FE whenever a machine
+            // fills up mid-transfer.
+            int accepted = other.receiveEnergy(budget, false);
+            if (accepted > 0) {
+                energyStorage.extractEnergy(accepted, false);
+                budget -= accepted;
+            }
+        }
     }
 
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */

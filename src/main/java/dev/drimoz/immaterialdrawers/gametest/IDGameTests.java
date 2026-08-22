@@ -270,7 +270,7 @@ public final class IDGameTests {
         EnergyDrawerTile tile = placeDrawer(helper);
 
         helper.assertValueEqual(tile.getEnergyStorage().getCapacityLong(),
-                (long) EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT, "base capacity in FE");
+                EnergyScaling.baseCapacity(), "base capacity in FE");
         helper.succeed();
     }
 
@@ -351,7 +351,7 @@ public final class IDGameTests {
                 new ItemStack(upgrade(StorageUpgradeItem.StorageTier.NETHERITE)), false);
 
         long upgradedCapacity = tile.getEnergyStorage().getCapacityLong();
-        long base = (long) EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
+        long base = EnergyScaling.baseCapacity();
         helper.assertTrue(upgradedCapacity > base, "the upgrade did not enlarge the drawer");
 
         // More than the drawer could hold without the upgrade.
@@ -526,7 +526,7 @@ public final class IDGameTests {
         controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
                 placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
 
-        int perDrawer = EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
+        int perDrawer = (int) EnergyScaling.baseCapacity();
 
         helper.startSequence()
                 // The controller builds its network on its own tick, not when the link is made.
