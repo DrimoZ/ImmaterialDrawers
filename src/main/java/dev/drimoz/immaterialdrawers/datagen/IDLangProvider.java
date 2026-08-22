@@ -21,6 +21,10 @@ public class IDLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup." + ImmaterialDrawers.MOD_ID, "Immaterial Drawers");
+        // The noun that goes into Functional Storage's own upgrade sentence - see IDTooltips.
+        add("storageupgrade.obj.immaterialdrawers.energy_storage", "energy storage");
+        add("gui.immaterialdrawers.energy", "Energy: ");
+        add("gui.immaterialdrawers.capacity", "Capacity: ");
         addBlock(() -> IDContent.ENERGY_DRAWER.getBlock(), "Energy Drawer");
         addBlock(() -> IDContent.FRAMED_ENERGY_DRAWER.getBlock(), "Framed Energy Drawer");
     }

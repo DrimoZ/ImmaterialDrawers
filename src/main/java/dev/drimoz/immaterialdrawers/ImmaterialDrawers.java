@@ -2,6 +2,8 @@ package dev.drimoz.immaterialdrawers;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
+import com.buuz135.functionalstorage.block.tile.StorageControllerExtensionTile;
+import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
 import com.hrznstudio.titanium.module.BlockWithTile;
@@ -13,6 +15,7 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -138,6 +141,47 @@ public class ImmaterialDrawers extends ModuleController {
                     (blockEntity, side) -> blockEntity instanceof EnergyDrawerTile tile
                             ? tile.getEnergyStorage()
                             : null);
+        }
+
+        // And on Functional Storage's own controllers, so a cable on the controller reaches every
+        // energy drawer linked to it - the same way their controller already stands in for the
+        // items and the fluids of its network. Their controller cannot do this for us: it collects
+        // our deliberately empty item handler and has no third kind of content to look for.
+        //
+        // Registering a provider on another mod's block entity type is ordinary NeoForge - it never
+        // asks who owns the type - and it is the payoff of the reading in CLAUDE.md §7 that the
+        // connected-drawer list is public. See ControllerEnergyStorage.
+        for (BlockWithTile controller : List.of(
+                FunctionalStorage.DRAWER_CONTROLLER,
+                FunctionalStorage.FRAMED_DRAWER_CONTROLLER)) {
+            event.registerBlockEntity(
+                    Capabilities.EnergyStorage.BLOCK,
+                    controller.type().get(),
+                    (blockEntity, side) -> blockEntity instanceof StorageControllerTile<?> tile
+                            ? new ControllerEnergyStorage(tile)
+                            : null);
+        }
+
+        // Extensions are not controllers; they forward to the one they are linked to. Same
+        // treatment, so a wall reachable through an extension is reachable for energy too.
+        for (BlockWithTile extension : List.of(
+                FunctionalStorage.CONTROLLER_EXTENSION,
+                FunctionalStorage.FRAMED_CONTROLLER_EXTENSION)) {
+            event.registerBlockEntity(
+                    Capabilities.EnergyStorage.BLOCK,
+                    extension.type().get(),
+                    (blockEntity, side) -> {
+                        if (!(blockEntity instanceof StorageControllerExtensionTile<?> tile)
+                                || tile.getControllerPos() == null
+                                || tile.getLevel() == null
+                                || !tile.getLevel().isLoaded(tile.getControllerPos())) {
+                            return null;
+                        }
+                        return tile.getLevel().getBlockEntity(tile.getControllerPos())
+                                instanceof StorageControllerTile<?> controller
+                                ? new ControllerEnergyStorage(controller)
+                                : null;
+                    });
         }
     }
 }

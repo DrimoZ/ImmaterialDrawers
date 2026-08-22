@@ -1,5 +1,8 @@
 {
   "block.immaterialdrawers.energy_drawer": "Energy Drawer",
   "block.immaterialdrawers.framed_energy_drawer": "Framed Energy Drawer",
-  "itemGroup.immaterialdrawers": "Immaterial Drawers"
+  "gui.immaterialdrawers.capacity": "Capacity: ",
+  "gui.immaterialdrawers.energy": "Energy: ",
+  "itemGroup.immaterialdrawers": "Immaterial Drawers",
+  "storageupgrade.obj.immaterialdrawers.energy_storage": "energy storage"
 }

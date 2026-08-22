@@ -481,6 +481,67 @@ public final class IDGameTests {
         helper.succeed();
     }
 
+    /**
+     * A cable on the Storage Controller reaches every energy drawer linked to it.
+     *
+     * <p>The controller already stands in for the items and the fluids of its network; it cannot do
+     * the same for energy, because it collects our deliberately empty item handler and has no third
+     * kind of content to look for. So the aggregate is registered from our side, against
+     * <em>their</em> block entity type — NeoForge never asks who owns a type — reading the linked
+     * positions off the public {@code getConnectedDrawers()}. See CLAUDE.md §7.
+     *
+     * <p>Both directions are asserted. Insert alone would pass with an aggregate that reports a
+     * capacity and swallows what it is given.
+     */
+    @GameTest(template = WALL, timeoutTicks = 300)
+    public static void theControllerMovesEnergyForItsWholeNetwork(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+
+        List<BlockPos> placed = new ArrayList<>();
+        for (int x = 0; x < 4; x++) {
+            BlockPos pos = new BlockPos(x, 1, 0);
+            helper.setBlock(pos, IDContent.ENERGY_DRAWER.getBlock());
+            placed.add(pos);
+        }
+
+        StorageControllerTile<?> controller = (StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
+        controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
+                placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
+
+        int perDrawer = EnergyScaling.BASE_UNITS * EnergyScaling.FE_PER_UNIT;
+
+        helper.startSequence()
+                // The controller builds its network on its own tick, not when the link is made.
+                .thenIdle(SETTLE_TICKS)
+                .thenExecute(() -> {
+                    IEnergyStorage network = helper.getLevel().getCapability(
+                            Capabilities.EnergyStorage.BLOCK, helper.absolutePos(CONTROLLER), null);
+                    helper.assertTrue(network != null,
+                            "The Storage Controller has no EnergyStorage capability, so nothing can "
+                                    + "push or pull energy through it");
+
+                    helper.assertValueEqual(network.getMaxEnergyStored(), perDrawer * placed.size(),
+                            "capacity summed over the network");
+
+                    // Insert more than one drawer can take, to prove it spills into the next.
+                    int inserted = network.receiveEnergy(perDrawer * 3, false);
+                    helper.assertValueEqual(inserted, perDrawer * 3, "energy accepted by the network");
+                    helper.assertValueEqual(network.getEnergyStored(), perDrawer * 3, "energy stored across the network");
+
+                    // And that it really landed in the drawers, not in the aggregate.
+                    int inDrawers = 0;
+                    for (BlockPos pos : placed) {
+                        inDrawers += ((EnergyDrawerTile) helper.getBlockEntity(pos)).getEnergyStorage().getEnergyStored();
+                    }
+                    helper.assertValueEqual(inDrawers, perDrawer * 3, "energy actually held by the drawers");
+
+                    int extracted = network.extractEnergy(perDrawer * 2, false);
+                    helper.assertValueEqual(extracted, perDrawer * 2, "energy extracted from the network");
+                    helper.assertValueEqual(network.getEnergyStored(), perDrawer, "energy left in the network");
+                })
+                .thenSucceed();
+    }
+
     private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
         return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
     }

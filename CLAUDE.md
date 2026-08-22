@@ -270,6 +270,24 @@ des positions connectées pour agréger le FE nous-mêmes, sans toucher au code 
 Un mixin dans `ConnectedDrawers` reste possible en dernier recours, mais c'est un mixin dans un
 mod tiers à 56M de téléchargements : rejeté tant qu'une solution dans le contrat public existe.
 
+### [vérifié] Le contrôleur agrège le FE — et c'est nous qui le faisons
+
+Le contrôleur de FS agrège les item handlers et les fluid handlers de son réseau et les expose
+comme un inventaire et un tank. **Il ne peut pas faire pareil pour l'énergie** : il ramasse notre
+item handler vide et n'a pas de troisième type de contenu à chercher.
+
+Ce qu'il donne, c'est le réseau lui-même. `getConnectedDrawers()` est public des deux côtés, donc
+`storage/ControllerEnergyStorage` lit la liste des positions et fait la somme. Le provider est
+enregistré **sur leur `BlockEntityType`** — NeoForge ne demande jamais à qui appartient le type.
+Câble sur le contrôleur = tout le mur. Idem sur les extensions, qui redirigent vers leur contrôleur.
+Couvert par `theControllerMovesEnergyForItsWholeNetwork` (insert **et** extract : l'insert seul
+passerait avec un agrégat qui avale ce qu'on lui donne).
+
+**Ce que ça ne règle pas :** l'écran du contrôleur montre toujours items et fluides, pas l'énergie.
+Ce panneau est construit depuis les screen addons de *leur* tile, et il n'y a pas de hook pour un
+quatrième. L'ajouter voudrait dire un mixin, que le §7 refuse. Jade lit la capability et affiche le
+total ; c'est un panneau qui manque dans leur GUI, pas de l'énergie.
+
 ### [vérifié] Tâche 2 — 50 tiroirs sur un contrôleur, aucun rebuild
 
 `aWallOfDrawersDoesNotRebuildTheControllerEveryTick` : 50 Energy Drawers liés à un Storage

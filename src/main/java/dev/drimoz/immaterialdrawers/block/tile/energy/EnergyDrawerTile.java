@@ -8,12 +8,14 @@ import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
 import com.hrznstudio.titanium.annotation.Save;
 import com.hrznstudio.titanium.block.BasicTileBlock;
-import com.hrznstudio.titanium.client.screen.addon.EnergyBarScreenAddon;
+import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.client.gui.EnergyDrawerInfoGuiAddon;
 import com.hrznstudio.titanium.component.inventory.InventoryComponent;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -95,20 +97,20 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
     /**
      * Puts an energy bar in the drawer's screen.
      *
-     * <p>CLAUDE.md §8 suggested holding a Titanium {@code EnergyStorageComponent} by composition
-     * just to borrow its {@code getScreenAddons}. That turned out to be unnecessary:
-     * {@link EnergyBarScreenAddon} takes a plain {@link net.neoforged.neoforge.energy.IEnergyStorage},
-     * so our own storage can be handed to it directly and there is no second energy object to keep
-     * in step with the first.
-     *
-     * <p>Left of the upgrade rows, which start at y=70. Without this the screen opens on nothing but
-     * empty slots and gives no sign the drawer holds anything at all.
+     * <p>At the same place and the same size as the fluid drawer's: a 48x48 tile of the drawer front
+     * with the amount written across it. CLAUDE.md §8 planned to borrow Titanium's
+     * {@code EnergyStorageComponent} for its screen addon, and an earlier version used Titanium's
+     * {@code EnergyBarScreenAddon} directly - one line, works, and looks like a machine rather than
+     * like a drawer. A wall of drawers should not have one block whose screen came from somewhere
+     * else.
      */
     @OnlyIn(Dist.CLIENT)
     @Override
     public void initClient() {
         super.initClient();
-        addGuiAddonFactory(() -> new EnergyBarScreenAddon(10, 20, energyStorage));
+        addGuiAddonFactory(() -> new EnergyDrawerInfoGuiAddon(64, 16,
+                ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "textures/block/energy_drawer_front.png"),
+                this::getEnergyStorage));
     }
 
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */
