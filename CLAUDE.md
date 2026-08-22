@@ -82,10 +82,22 @@ Toute abstraction partagée (tile de base, logique du hack contrôleur, enregist
 capabilities) vit dans `block/` et `storage/`, **jamais** dans un sous-package `energy/`.
 Le futur Chemical Drawer doit pouvoir réutiliser la base sans refactor.
 
-### Avant la première release
+### Distribution
 
-Vérifier que le slug `immaterial-drawers` est libre sur **CurseForge** et **Modrinth**.
-Non confirmé au moment de la rédaction.
+| Plateforme | Slug | État |
+|---|---|---|
+| **CurseForge** | `immarterial-drawers` | **Projet créé** (23 août 2026), visible seulement via `/preview` tant qu'il n'est pas approuvé. |
+| **Modrinth** | `immaterial-drawers` | Libre (404 sur l'API), à réserver. |
+
+<https://www.curseforge.com/minecraft/mc-mods/immarterial-drawers>
+
+⚠️ **Les deux slugs ne s'écrivent pas pareil** — CurseForge est `imm**ar**terial`, Modrinth serait
+`imm**a**terial`. Un slug CurseForge se change difficilement une fois le projet approuvé et il
+apparaît dans chaque lien partagé ; si le `r` n'est pas voulu, c'est **maintenant** qu'il faut le
+corriger, pas après la première release.
+
+Le slug n'a aucun effet sur le `modid`, qui reste `immaterialdrawers` et reste figé (voir plus
+haut).
 
 ---
 
@@ -780,8 +792,9 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 ### Toujours non vérifié
 
-- **Le slug sur CurseForge.** Leur site répond 403 à une vérification automatisée : ni libre ni
-  pris, juste inconnu. À confirmer à la main avant la release.
+- ✅ **Le slug sur CurseForge** — réglé autrement que prévu : le projet a été créé à la main sous
+  `immarterial-drawers` (23 août 2026), en preview. Voir §2 — l'orthographe diffère de celle du
+  slug Modrinth visé, et c'est à trancher avant l'approbation.
 - ✅ **Le chargement client (tâche 6, partie code)** — `./gradlew runClient` : blockstates, modèles,
   textures et lang chargent sans erreur ni warning nous concernant, loader `functionalstorage:framedblock`
   compris. Voir §11.
