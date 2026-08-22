@@ -14,9 +14,15 @@ Newest first. Versions are `{mod}+{minecraft}`.
   handlers, no network rebuild across 60 idle ticks.
 - Storage upgrades scale the drawer, through `immaterialdrawers:energy_storage_modifier` — our own
   size component, attached to Functional Storage's upgrade items at load. 500,000 FE unupgraded,
-  2,048,000,000 FE with four Netherite upgrades, calibrated so all four slots do something and the
-  fourth still fits in the int that `IEnergyStorage` is built on.
+  2,048,000,000 FE with four Netherite upgrades, calibrated so all four slots do something.
 - An upgrade cannot be pulled out of a drawer too full to do without it.
+- Energy is stored in a long and clamped only at the standard capability, so a drawer can hold far
+  more than an int expresses. Jade reads the real figure through a plugin of ours; the controller
+  sums its whole network the same way.
+- The drawer hands energy to its neighbours on its own, because nothing in the Forge Energy
+  ecosystem pulls - a cable set to "extract" is describing its own output side, not draining what is
+  behind it.
+- Every number is in a config file, including the ones Functional Storage keeps fixed in code.
 - Void and creative behave as they do on a fluid drawer. Locking does not, deliberately: energy has
   one content type, so there is nothing to lock a drawer to.
 - Framed Energy Drawer. Framable with Functional Storage's own recipe — its `FramedBlock` check is

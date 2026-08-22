@@ -100,6 +100,11 @@ dependencies {
     runtimeOnly "maven.modrinth:cloth-config:${cloth_config_version}"
     runtimeOnly "maven.modrinth:jade:${jade_version}"
 
+    // Jade is also compiled against, for the plugin in compat/jade - but compileOnly, so it stays a
+    // soft dependency. The plugin class is only ever loaded by Jade's own annotation scan, which
+    // does not happen when Jade is absent.
+    compileOnly "maven.modrinth:jade:${jade_version}"
+
     // Both are hard dependencies, required at compile time and at runtime, and neither is
     // bundled: Titanium is LGPLv3 and must stay a separate jar, and Functional Storage is the
     // mod we extend - shipping a copy of it would be absurd.

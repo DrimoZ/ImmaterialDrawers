@@ -484,8 +484,46 @@ resterait aux deux tiers vide. 4 est la valeur qui utilise tout l'int.
 (`FunctionalStorageConfig.getLevelMult(-1)`). Sans clamp, le cast donne une capacité **négative** et
 un tiroir qui refuse tout FE. Couvert par `maxStorageUpgradeSaturatesWithoutOverflowing`.
 
-*Ne pas* stocker en `long` avec clamp à l'exposition en v1 — `getEnergyStored()` mentirait aux
-câbles et à Jade.
+### ⚠️ RENVERSÉ — le stockage est en `long`
+
+> Ce paragraphe disait : *« Ne pas stocker en `long` avec clamp à l'exposition en v1 —
+> `getEnergyStored()` mentirait aux câbles et à Jade. »* **C'était faux, et le clamp est la seule
+> façon de dépasser int.**
+
+`IEnergyStorage` est un int de bout en bout : 2 147 483 647 FE maximum. Tout mod qui stocke plus
+garde un nombre plus large en interne et clampe à la frontière. **Vérifié dans le jar de Powah :**
+`CableTile.receiveEnergy(long, boolean, Direction)`, et l'accès à la capability standard passe par
+un `AbstractEnergyStorage$ExternalAdapter`. C'est comme ça qu'une Nitro Ender Cell affiche 18B FE.
+
+`BigEnergyStorage` stocke donc en `long` (9,22 × 10¹⁸ FE, quatre milliards de fois le plafond int).
+`BigInteger` serait illimité, mais c'est une allocation par opération pour une marge déjà absurde.
+
+**Le clamp ment, et il faut savoir où — voir §11bis.** `getStoredLong()` / `getCapacityLong()` sont
+la vérité, et **tous** nos affichages les utilisent : face du bloc, écran, tooltip d'item,
+comparateur, provider Jade.
+
+Le contrôleur additionne aussi en `long` et sature **une seule fois à la fin** — sommer les vues
+clampées plafonnerait chaque tiroir à 2,1B *avant* l'addition, et un mur de tiroirs pleins
+s'afficherait comme une poignée.
+
+**`ENERGY_DIVISOR` reste à 4.** Le plafond int n'était que la moitié de sa raison d'être ; l'autre
+moitié est l'équilibrage, et c'est la courbe avec laquelle le mod est joué. Qui veut la marge que le
+`long` achète baisse le diviseur **en config** (à 2 : ~32,8B FE à fond).
+
+### §11bis. Qui voit quoi — les trois niveaux de lecture
+
+Question à se reposer à chaque nouvelle intégration : *ce lecteur passe-t-il par la capability
+standard, ou peut-on lui donner le vrai chiffre ?*
+
+| Niveau | Qui | Ce qu'il voit | Action possible |
+|---|---|---|---|
+| **Capability standard** | Câbles, machines, la plupart des compteurs | Clampé à 2,1B. `IEnergyStorage` est int, il n'existe pas de contrat FE en `long`. | **Aucune.** C'est le contrat de l'écosystème, pas notre bug. |
+| **Mods de sonde** | Jade ✅, TOP, WTHIT… | Ce qu'on leur envoie. Chacun a son API de plugin. | **Un provider par mod**, ~40 lignes, qui appelle `getStoredLong()` et `EnergyFormat.format`. |
+| **API propriétaires** | Mekanism (Joules), Powah (`long`) | Rien, sauf adaptateur dédié. | Seulement si une intégration le justifie. Hors scope v1. |
+
+**Le point d'architecture :** la vérité et le formatage vivent à un seul endroit
+(`BigEnergyStorage` / `ControllerEnergyStorage` / `util/EnergyFormat`). Toute couche de compat
+future est un adaptateur mince par-dessus — jamais une réimplémentation du calcul.
 
 Le test qui compte est `everyStorageUpgradeSlotChangesTheCapacity` : chaque slot doit **strictement**
 augmenter la capacité et rester positif. Un diviseur trop petit sature avant le 4ᵉ slot, un trop
@@ -496,8 +534,13 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
 - **Comparateur** — **[fait]** `Drawer.getAnalogOutputSignal` dispatche sur `FluidDrawerTile` /
   `ItemControllableDrawerTile` ; notre tile tombe sur la branche item et retournerait 0
   (handler vide). Override dans `EnergyDrawerBlock`.
-- **Jade / TOP** — `instanceof` en dur dans `compat/jade/DrawerComponentProvider.java` et
-  `compat/top/FunctionalDrawerProvider.java`. Intégration à écrire.
+- **Jade** — **[fait]** `compat/jade/IDJadePlugin`. Leur ligne énergie intégrée lit la capability,
+  donc elle affiche 2,14G dès que le total dépasse int — deux tiroirs 4x netherite suffisent. Notre
+  provider envoie les `long` dans le paquet server-data de Jade, ce qui est aussi la seule façon
+  correcte pour le contrôleur : son total est la somme d'un réseau que le client n'a pas forcément
+  chargé. Enregistré aussi sur **leur** bloc contrôleur.
+- **TOP** — à écrire, même forme que Jade (§11bis). `instanceof` en dur dans
+  `compat/top/FunctionalDrawerProvider.java` de leur côté.
 - **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.
   Principal poste de travail artistique. **Textures actuelles = placeholders générés**
   (`scratchpad/GenTextures.java`), volontairement plates, à remplacer entièrement.
@@ -585,9 +628,10 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâches 1 à 5 faites, tâche 6 entamée — datagen et teinte faits (22 août 2026,
-`SPIKE.md`). Reste la jauge d'énergie, la GUI, et surtout : lancer un client. Rien de ce qui a
-été écrit sous `assets/` n'a jamais été chargé par quoi que ce soit.**
+**État : tâches 1 à 5 faites, tâche 6 en cours (23 août 2026). Client lancé et validé. Datagen,
+teinte, affichages (face, écran, tooltip), config complète, stockage en `long`, agrégation
+contrôleur, push vers les voisins et provider Jade : faits. Reste la vraie jauge d'énergie — les
+textures sont des placeholders générés — puis TOP, puis la tâche 7.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**

@@ -4,6 +4,15 @@ Ordered, not scheduled. The order is the point: each step is what makes the next
 
 ## Now
 
+**Energy is stored in a long, not an int.** `IEnergyStorage` is an int API, so anything reading the
+standard capability - cables, machines, most meters - sees at most 2,147,483,647 FE. Every mod that
+holds more does the same clamp; Powah's cable is literally `receiveEnergy(long, boolean, Direction)`
+behind an adapter. The long values are the truth and every display in this mod uses them.
+
+**Everything is configurable.** Base size, FE per unit, the upgrade divisor, whether the drawer
+pushes, its throughput and its tick interval - all in `immaterialdrawers-common.toml`, deliberately
+wider than what Functional Storage exposes for its own drawers.
+
 **6 — Rendering, datagen, GUI.** Datagen and the framed tint are done: blockstates, item models,
 loot tables, recipes and en_us are generated and committed, block models and textures are
 hand-authored, and the framed drawer registers the tint handler Functional Storage cannot register
