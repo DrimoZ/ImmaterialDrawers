@@ -547,11 +547,24 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
 - **Comparateur** — **[fait]** `Drawer.getAnalogOutputSignal` dispatche sur `FluidDrawerTile` /
   `ItemControllableDrawerTile` ; notre tile tombe sur la branche item et retournerait 0
   (handler vide). Override dans `EnergyDrawerBlock`.
-- **Jade** — **[fait]** `compat/jade/IDJadePlugin`. Leur ligne énergie intégrée lit la capability,
-  donc elle affiche 2,14G dès que le total dépasse int — deux tiroirs 4x netherite suffisent. Notre
-  provider envoie les `long` dans le paquet server-data de Jade, ce qui est aussi la seule façon
-  correcte pour le contrôleur : son total est la somme d'un réseau que le client n'a pas forcément
-  chargé. Enregistré aussi sur **leur** bloc contrôleur.
+- **Jade** — **[fait]** `compat/jade/IDJadePlugin`. Leur barre d'énergie intégrée lit la capability,
+  donc elle affiche 2,14G dès que le total dépasse int — deux tiroirs 4× netherite suffisent.
+
+  **On alimente *leur* barre, on n'ajoute pas de ligne.** Une première version enregistrait un
+  `IBlockComponentProvider` et écrivait son propre texte : deux affichages de la même chose dans
+  deux styles différents. Le bon hook est `registerEnergyStorage`, et `EnergyView.of(long, long)`
+  prend déjà des `long` — Jade n'a jamais été la pièce incapable de compter au-delà d'un int.
+
+  **Pourquoi ça remplace leur lecture au lieu de s'y ajouter :** `getServerExtensionData` renvoie
+  **une seule** `Map.Entry` issue d'un lookup hiérarchique, donc Jade retient le provider le plus
+  spécifique. S'enregistrer sur nos classes de tuile l'emporte sur son provider universel.
+
+  Le provider doit implémenter les deux moitiés (`IServerExtensionProvider` +
+  `IClientExtensionProvider`) avec **le même `getUid()`** : le client retrouve son provider par
+  l'UID que le serveur a estampillé sur les données.
+
+  Enregistré aussi sur **leur** bloc contrôleur : son total est la somme d'un réseau que le client
+  n'a pas forcément chargé, donc il doit être calculé côté serveur.
 - **TOP** — à écrire, même forme que Jade (§11bis). `instanceof` en dur dans
   `compat/top/FunctionalDrawerProvider.java` de leur côté.
 - **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.

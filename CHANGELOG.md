@@ -17,8 +17,9 @@ Newest first. Versions are `{mod}+{minecraft}`.
   2,048,000,000 FE with four Netherite upgrades, calibrated so all four slots do something.
 - An upgrade cannot be pulled out of a drawer too full to do without it.
 - Energy is stored in a long and clamped only at the standard capability, so a drawer can hold far
-  more than an int expresses. Jade reads the real figure through a plugin of ours; the controller
-  sums its whole network the same way.
+  more than an int expresses. Jade's own energy bar shows the real figure, fed through its
+  registerEnergyStorage hook rather than a second line of our own; the controller sums its whole
+  network the same way.
 - The drawer hands energy to its neighbours on its own, because nothing in the Forge Energy
   ecosystem pulls - a cable set to "extract" is describing its own output side, not draining what is
   behind it.
