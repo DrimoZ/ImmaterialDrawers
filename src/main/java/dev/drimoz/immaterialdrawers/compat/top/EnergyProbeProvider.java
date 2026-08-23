@@ -4,13 +4,17 @@ import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
+import mcjty.theoneprobe.api.IProbeConfig;
+import mcjty.theoneprobe.api.IProbeConfigProvider;
 import mcjty.theoneprobe.api.IProbeHitData;
+import mcjty.theoneprobe.api.IProbeHitEntityData;
 import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
 import mcjty.theoneprobe.api.ITheOneProbe;
 import mcjty.theoneprobe.api.ProbeMode;
 import mcjty.theoneprobe.apiimpl.styles.ProgressStyle;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -35,13 +39,26 @@ import java.util.function.Function;
  * {@code ControllerEnergyStorage}; nothing is recomputed here, which is the rule §11bis sets for
  * every compat layer.
  */
-public class EnergyProbeProvider implements IProbeInfoProvider {
+public class EnergyProbeProvider implements IProbeInfoProvider, IProbeConfigProvider {
 
-    /** What {@code IDTopPlugin} sends across InterModComms. */
+    /**
+     * What {@code IDTopPlugin} sends across InterModComms.
+     *
+     * <p>Registered twice, as two different things, and the second is not optional. TOP asks
+     * <em>every</em> provider for its say — unlike Jade, which keeps only the most specific one — so
+     * its own RF readout and ours both appeared, stacked. {@code IProbeConfigProvider} is TOP's
+     * answer to exactly that: it lets a mod switch the default RF display off for the blocks it
+     * draws itself.
+     */
     public static final Function<ITheOneProbe, Void> REGISTER = probe -> {
-        probe.registerProvider(new EnergyProbeProvider());
+        EnergyProbeProvider provider = new EnergyProbeProvider();
+        probe.registerProvider(provider);
+        probe.registerProbeConfigProvider(provider);
         return null;
     };
+
+    /** {@code IProbeConfig}'s "do not show RF at all" mode. */
+    private static final int RF_HIDDEN = 0;
 
     private static final int FILLED = 0xFFC4764A;
     private static final int ALTERNATE = 0xFF8E5334;
@@ -81,5 +98,27 @@ public class EnergyProbeProvider implements IProbeInfoProvider {
                 .filledColor(FILLED)
                 .alternateFilledColor(ALTERNATE)
                 .backgroundColor(BACKGROUND));
+    }
+
+    /**
+     * Turns TOP's own RF readout off for the blocks we draw ourselves.
+     *
+     * <p>Without this there are two bars: theirs, read off the int capability and therefore wrong
+     * above 2.1B, and ours. TOP collects from every registered provider rather than picking one, so
+     * suppression has to be explicit — this is the hook it provides for it.
+     */
+    @Override
+    public void getProbeConfig(IProbeConfig config, Player player, Level level, BlockState state,
+                               IProbeHitData data) {
+        BlockEntity be = level.getBlockEntity(data.getPos());
+        if (be instanceof EnergyDrawerTile || be instanceof StorageControllerTile<?>) {
+            config.setRFMode(RF_HIDDEN);
+        }
+    }
+
+    /** Entities have no energy drawers on them. Required by the interface, nothing to say. */
+    @Override
+    public void getProbeConfig(IProbeConfig config, Player player, Level level, Entity entity,
+                               IProbeHitEntityData data) {
     }
 }

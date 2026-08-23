@@ -5,10 +5,11 @@
   },
   "elements": [
     {
-      "from": [0, 0, 0],
-      "to": [16, 16, 0.02],
+      "__comment": "The recessed panel itself, sitting at the bottom of the one-pixel well.",
+      "from": [1, 1, 1],
+      "to": [15, 15, 1.02],
       "faces": {
-        "north": {"uv": [0, 0, 16, 16], "texture": "#front", "tintindex": 0, "cullface": "north"}
+        "north": {"uv": [1, 1, 15, 15], "texture": "#front", "tintindex": 0}
       }
     }
   ]
