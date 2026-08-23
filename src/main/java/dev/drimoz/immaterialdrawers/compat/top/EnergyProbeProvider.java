@@ -12,7 +12,7 @@ import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.IProbeInfoProvider;
 import mcjty.theoneprobe.api.ITheOneProbe;
 import mcjty.theoneprobe.api.ProbeMode;
-import mcjty.theoneprobe.apiimpl.styles.ProgressStyle;
+import mcjty.theoneprobe.config.Config;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -60,10 +60,6 @@ public class EnergyProbeProvider implements IProbeInfoProvider, IProbeConfigProv
     /** {@code IProbeConfig}'s "do not show RF at all" mode. */
     private static final int RF_HIDDEN = 0;
 
-    private static final int FILLED = 0xFFC4764A;
-    private static final int ALTERNATE = 0xFF8E5334;
-    private static final int BACKGROUND = 0xFF2A2D30;
-
     @Override
     public ResourceLocation getID() {
         return ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "energy");
@@ -93,11 +89,17 @@ public class EnergyProbeProvider implements IProbeInfoProvider, IProbeConfigProv
             return;
         }
 
-        probeInfo.progress(stored, capacity, new ProgressStyle()
-                .suffix(" FE")
-                .filledColor(FILLED)
-                .alternateFilledColor(ALTERNATE)
-                .backgroundColor(BACKGROUND));
+        // TOP's own bar, exactly as it draws one for any other energy block: its default style, its
+        // configured RF colours, its configured number format. The only thing of ours in here is
+        // the pair of longs. A bespoke palette would make this block the odd one out on a HUD whose
+        // whole job is consistency - and the colours are a player's config setting, not ours to
+        // decide.
+        probeInfo.progress(stored, capacity, probeInfo.defaultProgressStyle()
+                .suffix("RF")
+                .filledColor(Config.rfbarFilledColor)
+                .alternateFilledColor(Config.rfbarAlternateFilledColor)
+                .borderColor(Config.rfbarBorderColor)
+                .numberFormat(Config.rfFormat.get()));
     }
 
     /**
