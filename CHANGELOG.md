@@ -24,6 +24,9 @@ Newest first. Versions are `{mod}+{minecraft}`.
   ecosystem pulls - a cable set to "extract" is describing its own output side, not draining what is
   behind it.
 - Every number is in a config file, including the ones Functional Storage keeps fixed in code.
+- The drawer front lights from the bottom with the charge, at full brightness so it reads in the
+  dark. A recessed panel rather than the vertical bar every energy block wears, because a wall of
+  drawers should not contain one block from somewhere else.
 - Void and creative behave as they do on a fluid drawer. Locking does not, deliberately: energy has
   one content type, so there is nothing to lock a drawer to.
 - Framed Energy Drawer. Framable with Functional Storage's own recipe — its `FramedBlock` check is

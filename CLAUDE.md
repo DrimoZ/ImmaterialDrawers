@@ -577,9 +577,18 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   **Le `@FeaturePlugin` de Titanium est ce qui rend le `compileOnly` sûr** : le plugin manager
   n'instancie la classe que si `theoneprobe` est chargé, donc rien n'est classloadé dans un pack
   sans TOP. L'entrée se fait par `InterModComms`, la porte publiée de TOP, pas par un appel direct.
-- **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.
-  Principal poste de travail artistique. **Textures actuelles = placeholders générés**
-  (`scratchpad/GenTextures.java`), volontairement plates, à remplacer entièrement.
+- **Rendu** — **[fait, à regarder]** l'énergie n'a pas de texture de fluide, donc la jauge se conçoit
+  à partir de rien. Choix retenu : **le panneau encastré de la façade s'allume par le bas**, pas une
+  barre verticale de machine — un mur de tiroirs ne doit pas contenir un bloc qui vient d'ailleurs.
+  C'est l'idée que FS applique au fluide (le contenu se voit par la fenêtre de la façade), avec une
+  lueur à la place d'une texture de fluide.
+
+  Dessiné à `LightTexture.FULL_BRIGHT` plutôt qu'à la lumière du bloc : une jauge illisible dans une
+  pièce sombre ne sert à rien. Les V suivent le remplissage au lieu de s'étirer dessus, donc le
+  dégradé et ses stries restent en place quand le niveau monte. Marche sur le framed sans rien de
+  plus — c'est dessiné par-dessus la texture du joueur.
+
+  **Le reste des textures = placeholders générés**, volontairement plats, à remplacer.
 
   **Le modèle framed passe par le loader de FS.** `models/block/framed_energy_drawer.json` déclare
   `"loader": "functionalstorage:framedblock"`. `FramedModel` est générique : il indexe ses
