@@ -648,6 +648,30 @@ eux demanderait un mixin. **Override à supprimer quand le plancher passera à 1
 Troisième instance de la dérive 1.5.7 / branche, et la première qui casse un monde plutôt qu'une
 compilation.
 
+### Le design est repris à la main — deux contraintes à ne pas casser
+
+Les textures et modèles actuels sont des placeholders générés, destinés à être remplacés à la main.
+**Deux choses dans ces fichiers ne sont pas des choix esthétiques**, et les casser donne un bloc qui
+compile, se pose, et n'affiche rien :
+
+1. **La façade doit être encastrée d'au moins 1 pixel** (`models/block/energy_drawer.json` : corps de
+   z=1 à 16, plus un rebord). `BaseDrawerRenderer` fait `translate(0, 0, -0.5/16)` avant de rendre la
+   main : sur un cube plein, le plan de dessin tombe *dans* la géométrie, et la jauge comme le nombre
+   sont masqués par notre propre face. C'est pour ça que les modèles de FS ont une plaque avant à
+   z=0,5..2,5.
+2. **La texture de façade doit avoir une fenêtre transparente**, avec `energy_drawer_back` derrière.
+   La GUI dessine le contenu *puis* blitte la façade par-dessus — l'ordre de
+   `FluidDrawerInfoGuiAddon`. Sur une façade opaque il ne reste qu'à peindre par-dessus, ce qui donne
+   un aplat de couleur et pas une fenêtre de tiroir.
+
+Reste entièrement libre : couleurs, formes, le `FILL` de `EnergyDrawerInfoGuiAddon`,
+`energy_gauge.png`, et les constantes `PANEL_*` de `EnergyDrawerRenderer` si la fenêtre change de
+taille.
+
+Deux détails qui accrochent : les variantes framed ont besoin de `"tintindex": 0` sur leurs faces,
+sinon `IDColors` n'a rien à teindre ; et les chemins de modèles restent
+`immaterialdrawers:block/<nom de registre>`, dérivés par `IDBlockStateProvider`.
+
 ### Dette permanente
 
 54 références à `FluidDrawerTile` dans 15 fichiers. Chaque release de FS peut ajouter un
