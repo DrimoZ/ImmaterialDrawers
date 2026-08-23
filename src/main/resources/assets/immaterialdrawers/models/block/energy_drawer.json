@@ -3,7 +3,8 @@
   "textures": {
     "particle": "immaterialdrawers:block/energy_drawer_side",
     "side": "immaterialdrawers:block/energy_drawer_side",
-    "front": "immaterialdrawers:block/energy_drawer_front"
+    "front": "immaterialdrawers:block/energy_drawer_front",
+    "back": "immaterialdrawers:block/energy_drawer_back"
   },
   "elements": [
     {
@@ -11,12 +12,20 @@
       "from": [0, 0, 1],
       "to": [16, 16, 16],
       "faces": {
-        "north": {"uv": [0, 0, 16, 16], "texture": "#front"},
+        "north": {"uv": [0, 0, 16, 16], "texture": "#back"},
         "south": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south"},
         "east":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east"},
         "west":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west"},
         "up":    {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "up"},
         "down":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "down"}
+      }
+    },
+    {
+      "__comment": "The front plate, in front of the backing. Its window is transparent, so what the block entity renderer draws in the well shows through - the same arrangement the fluid drawer uses.",
+      "from": [0, 0, 0.98],
+      "to": [16, 16, 1],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#front"}
       }
     },
     {
