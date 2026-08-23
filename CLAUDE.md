@@ -164,14 +164,19 @@ la persistance passe par `@Save` / `NBTManager`, l'enregistrement par `ModuleCon
 
 ### Mods de test dans le run de dev
 
-`runtimeOnly` uniquement — jamais compilés contre, jamais expédiés. Ils répondent à la seule
-question que les game tests ne peuvent pas poser : est-ce qu'un vrai câble, d'un vrai mod, fait
-vraiment entrer et sortir du FE de ce bloc ?
+Jamais expédiés, jamais requis pour jouer. Ils répondent à la seule question que les game tests ne
+peuvent pas poser : est-ce qu'un vrai câble, d'un vrai mod, fait vraiment entrer et sortir du FE de
+ce bloc ?
+
+Powah est `runtimeOnly` seul. **Jade et TOP sont aussi `compileOnly`**, parce qu'on écrit un plugin
+pour chacun (§11bis) — ça reste une dépendance douce : la classe n'est chargée que par le scan de
+Jade, ou par le `@FeaturePlugin` de Titanium pour TOP.
 
 | Mod | Pourquoi |
 |---|---|
 | **Powah** | Petit, énergie en FE pur sans conversion, et il a les trois choses nécessaires : un générateur, des câbles, et des cellules à comparer. Mekanism stocke des Joules et convertit à la frontière — un échec y serait ambigu. |
 | **Jade** | Lit la capability `EnergyStorage` de n'importe quel bloc et l'affiche au réticule. Le plus rapide pour voir si la capability répond du tout. |
+| **The One Probe** | L'autre mod de sonde. Deux APIs différentes pour le même besoin — c'est ce qui a fait écrire le §11bis. |
 | GuideME, Cloth Config | Dépendances dures de Powah. |
 
 **Une coordonnée maven `runtimeOnly` amène le jar, pas les mods dont ce jar a besoin**, et FML fait
@@ -531,7 +536,7 @@ standard, ou peut-on lui donner le vrai chiffre ?*
 | Niveau | Qui | Ce qu'il voit | Action possible |
 |---|---|---|---|
 | **Capability standard** | Câbles, machines, la plupart des compteurs | Clampé à 2,1B. `IEnergyStorage` est int, il n'existe pas de contrat FE en `long`. | **Aucune.** C'est le contrat de l'écosystème, pas notre bug. |
-| **Mods de sonde** | Jade ✅, TOP, WTHIT… | Ce qu'on leur envoie. Chacun a son API de plugin. | **Un provider par mod**, ~40 lignes, qui appelle `getStoredLong()` et `EnergyFormat.format`. |
+| **Mods de sonde** | Jade ✅, TOP ✅, WTHIT… | Ce qu'on leur envoie. Chacun a son API de plugin. | **Un provider par mod**, ~40 lignes, qui appelle `getStoredLong()` et `EnergyFormat.format`. |
 | **API propriétaires** | Mekanism (Joules), Powah (`long`) | Rien, sauf adaptateur dédié. | Seulement si une intégration le justifie. Hors scope v1. |
 
 **Le point d'architecture :** la vérité et le formatage vivent à un seul endroit
@@ -565,8 +570,13 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
 
   Enregistré aussi sur **leur** bloc contrôleur : son total est la somme d'un réseau que le client
   n'a pas forcément chargé, donc il doit être calculé côté serveur.
-- **TOP** — à écrire, même forme que Jade (§11bis). `instanceof` en dur dans
-  `compat/top/FunctionalDrawerProvider.java` de leur côté.
+- **TOP** — **[fait]** `compat/top/IDTopPlugin` + `EnergyProbeProvider`. Même réponse que Jade, autre
+  API : `IProbeInfo.progress` prend des `long`, donc on remplit **sa** barre au lieu d'ajouter une
+  ligne.
+
+  **Le `@FeaturePlugin` de Titanium est ce qui rend le `compileOnly` sûr** : le plugin manager
+  n'instancie la classe que si `theoneprobe` est chargé, donc rien n'est classloadé dans un pack
+  sans TOP. L'entrée se fait par `InterModComms`, la porte publiée de TOP, pas par un appel direct.
 - **Rendu** — l'énergie n'a pas de texture de fluide. Jauge émissive custom à concevoir.
   Principal poste de travail artistique. **Textures actuelles = placeholders générés**
   (`scratchpad/GenTextures.java`), volontairement plates, à remplacer entièrement.
@@ -657,7 +667,7 @@ une raison de plus de viser un périmètre livrable en un mois.
 **État : tâches 1 à 5 faites, tâche 6 en cours (23 août 2026). Client lancé et validé. Datagen,
 teinte, affichages (face, écran, tooltip), config complète, stockage en `long`, agrégation
 contrôleur, push vers les voisins et provider Jade : faits. Reste la vraie jauge d'énergie — les
-textures sont des placeholders générés — puis TOP, puis la tâche 7.**
+textures sont des placeholders générés — puis la tâche 7. Jade et TOP sont faits.**
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**

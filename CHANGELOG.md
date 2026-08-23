@@ -19,7 +19,7 @@ Newest first. Versions are `{mod}+{minecraft}`.
 - Energy is stored in a long and clamped only at the standard capability, so a drawer can hold far
   more than an int expresses. Jade's own energy bar shows the real figure, fed through its
   registerEnergyStorage hook rather than a second line of our own; the controller sums its whole
-  network the same way.
+  network the same way. The One Probe gets the same treatment through its own API.
 - The drawer hands energy to its neighbours on its own, because nothing in the Forge Energy
   ecosystem pulls - a cable set to "extract" is describing its own output side, not draining what is
   behind it.

@@ -105,6 +105,11 @@ dependencies {
     // does not happen when Jade is absent.
     compileOnly "maven.modrinth:jade:${jade_version}"
 
+    // Same arrangement for The One Probe. Titanium's @FeaturePlugin gates the class on the mod
+    // being present, so it is never loaded when TOP is absent.
+    compileOnly "maven.modrinth:the-one-probe:${top_version}"
+    runtimeOnly "maven.modrinth:the-one-probe:${top_version}"
+
     // Both are hard dependencies, required at compile time and at runtime, and neither is
     // bundled: Titanium is LGPLv3 and must stay a separate jar, and Functional Storage is the
     // mod we extend - shipping a copy of it would be absurd.
