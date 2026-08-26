@@ -1,6 +1,10 @@
 package dev.drimoz.immaterialdrawers.datagen;
 
 import com.hrznstudio.titanium.block.BasicBlock;
+import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
+import dev.drimoz.immaterialdrawers.registry.IDContent;
+import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.Tags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
@@ -31,5 +35,14 @@ public class IDRecipeProvider extends RecipeProvider {
         blocks.stream()
                 .filter(block -> block instanceof BasicBlock)
                 .forEach(block -> ((BasicBlock) block).registerRecipe(output));
+
+        // The augment is an item, not a block, so it has no registerRecipe hook to be collected
+        // from. An ender pearl for the "wireless" half and copper for the "charger" half.
+        TitaniumShapedRecipeBuilder.shapedRecipe(IDContent.WIRELESS_CHARGER.get())
+                .pattern("CRC").pattern("RER").pattern("CRC")
+                .define('C', Tags.Items.INGOTS_COPPER)
+                .define('R', Tags.Items.DUSTS_REDSTONE)
+                .define('E', Items.ENDER_PEARL)
+                .save(output);
     }
 }

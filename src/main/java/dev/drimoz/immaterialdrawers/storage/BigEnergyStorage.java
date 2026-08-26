@@ -146,6 +146,23 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
     }
 
     /**
+     * The most this drawer may offer someone else right now.
+     *
+     * <p>Anything handing energy outward has to clamp its offer to this, because
+     * {@code receiveEnergy} on the far side is committed the moment it is called: offer more than
+     * is held, and the receiver keeps the difference while this drawer gives up only what it has.
+     * That was a real defect — a drawer with 1 FE handed a machine 2,500 every four ticks — so it
+     * lives in one place now, and the next thing that pushes energy cannot reintroduce it.
+     * {@code pushingEnergyNeverCreatesIt} is the test.
+     *
+     * <p>A creative drawer is unlimited, which is the one case where offering more than
+     * {@link #getStoredRaw()} is correct.
+     */
+    public long availableToGive() {
+        return isDrawerCreative() ? Long.MAX_VALUE : energy;
+    }
+
+    /**
      * Resizes the drawer when its storage upgrades change.
      *
      * <p>Shrinking spills, and that is the caller's problem to prevent rather than this object's to

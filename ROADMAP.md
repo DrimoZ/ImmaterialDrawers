@@ -28,30 +28,33 @@ result.
 Then the gauge itself: energy has no fluid texture to borrow, so it is designed from nothing. The
 current textures are flat generated placeholders and are meant to be thrown away.
 
+**7 — Augments, started.** These are the product; the block is the support - a drawer that only
+holds FE duplicates a Powah energy cell. The **Wireless Charger** is in: put it in a utility slot and
+the wall keeps the tools, armour and offhand of everyone in range charged. It was built instead of
+the throwaway behaviour the plan called for, because it proves the same thing - that Functional
+Storage really calls `work()` on an upgrade of ours - and leaves something behind.
+
 ## Then
 
-**7 — Augments.** These are the product; the block is the support. A drawer that only holds FE
-duplicates a Powah energy cell. Register one trivial `FunctionalUpgradeBehavior` first to prove the
-registry end to end, then:
+**7 — The rest of the augments.**
 
-- **Wireless Charger** — the wall of drawers charges tools and players in range. Nobody has this,
-  and it goes through Functional Storage's one official extension point.
 - Auto-output to adjacent blocks — `MoveFluidsBehavior` is the model.
 - Fuel-burning generator — `GenerateFluidBehavior` is the model.
 - Redstone on a charge threshold — already in the interface.
 
 ## Still open
 
-- Which slug the mod gets. `immaterial-drawers` is free on Modrinth and appears free on CurseForge
-  (403 to an automated check, so confirm by hand before release).
-- Whether `BASE_UNITS` and `ENERGY_DIVISOR` should be config values rather than constants. They are
-  calibrated against the int ceiling, so a pack author who moves them can break the top of the
-  curve — which argues for leaving them alone, or for validating them at load.
-- Jade and The One Probe integration. Both dispatch on Functional Storage's tile types by
-  `instanceof`, so both need writing rather than inheriting.
+- The CurseForge project is created as `immaterial-drawers` and waits for approval; the same slug is
+  still to be reserved on Modrinth.
 
 ## Settled
 
+- **Every number is config, including the ones Functional Storage keeps in code.** The worry was
+  that a pack author moving `ENERGY_DIVISOR` breaks the top of the curve. `EnergyScaling.capacityFor`
+  clamps instead of overflowing, so the failure mode is a flat top, not a negative capacity.
+- **Probe mods get a provider each, and it feeds their bar rather than adding a line.** Jade and The
+  One Probe both read the standard capability, so both stop at 2.1B without one. Neither API was the
+  limitation: `EnergyView.of` and `IProbeInfo.progress` have taken longs all along.
 - **NeoForge 1.21.1 only.** No Fabric, no multiloader. 1.21.1 is not a choice — it is where
   Functional Storage is.
 - **Umbrella name, not "Energy Drawers".** The mod id is written into every save that contains one

@@ -2,7 +2,9 @@ package dev.drimoz.immaterialdrawers.datagen;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import net.minecraft.core.registries.BuiltInRegistries;
+import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -35,5 +37,12 @@ public class IDItemModelProvider extends ItemModelProvider {
             // existing-file helper does not see them from here.
             getBuilder(path).parent(new ModelFile.UncheckedModelFile(IDBlockStateProvider.modelFor(block)));
         }
+
+        // Items that are not blocks get the flat treatment every upgrade in Functional Storage has.
+        String charger = BuiltInRegistries.ITEM.getKey(IDContent.WIRELESS_CHARGER.get()).getPath();
+        getBuilder(charger)
+                .parent(new ModelFile.UncheckedModelFile(ResourceLocation.parse("item/generated")))
+                .texture("layer0", ResourceLocation.fromNamespaceAndPath(
+                        ImmaterialDrawers.MOD_ID, "item/" + charger));
     }
 }

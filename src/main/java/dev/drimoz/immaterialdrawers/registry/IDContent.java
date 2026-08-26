@@ -5,7 +5,11 @@ import com.hrznstudio.titanium.module.DeferredRegistryHelper;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.energy.EnergyDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
+import com.buuz135.functionalstorage.item.UpgradeItem;
+import dev.drimoz.immaterialdrawers.augment.ChargeNearbyBehavior;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
@@ -36,6 +40,15 @@ public final class IDContent {
 
     public static BlockWithTile FRAMED_ENERGY_DRAWER;
 
+    /**
+     * The Wireless Charger augment.
+     *
+     * <p>An {@code UpgradeItem} built from a behaviour is a utility upgrade carrying the
+     * {@code FUNCTIONAL_BEHAVIOR} component - Functional Storage's own Redstone Upgrade is made the
+     * same way, in the same one line.
+     */
+    public static DeferredHolder<Item, Item> WIRELESS_CHARGER;
+
     private IDContent() {
     }
 
@@ -62,5 +75,8 @@ public final class IDContent {
                 block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
                         (EnergyDrawerBlock) block.get(), new Item.Properties()),
                 ImmaterialDrawers.TAB);
+
+        WIRELESS_CHARGER = registries.registerGeneric(Registries.ITEM, "wireless_charger",
+                () -> new UpgradeItem(ChargeNearbyBehavior.INSTANCE));
     }
 }

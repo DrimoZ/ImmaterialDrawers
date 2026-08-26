@@ -7,7 +7,10 @@ import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
 import com.buuz135.functionalstorage.recipe.FramedDrawerRecipe;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
+import com.buuz135.functionalstorage.item.FSAttachments;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
+import com.buuz135.functionalstorage.item.component.FunctionalUpgradeBehavior;
+import dev.drimoz.immaterialdrawers.augment.ChargeNearbyBehavior;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
@@ -25,7 +28,10 @@ import net.minecraft.world.item.Items;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -611,6 +617,91 @@ public final class IDGameTests {
                             "total FE across the drawer and its neighbour. More than was put in means "
                                     + "the push is offering more than the drawer holds while only "
                                     + "giving up what it has");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * The augment reaches Functional Storage's registry, and the item carries it.
+     *
+     * <p>This is what CLAUDE.md §12 task 7 asks to prove before building augments on top of it:
+     * {@code FunctionalUpgradeBehavior} is a synchronised registry dispatched by codec, and an
+     * upgrade whose codec never landed in it is an item that silently does nothing. Both halves
+     * matter — the codec being registered, and the item actually carrying the component that makes
+     * the drawer call it.
+     */
+    @GameTest(template = PLATFORM)
+    public static void augmentIsRegisteredWithFunctionalStorage(GameTestHelper helper) {
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "charge_nearby");
+
+        helper.assertTrue(FunctionalUpgradeBehavior.REGISTRY.containsKey(id),
+                "The augment's codec is not in Functional Storage's functional_upgrade_behavior "
+                        + "registry under " + id + ". Their dispatch is by codec, so an unregistered "
+                        + "behaviour is an upgrade that does nothing and says nothing.");
+        helper.assertTrue(FunctionalUpgradeBehavior.REGISTRY.get(id) == ChargeNearbyBehavior.CODEC,
+                "Something else is registered under " + id);
+
+        ItemStack charger = new ItemStack(IDContent.WIRELESS_CHARGER.get());
+        helper.assertTrue(charger.get(FSAttachments.FUNCTIONAL_BEHAVIOR) instanceof ChargeNearbyBehavior,
+                "The Wireless Charger item does not carry the behaviour component, so the drawer "
+                        + "will never call it");
+
+        helper.succeed();
+    }
+
+    /**
+     * The charger fills what a player is carrying, and conserves energy doing it.
+     *
+     * <p>Two assertions in one test on purpose: that the augment does its job at all — which is also
+     * the proof that Functional Storage really calls {@code work()} on an upgrade in a utility slot
+     * — and that the drawer loses exactly what the battery gains.
+     *
+     * <p>The conservation half is not padding. The identical mistake in the push loop shipped and
+     * had to be found by review: an offer larger than the drawer holds is committed on the receiving
+     * side, and the difference is invented. A charger feeding several items in one sweep is the same
+     * shape, which is why the offer is recomputed per item.
+     */
+    @GameTest(template = PLATFORM, timeoutTicks = 300)
+    public static void wirelessChargerFillsGearWithoutInventingEnergy(GameTestHelper helper) {
+        Item battery = BuiltInRegistries.ITEM.get(ResourceLocation.parse("powah:battery_basic"));
+        helper.assertTrue(battery != Items.AIR,
+                "Powah is not in the run, so there is no chargeable item to test with. It is "
+                        + "declared runtimeOnly in build.gradle - see CLAUDE.md §4.");
+
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getUtilityUpgrades().insertItem(0, new ItemStack(IDContent.WIRELESS_CHARGER.get()), false);
+
+        final int seeded = 50_000;
+        tile.getEnergyStorage().receiveEnergy(seeded, false);
+
+        // A mock player, positioned and then added to the level by hand.
+        //
+        // makeMockPlayer alone builds a Player the level has never heard of, so
+        // getEntitiesOfClass would not see it. makeMockServerPlayerInLevel does add one, but it
+        // goes through the real join path over a fake channel, and Jade throws trying to send its
+        // server ping down it - a failure of the dev run, not of anything being tested.
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(helper.absoluteVec(new Vec3(DRAWER.getX() + 0.5, DRAWER.getY(), DRAWER.getZ() + 0.5)));
+        helper.getLevel().addFreshEntity(player);
+        ItemStack cell = new ItemStack(battery);
+        player.getInventory().items.set(0, cell);
+
+        helper.startSequence()
+                // The sweep interval is 20 ticks; give it room for a couple.
+                .thenIdle(60)
+                .thenExecute(() -> {
+                    IEnergyStorage carried = cell.getCapability(Capabilities.EnergyStorage.ITEM);
+                    helper.assertTrue(carried != null, "the Powah battery exposes no item energy capability");
+
+                    long inBattery = carried.getEnergyStored();
+                    long inDrawer = tile.getEnergyStorage().getStoredLong();
+
+                    helper.assertTrue(inBattery > 0,
+                            "The charger moved nothing. Either Functional Storage is not calling "
+                                    + "work() for utility upgrades any more, or the augment is not "
+                                    + "finding the player.");
+                    helper.assertValueEqual(inDrawer + inBattery, (long) seeded,
+                            "total FE across the drawer and the battery it charged");
                 })
                 .thenSucceed();
     }

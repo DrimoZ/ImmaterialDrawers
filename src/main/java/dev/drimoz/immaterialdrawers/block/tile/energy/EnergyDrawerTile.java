@@ -239,9 +239,9 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
      * that, a wall would shuffle the same FE between its own blocks forever.
      */
     private void pushToNeighbours(ServerLevel level, BlockPos pos) {
-        long available = isCreative() ? Long.MAX_VALUE : energyStorage.getStoredRaw();
         int budget = (int) Math.min(
-                EnergyScaling.transferPerOperation(energyStorage.getCapacityRaw()), available);
+                EnergyScaling.transferPerOperation(energyStorage.getCapacityRaw()),
+                energyStorage.availableToGive());
         if (budget <= 0) {
             return;
         }

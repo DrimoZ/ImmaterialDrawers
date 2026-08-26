@@ -5,7 +5,9 @@ import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
 import com.buuz135.functionalstorage.block.tile.StorageControllerExtensionTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
+import com.buuz135.functionalstorage.item.component.FunctionalUpgradeBehavior;
 import com.buuz135.functionalstorage.item.component.SizeProvider;
+import dev.drimoz.immaterialdrawers.augment.ChargeNearbyBehavior;
 import com.hrznstudio.titanium.module.BlockWithTile;
 import com.hrznstudio.titanium.module.ModuleController;
 import com.hrznstudio.titanium.nbthandler.NBTManager;
@@ -68,6 +70,11 @@ public class ImmaterialDrawers extends ModuleController {
     @Override
     protected void initModules() {
         IDContent.register(getRegistries());
+
+        // The augment's codec, in Functional Storage's registry. This is their one supported
+        // extension point (CLAUDE.md §9) and it is a plain registry entry - no mixin, no hook.
+        getRegistries().registerGeneric(FunctionalUpgradeBehavior.REGISTRY_KEY, "charge_nearby",
+                () -> ChargeNearbyBehavior.CODEC);
         addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getBlock()), MOD_ID, TAB);
     }
 

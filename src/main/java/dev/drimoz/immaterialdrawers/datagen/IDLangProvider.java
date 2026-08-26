@@ -25,6 +25,9 @@ public class IDLangProvider extends LanguageProvider {
         add("storageupgrade.obj.immaterialdrawers.energy_storage", "energy storage");
         add("gui.immaterialdrawers.energy", "Energy: ");
         add("gui.immaterialdrawers.capacity", "Capacity: ");
+        addItem(() -> IDContent.WIRELESS_CHARGER.get(), "Wireless Charger");
+        add("augment.immaterialdrawers.wireless_charger.desc", "Charges what nearby players carry, within %s blocks");
+        add("augment.immaterialdrawers.wireless_charger.energy_only", "Only does anything in an Energy Drawer");
         addBlock(() -> IDContent.ENERGY_DRAWER.getBlock(), "Energy Drawer");
         addBlock(() -> IDContent.FRAMED_ENERGY_DRAWER.getBlock(), "Framed Energy Drawer");
     }

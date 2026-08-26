@@ -36,6 +36,12 @@ Newest first. Versions are `{mod}+{minecraft}`.
 - The framed drawer registers its own tint handler, reusing Functional Storage's implementation.
   Theirs is generic; only their registration is not, since it is driven by a scan of their own
   block registry.
+- Wireless Charger augment: drop it in a drawer's utility slot and the wall keeps whatever the
+  players in range are carrying topped up - main inventory, armour and offhand. It goes through
+  `FunctionalUpgradeBehavior`, Functional Storage's one supported extension point, so there is no
+  mixin behind it. Range, throughput and sweep interval are config. Two game tests cover it: that
+  the behaviour really is in Functional Storage's registry and on the item, and that the drawer
+  loses exactly what the battery gains.
 
 ### Notes on this release
 - The client loads every asset without an error or a warning of ours, framed model loader included.

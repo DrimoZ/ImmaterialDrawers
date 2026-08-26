@@ -52,6 +52,21 @@ public class IDConfig {
     @ConfigVal.InRangeInt(min = 1)
     public static int ENERGY_TRANSFER_DIVISOR = 200;
 
+    @ConfigVal(comment = "How far the Wireless Charger reaches, in blocks. Measured from the drawer, "
+            + "so a wall of them covers a room without stacking range on top of range.")
+    @ConfigVal.InRangeInt(min = 1)
+    public static int WIRELESS_CHARGER_RANGE = 8;
+
+    @ConfigVal(comment = "FE the Wireless Charger hands out per sweep, shared across everyone in "
+            + "range. It never gives out more than the drawer holds.")
+    @ConfigVal.InRangeInt(min = 1)
+    public static int WIRELESS_CHARGER_FE_PER_OPERATION = 1000;
+
+    @ConfigVal(comment = "Ticks between Wireless Charger sweeps. Each sweep looks for players in "
+            + "range, so lowering this costs an entity query more often.")
+    @ConfigVal.InRangeInt(min = 1)
+    public static int WIRELESS_CHARGER_INTERVAL_TICKS = 20;
+
     @ConfigVal(comment = "Ticks between pushes. Four matches the cadence Functional Storage gives "
             + "its upgrades. Lowering it makes drawers more responsive and makes a large wall cost "
             + "proportionally more to tick.")

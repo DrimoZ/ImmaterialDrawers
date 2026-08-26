@@ -391,6 +391,17 @@ MapCodec<? extends FunctionalUpgradeBehavior> codec();
 Le comportement s'attache à un item via le DataComponent `FSAttachments.FUNCTIONAL_BEHAVIOR`.
 Registre synchronisé client/serveur, dispatché par codec. Contrat stable, pas de mixin.
 
+**[vérifié] Le contrat tient, et il est le seul qui n'ait rien coûté.** `immaterialdrawers:charge_nearby`
+est enregistré via `registerGeneric(FunctionalUpgradeBehavior.REGISTRY_KEY, …)`, l'item est un
+`UpgradeItem` construit depuis le behaviour — une ligne, comme le Redstone Upgrade de FS — et le
+`serverTick` du tiroir appelle bien notre `work()`. Aucun `instanceof` à contourner, aucun mixin :
+c'est le seul point d'extension de FS qui se comporte comme une API. Couvert par
+`augmentIsRegisteredWithFunctionalStorage` et `wirelessChargerFillsGearWithoutInventingEnergy`.
+
+**Le behaviour ne fait rien hors d'un tiroir d'énergie**, et c'est voulu : les slots utilitaires
+appartiennent à FS et acceptent n'importe quel upgrade utilitaire. Un Wireless Charger dans un
+tiroir de cobble ne charge rien, ce qui est la réponse honnête pour un augment qui a besoin de FE.
+
 ---
 
 ## 10. Ce qui est réutilisable gratuitement
@@ -697,10 +708,11 @@ une raison de plus de viser un périmètre livrable en un mois.
 
 **Ne pas dévier de l'ordre. La tâche 1 conditionne l'architecture entière.**
 
-**État : tâches 1 à 5 faites, tâche 6 en cours (23 août 2026). Client lancé et validé. Datagen,
+**État : tâches 1 à 6 faites, tâche 7 en cours (26 août 2026).** Client lancé et validé. Datagen,
 teinte, affichages (face, écran, tooltip), config complète, stockage en `long`, agrégation
-contrôleur, push vers les voisins et provider Jade : faits. Reste la vraie jauge d'énergie — les
-textures sont des placeholders générés — puis la tâche 7. Jade et TOP sont faits.**
+contrôleur, push vers les voisins, Jade et TOP : faits. Le premier augment — le **Wireless Charger**
+— est en place, ce qui valide `FunctionalUpgradeBehavior` de bout en bout (§9). 17 game tests au
+vert. Restent les autres augments, et l'art, que le propriétaire du projet reprend lui-même.
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -753,15 +765,28 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    la première donne un tiroir qui se pose, s'affiche, rejoint un réseau — et que tous les câbles
    du jeu ignorent. Rater la seconde et il oublie ses textures au reload.
 
-6. **← ICI. Rendu + datagen + GUI.** Datagen et teinte faits ; il reste la jauge et la GUI.
+6. ✅ **[FAIT] Rendu + datagen + GUI.** Datagen, teinte, affichages (face, écran, tooltip) et GUI
+   faits, et le client charge le tout sans une plainte — `models/block/framed_energy_drawer.json` et
+   son loader `functionalstorage:framedblock` compris, qui était le suspect nº1.
 
-   **Aucun client n'a jamais été lancé.** Le serveur de game tests ne charge ni modèle ni texture,
-   donc tout `assets/` est écrit et jamais exécuté. `./gradlew runClient` est la prochaine chose
-   à faire, et le premier suspect est `models/block/framed_energy_drawer.json`, qui utilise le
-   loader `functionalstorage:framedblock`.
+   Reste l'art, et il n'est pas de notre ressort : les textures sont des placeholders générés, et
+   c'est le propriétaire du projet qui les reprend à la main. Les deux contraintes que ce travail ne
+   doit pas casser sont en §11.
 
-7. **Augments** — enregistrer un premier `FunctionalUpgradeBehavior` trivial pour valider le
-   registre de bout en bout, puis le **Wireless Charger**, puis les autres.
+7. **← ICI. Augments.** Le **Wireless Charger** est fait, et il a servi de validation du registre :
+   pas de behaviour jetable, le premier vrai augment prouve la même chose. `augment/ChargeNearbyBehavior`,
+   enregistré dans `FunctionalUpgradeBehavior.REGISTRY` sous `immaterialdrawers:charge_nearby` et porté
+   par `IDContent.WIRELESS_CHARGER`, un `UpgradeItem` construit depuis le behaviour — exactement comme
+   le Redstone Upgrade de FS.
+
+   **Le piège du test, à ne pas reperdre :** `GameTestHelper.makeMockPlayer` rend un `Player` que le
+   level ne connaît pas, donc `getEntitiesOfClass` ne le voit jamais et le test échoue pour une raison
+   qui ne concerne pas l'augment. `makeMockServerPlayerInLevel` l'ajoute vraiment, mais passe par le
+   vrai chemin de join sur un `EmbeddedChannel` : Jade explose en essayant d'envoyer son server ping
+   dedans. La combinaison qui marche est `makeMockPlayer` + `setPos` + `addFreshEntity`.
+
+   Restent : auto-output vers les blocs adjacents (`MoveFluidsBehavior` comme modèle), générateur à
+   combustible (`GenerateFluidBehavior`), redstone sur un seuil de charge (déjà dans l'interface).
 
 ---
 
@@ -846,6 +871,8 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
   trop plein pour s'en passer. Voir §11.
 - ✅ **Le comportement en réseau réel (tâche 2)** — 50 tiroirs liés à un Storage Controller, tous
   comptés dans `itemHandlers`, aucun rebuild pendant 60 ticks. Voir §7 et `SPIKE.md`.
+- ✅ **Le registre `FunctionalUpgradeBehavior` (tâche 7)** — un augment à nous y est enregistré, porté
+  par un `UpgradeItem`, et appelé par le `serverTick` du tiroir. Voir §9.
 
 ### Toujours non vérifié
 

@@ -1,8 +1,11 @@
 {
+  "augment.immaterialdrawers.wireless_charger.desc": "Charges what nearby players carry, within %s blocks",
+  "augment.immaterialdrawers.wireless_charger.energy_only": "Only does anything in an Energy Drawer",
   "block.immaterialdrawers.energy_drawer": "Energy Drawer",
   "block.immaterialdrawers.framed_energy_drawer": "Framed Energy Drawer",
   "gui.immaterialdrawers.capacity": "Capacity: ",
   "gui.immaterialdrawers.energy": "Energy: ",
+  "item.immaterialdrawers.wireless_charger": "Wireless Charger",
   "itemGroup.immaterialdrawers": "Immaterial Drawers",
   "storageupgrade.obj.immaterialdrawers.energy_storage": "energy storage"
 }
