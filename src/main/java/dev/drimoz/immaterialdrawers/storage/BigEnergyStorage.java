@@ -68,7 +68,9 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
             return toReceive;
         }
         // capacity - energy cannot overflow: both are non-negative and capacity is the larger.
-        long accepted = Math.min(capacity - energy, toReceive);
+        // max(0, ..): capacity can sit below energy for a moment if a pack lowers the curve, and
+        // receiveEnergy is contractually forbidden from returning a negative.
+        long accepted = Math.max(0, Math.min(capacity - energy, toReceive));
         if (!simulate && accepted > 0) {
             energy += accepted;
             onChange();

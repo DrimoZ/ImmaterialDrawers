@@ -158,7 +158,7 @@ public class ImmaterialDrawers extends ModuleController {
                     Capabilities.EnergyStorage.BLOCK,
                     controller.type().get(),
                     (blockEntity, side) -> blockEntity instanceof StorageControllerTile<?> tile
-                            ? new ControllerEnergyStorage(tile)
+                            ? ControllerEnergyStorage.of(tile)
                             : null);
         }
 
@@ -179,7 +179,7 @@ public class ImmaterialDrawers extends ModuleController {
                         }
                         return tile.getLevel().getBlockEntity(tile.getControllerPos())
                                 instanceof StorageControllerTile<?> controller
-                                ? new ControllerEnergyStorage(controller)
+                                ? ControllerEnergyStorage.of(controller)
                                 : null;
                     });
         }

@@ -15,6 +15,7 @@ import dev.drimoz.immaterialdrawers.client.gui.EnergyDrawerInfoGuiAddon;
 import com.hrznstudio.titanium.component.inventory.InventoryComponent;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
+import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,6 +29,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.server.level.ServerLevel;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -66,6 +69,12 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
 
     @Save
     public BigEnergyStorage energyStorage;
+
+    /**
+     * One capability cache per side, built on first push and kept for the life of the tile.
+     * Not saved: it is a view of the world, not state.
+     */
+    private BlockCapabilityCache<IEnergyStorage, Direction>[] neighbourCaches;
 
     public EnergyDrawerTile(BasicTileBlock<EnergyDrawerTile> base, BlockEntityType<EnergyDrawerTile> entityType,
                             BlockPos pos, BlockState state) {
@@ -198,34 +207,54 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
         if (!EnergyScaling.pushesToNeighbours()) {
             return;
         }
-        // Offset by position so a wall of drawers does not all scan on the same tick.
-        if ((level.getGameTime() + pos.asLong()) % EnergyScaling.pushIntervalTicks() != 0) {
+        // Offset by position so a wall of drawers does not all scan on the same tick. floorMod
+        // because pos.asLong() is very often negative.
+        if (Math.floorMod(level.getGameTime() + pos.asLong(), EnergyScaling.pushIntervalTicks()) != 0) {
             return;
         }
         if (energyStorage.getStoredRaw() <= 0 && !isCreative()) {
             return;
         }
-        pushToNeighbours(level, pos);
+        if (level instanceof ServerLevel serverLevel) {
+            pushToNeighbours(serverLevel, pos);
+        }
     }
 
-    private void pushToNeighbours(Level level, BlockPos pos) {
-        int budget = EnergyScaling.transferPerOperation(energyStorage.getCapacityRaw());
+    /**
+     * Hands out at most what the drawer is actually holding.
+     *
+     * <p><b>The clamp is the whole method.</b> An earlier version offered a budget derived from
+     * <em>capacity</em> and then took back only what it had. {@code receiveEnergy} is committed, so
+     * a drawer holding 1 FE would hand a neighbour 2,500 and lose 1: not a rounding error, a
+     * generator. There is a game test for it now, because the reason it shipped is that there was
+     * not one.
+     *
+     * <p>Neighbours are read through {@link BlockCapabilityCache} rather than looked up every time.
+     * Six {@code getBlockEntity} plus six {@code getCapability} per drawer per push is around 75
+     * lookups a tick on the fifty-drawer wall the tests exercise, and CLAUDE.md §7 exists because
+     * that kind of per-tick cost is what kills a server running a wall of these.
+     *
+     * <p>Our own blocks are skipped by looking at the storage object rather than the block entity —
+     * a drawer, a controller and an extension all hand back one of our two storage classes. Without
+     * that, a wall would shuffle the same FE between its own blocks forever.
+     */
+    private void pushToNeighbours(ServerLevel level, BlockPos pos) {
+        long available = isCreative() ? Long.MAX_VALUE : energyStorage.getStoredRaw();
+        int budget = (int) Math.min(
+                EnergyScaling.transferPerOperation(energyStorage.getCapacityRaw()), available);
+        if (budget <= 0) {
+            return;
+        }
+        ensureNeighbourCaches(level, pos);
 
         for (Direction side : Direction.values()) {
             if (budget <= 0) {
                 return;
             }
-            BlockPos target = pos.relative(side);
-            BlockEntity neighbour = level.getBlockEntity(target);
-            if (neighbour instanceof EnergyDrawerTile
-                    || neighbour instanceof StorageControllerTile<?>
-                    || neighbour instanceof StorageControllerExtensionTile<?>) {
-                continue;
-            }
-
-            IEnergyStorage other = level.getCapability(
-                    Capabilities.EnergyStorage.BLOCK, target, side.getOpposite());
-            if (other == null || !other.canReceive()) {
+            IEnergyStorage other = neighbourCaches[side.ordinal()].getCapability();
+            if (other == null || !other.canReceive()
+                    || other instanceof BigEnergyStorage
+                    || other instanceof ControllerEnergyStorage) {
                 continue;
             }
 
@@ -238,6 +267,20 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
                 budget -= accepted;
             }
         }
+    }
+
+    private void ensureNeighbourCaches(ServerLevel level, BlockPos pos) {
+        if (neighbourCaches != null) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        BlockCapabilityCache<IEnergyStorage, Direction>[] caches =
+                new BlockCapabilityCache[Direction.values().length];
+        for (Direction side : Direction.values()) {
+            caches[side.ordinal()] = BlockCapabilityCache.create(
+                    Capabilities.EnergyStorage.BLOCK, level, pos.relative(side), side.getOpposite());
+        }
+        this.neighbourCaches = caches;
     }
 
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */

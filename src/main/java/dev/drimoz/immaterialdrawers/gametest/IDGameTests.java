@@ -15,13 +15,17 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -556,6 +560,57 @@ public final class IDGameTests {
                     int extracted = network.extractEnergy(perDrawer * 2, false);
                     helper.assertValueEqual(extracted, perDrawer * 2, "energy extracted from the network");
                     helper.assertValueEqual(network.getEnergyStored(), perDrawer, "energy left in the network");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * Pushing energy out never creates any.
+     *
+     * <p>A regression test for a real defect, and the shape of it is worth keeping in mind. The
+     * drawer offered a neighbour a budget derived from its <em>capacity</em>, committed the
+     * transfer, then handed over only what it actually held. A drawer with 1 FE in it gave a machine
+     * 2,500 and lost 1 — an infinite generator, firing every four ticks, on any drawer that happened
+     * to be nearly empty rather than on some exotic edge case.
+     *
+     * <p>Nothing else on this branch could have caught it: every other test asks a drawer about
+     * itself, and this only goes wrong once a second block is involved. Hence a real receiver from a
+     * real mod — Powah's energy cell, which is in the dev run for exactly this kind of question
+     * (CLAUDE.md §4).
+     *
+     * <p>The assertion is conservation, not transfer. How much moves is a balance decision that may
+     * change; that the total is unchanged is not.
+     */
+    @GameTest(template = PLATFORM, timeoutTicks = 300)
+    public static void pushingEnergyNeverCreatesIt(GameTestHelper helper) {
+        Block cell = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("powah:energy_cell_starter"));
+        helper.assertTrue(cell != Blocks.AIR,
+                "Powah is not in the run, so this test cannot check what it exists to check. It is "
+                        + "declared runtimeOnly in build.gradle - see CLAUDE.md §4.");
+
+        BlockPos cellPos = DRAWER.east();
+        EnergyDrawerTile tile = placeDrawer(helper);
+        helper.setBlock(cellPos, cell);
+
+        // One FE. The bug needed the drawer to be nearly empty, not full.
+        final int seeded = 1;
+        helper.assertValueEqual(tile.getEnergyStorage().receiveEnergy(seeded, false), seeded, "seeded energy");
+
+        helper.startSequence()
+                // Long enough for several pushes: the interval is four ticks.
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    long inDrawer = tile.getEnergyStorage().getStoredLong();
+
+                    IEnergyStorage cellStorage = helper.getLevel().getCapability(
+                            Capabilities.EnergyStorage.BLOCK, helper.absolutePos(cellPos), null);
+                    helper.assertTrue(cellStorage != null, "the Powah cell has no energy capability");
+                    long inCell = cellStorage.getEnergyStored();
+
+                    helper.assertValueEqual(inDrawer + inCell, (long) seeded,
+                            "total FE across the drawer and its neighbour. More than was put in means "
+                                    + "the push is offering more than the drawer holds while only "
+                                    + "giving up what it has");
                 })
                 .thenSucceed();
     }

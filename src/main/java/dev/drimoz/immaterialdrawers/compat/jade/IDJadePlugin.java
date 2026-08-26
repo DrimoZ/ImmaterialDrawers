@@ -88,9 +88,9 @@ public class IDJadePlugin implements IWailaPlugin {
                 stored = drawer.getEnergyStorage().getStoredLong();
                 capacity = drawer.getEnergyStorage().getCapacityLong();
             } else if (be instanceof StorageControllerTile<?> controller) {
-                ControllerEnergyStorage network = new ControllerEnergyStorage(controller);
-                stored = network.getStoredLong();
-                capacity = network.getCapacityLong();
+                var totals = ControllerEnergyStorage.of(controller).totals();
+                stored = totals.stored();
+                capacity = totals.capacity();
             } else {
                 return List.of();
             }

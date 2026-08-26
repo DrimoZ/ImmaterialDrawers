@@ -7,7 +7,10 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * A Storage Controller's energy: the sum of every energy drawer on its network.
@@ -36,10 +39,52 @@ import java.util.List;
  */
 public class ControllerEnergyStorage implements IEnergyStorage {
 
+    /**
+     * One storage per controller, not one per lookup.
+     *
+     * <p>NeoForge's {@code BlockCapabilityCache} is built to hold on to the object a provider
+     * returns; handing out a new one on every query defeats that cache and makes identity-based
+     * invalidation meaningless. The drawers already return their own storage — the controller should
+     * be no different.
+     *
+     * <p>Weak keys, because this map must not be the reason a block entity from an unloaded chunk
+     * stays in memory. Synchronised because Jade's server data and the capability lookups make no
+     * promise to run on the same thread.
+     */
+    private static final Map<StorageControllerTile<?>, ControllerEnergyStorage> CACHE =
+            Collections.synchronizedMap(new WeakHashMap<>());
+
     private final StorageControllerTile<?> controller;
 
-    public ControllerEnergyStorage(StorageControllerTile<?> controller) {
+    private ControllerEnergyStorage(StorageControllerTile<?> controller) {
         this.controller = controller;
+    }
+
+    public static ControllerEnergyStorage of(StorageControllerTile<?> controller) {
+        return CACHE.computeIfAbsent(controller, ControllerEnergyStorage::new);
+    }
+
+    /** What a network holds and what it can hold, from a single walk. */
+    public record Totals(long stored, long capacity) {
+    }
+
+    /**
+     * Both totals in one pass.
+     *
+     * <p>{@link #getStoredLong()} and {@link #getCapacityLong()} each walk the network, so anything
+     * wanting both — every probe tooltip does — was paying for two walks at HUD refresh rate, fifty
+     * block entity lookups apiece on the wall the tests exercise. Still nothing cached across calls:
+     * the drawer list changes whenever the network rebuilds, and a stale reference is a leak that
+     * voids energy.
+     */
+    public Totals totals() {
+        long stored = 0;
+        long capacity = 0;
+        for (EnergyDrawerTile drawer : drawers()) {
+            stored = saturatedAdd(stored, drawer.getEnergyStorage().getStoredLong());
+            capacity = saturatedAdd(capacity, drawer.getEnergyStorage().getCapacityLong());
+        }
+        return new Totals(stored, capacity);
     }
 
     private List<EnergyDrawerTile> drawers() {
