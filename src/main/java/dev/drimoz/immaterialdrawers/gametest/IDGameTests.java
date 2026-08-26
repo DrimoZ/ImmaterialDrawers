@@ -31,6 +31,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -704,6 +705,46 @@ public final class IDGameTests {
                             "total FE across the drawer and the battery it charged");
                 })
                 .thenSucceed();
+    }
+
+    /**
+     * Functional Storage's own Redstone Upgrade drives a signal from the charge.
+     *
+     * <p>There is no augment of ours for this, on purpose — the upgrade a player already owns should
+     * work. It nearly does: {@code EmitRedstoneBehavior} connects and ticks for us unchanged, and
+     * only its signal reads the zero-slot item handler and gives up. That half is answered in
+     * {@code EnergyDrawerBlock.getSignal}, and the failure it prevents is silent: an upgrade that
+     * slots in, connects to dust, and never leaves 0.
+     */
+    @GameTest(template = PLATFORM)
+    public static void functionalStorageRedstoneUpgradeReadsTheCharge(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        BlockPos absolute = helper.absolutePos(DRAWER);
+        BlockState state = helper.getBlockState(DRAWER);
+
+        helper.assertValueEqual(state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
+                "a drawer with no Redstone Upgrade emits a signal");
+
+        tile.getUtilityUpgrades().insertItem(0,
+                new ItemStack(FunctionalStorage.REDSTONE_UPGRADE.get()), false);
+
+        helper.assertTrue(state.canRedstoneConnectTo(helper.getLevel(), absolute, Direction.NORTH),
+                "the Redstone Upgrade does not connect - EmitRedstoneBehavior.canConnectRedstone "
+                        + "checks for an ItemControllableDrawerTile, which we are");
+        helper.assertValueEqual(state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
+                "an empty drawer emits a signal");
+
+        // Half full: 1 + 0.5 * 14 = 8, the same number a comparator reads.
+        tile.getEnergyStorage().receiveEnergy(
+                (int) (tile.getEnergyStorage().getCapacityRaw() / 2), false);
+
+        int signal = state.getSignal(helper.getLevel(), absolute, Direction.NORTH);
+        helper.assertValueEqual(signal, 8, "redstone signal at half charge");
+        helper.assertValueEqual(signal,
+                state.getAnalogOutputSignal(helper.getLevel(), absolute),
+                "redstone signal and comparator signal, which must not disagree");
+
+        helper.succeed();
     }
 
     private static Item upgrade(StorageUpgradeItem.StorageTier tier) {

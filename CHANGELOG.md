@@ -42,6 +42,10 @@ Newest first. Versions are `{mod}+{minecraft}`.
   mixin behind it. Range, throughput and sweep interval are config. Two game tests cover it: that
   the behaviour really is in Functional Storage's registry and on the item, and that the drawer
   loses exactly what the battery gains.
+- Functional Storage's own Redstone Upgrade works on an energy drawer, and there is no augment of
+  ours for it. Theirs already connects and ticks for us; only its signal read the zero-slot item
+  handler and gave up, so the drawer answers that half itself - with the same number the comparator
+  reports, because two ways of asking how full a drawer is should not disagree.
 
 ### Notes on this release
 - The client loads every asset without an error or a warning of ours, framed model loader included.

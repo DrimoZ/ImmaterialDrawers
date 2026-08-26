@@ -28,19 +28,28 @@ result.
 Then the gauge itself: energy has no fluid texture to borrow, so it is designed from nothing. The
 current textures are flat generated placeholders and are meant to be thrown away.
 
-**7 — Augments, started.** These are the product; the block is the support - a drawer that only
+**7 — Augments.** These are the product; the block is the support - a drawer that only
 holds FE duplicates a Powah energy cell. The **Wireless Charger** is in: put it in a utility slot and
 the wall keeps the tools, armour and offhand of everyone in range charged. It was built instead of
 the throwaway behaviour the plan called for, because it proves the same thing - that Functional
 Storage really calls `work()` on an upgrade of ours - and leaves something behind.
 
+The three that were listed after it are settled rather than built - see **Then**. What is left before
+a release is the art and the store copy.
+
 ## Then
 
-**7 — The rest of the augments.**
+**7 — Augments.** The Wireless Charger is in. The other three the plan listed are not coming, and
+each for its own reason:
 
-- Auto-output to adjacent blocks — `MoveFluidsBehavior` is the model.
-- Fuel-burning generator — `GenerateFluidBehavior` is the model.
-- Redstone on a charge threshold — already in the interface.
+- **Auto-output to adjacent blocks** is already the drawer's base behaviour, not an augment. Nothing
+  in the Forge Energy ecosystem pulls, so a drawer that waits to be asked never gives anything up.
+  It is on by default and configurable.
+- **A fuel-burning generator** is not this mod. It stores energy; it does not make it.
+- **Redstone on a charge threshold** uses Functional Storage's own Redstone Upgrade. An upgrade the
+  player already owns should work, and theirs almost did — it connects and ticks for an energy drawer
+  unchanged, and only its signal read the zero-slot item handler and gave up. That half is answered
+  in `EnergyDrawerBlock.getSignal`, with the same number the comparator reports.
 
 ## Still open
 
@@ -49,6 +58,8 @@ Storage really calls `work()` on an upgrade of ours - and leaves something behin
 
 ## Settled
 
+- **The mod stores energy and does not generate it.** A fuel-burning augment was on the list and is
+  off it: every tech mod already has generators, and none of them has a drawer.
 - **Every number is config, including the ones Functional Storage keeps in code.** The worry was
   that a pack author moving `ENERGY_DIVISOR` breaks the top of the curve. `EnergyScaling.capacityFor`
   clamps instead of overflowing, so the failure mode is a flat top, not a negative capacity.

@@ -5,6 +5,7 @@ import com.buuz135.functionalstorage.block.Drawer;
 import com.buuz135.functionalstorage.block.DrawerBlock;
 import com.buuz135.functionalstorage.block.FramedBlock;
 import com.buuz135.functionalstorage.item.FSAttachments;
+import com.buuz135.functionalstorage.item.component.EmitRedstoneBehavior;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
@@ -87,13 +88,52 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
      */
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        EnergyDrawerTile tile = TileUtil.getTileEntity(level, pos, EnergyDrawerTile.class).orElse(null);
+        return signalFor(TileUtil.getTileEntity(level, pos, EnergyDrawerTile.class).orElse(null));
+    }
+
+    /**
+     * Functional Storage's own Redstone Upgrade, reading a charge instead of a stack count.
+     *
+     * <p>No augment of ours for this. {@code EmitRedstoneBehavior} already ticks the neighbours and
+     * already reports {@code canConnectRedstone} for us — we are an {@code ItemControllableDrawerTile},
+     * which is what it checks. The one half that cannot work is the signal itself: it reads
+     * {@code getStorage()}, our handler has no slots, and its item branch yields -1. Their
+     * {@code Drawer.getSignal} reads -1 as "this upgrade has nothing to say" and returns 0, so the
+     * upgrade slots in, connects, and sits dead.
+     *
+     * <p>So the upgrade stays theirs and only the number is ours. It is the same number the
+     * comparator gets, deliberately: two ways of asking a drawer how full it is should not disagree.
+     *
+     * <p>{@code FSAttachments.SLOT} is ignored for the same reason locking is (see
+     * {@code BigEnergyStorage}): choosing which slot to watch means nothing where there is one kind
+     * of content.
+     */
+    @Override
+    public int getSignal(BlockState state, BlockGetter blockGetter, BlockPos pos, Direction dir) {
+        EnergyDrawerTile tile = TileUtil.getTileEntity(blockGetter, pos, EnergyDrawerTile.class).orElse(null);
+        if (tile != null) {
+            for (int slot = 0; slot < tile.getUtilityUpgrades().getSlots(); slot++) {
+                if (tile.getUtilityUpgrades().getStackInSlot(slot)
+                        .get(FSAttachments.FUNCTIONAL_BEHAVIOR) instanceof EmitRedstoneBehavior) {
+                    return signalFor(tile);
+                }
+            }
+        }
+        // Anything else in the utility slots is theirs to answer, including our own augments.
+        return super.getSignal(state, blockGetter, pos, dir);
+    }
+
+    /**
+     * How full this drawer is, on vanilla's 0-15 scale.
+     *
+     * <p>The long accessors, not the capability ones: above 2.1B the clamped view reads full at
+     * every fill level, so a comparator on a big drawer would sit at 15 from the first FE.
+     */
+    private static int signalFor(EnergyDrawerTile tile) {
         if (tile == null) {
             return 0;
         }
         var storage = tile.getEnergyStorage();
-        // The long accessors, not the capability ones: above 2.1B the clamped view reads full at
-        // every fill level, so a comparator on a big drawer would sit at 15 from the first FE.
         long capacity = storage.getCapacityLong();
         long stored = storage.getStoredLong();
         if (capacity <= 0 || stored <= 0) {

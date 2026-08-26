@@ -712,7 +712,8 @@ une raison de plus de viser un périmètre livrable en un mois.
 teinte, affichages (face, écran, tooltip), config complète, stockage en `long`, agrégation
 contrôleur, push vers les voisins, Jade et TOP : faits. Le premier augment — le **Wireless Charger**
 — est en place, ce qui valide `FunctionalUpgradeBehavior` de bout en bout (§9). 17 game tests au
-vert. Restent les autres augments, et l'art, que le propriétaire du projet reprend lui-même.
+vert. La tâche 7 est close : les trois augments qui suivaient sont réglés plutôt que construits
+(voir §12). Reste l'art, que le propriétaire du projet reprend lui-même.
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -773,7 +774,7 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    c'est le propriétaire du projet qui les reprend à la main. Les deux contraintes que ce travail ne
    doit pas casser sont en §11.
 
-7. **← ICI. Augments.** Le **Wireless Charger** est fait, et il a servi de validation du registre :
+7. ✅ **[FAIT] Augments.** Le **Wireless Charger** est fait, et il a servi de validation du registre :
    pas de behaviour jetable, le premier vrai augment prouve la même chose. `augment/ChargeNearbyBehavior`,
    enregistré dans `FunctionalUpgradeBehavior.REGISTRY` sous `immaterialdrawers:charge_nearby` et porté
    par `IDContent.WIRELESS_CHARGER`, un `UpgradeItem` construit depuis le behaviour — exactement comme
@@ -785,8 +786,18 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    vrai chemin de join sur un `EmbeddedChannel` : Jade explose en essayant d'envoyer son server ping
    dedans. La combinaison qui marche est `makeMockPlayer` + `setPos` + `addFreshEntity`.
 
-   Restent : auto-output vers les blocs adjacents (`MoveFluidsBehavior` comme modèle), générateur à
-   combustible (`GenerateFluidBehavior`), redstone sur un seuil de charge (déjà dans l'interface).
+   **L'auto-output est déjà là** : le tiroir pousse vers ses voisins de lui-même (`pushToNeighbours`),
+   parce que rien dans l'écosystème FE ne tire. Ce n'est pas un augment, c'est le comportement de
+   base, réglable en config.
+
+   **Pas de générateur.** Le mod stocke, il ne produit pas.
+
+   **Le seuil de redstone passe par la Redstone Upgrade de FS**, pas par un augment à nous. Leur
+   `EmitRedstoneBehavior` se connecte et tick déjà pour nous — il teste `ItemControllableDrawerTile`,
+   ce que nous sommes. Seul son signal lisait `getStorage()`, donc le handler à 0 slot, et rendait
+   -1 ; `Drawer.getSignal` traduit -1 par « rien à dire » et retourne 0. L'upgrade s'insérait, se
+   connectait, et restait morte. `EnergyDrawerBlock.getSignal` répond ce qui manquait, avec le même
+   nombre que le comparateur. Couvert par `functionalStorageRedstoneUpgradeReadsTheCharge`.
 
 ---
 
@@ -873,6 +884,8 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
   comptés dans `itemHandlers`, aucun rebuild pendant 60 ticks. Voir §7 et `SPIKE.md`.
 - ✅ **Le registre `FunctionalUpgradeBehavior` (tâche 7)** — un augment à nous y est enregistré, porté
   par un `UpgradeItem`, et appelé par le `serverTick` du tiroir. Voir §9.
+- ✅ **La Redstone Upgrade de FS sur un tiroir d'énergie (tâche 7)** — leur upgrade se connecte, tick
+  et pilote un signal tiré de la charge, sans augment de notre côté. Voir §12 tâche 7.
 
 ### Toujours non vérifié
 
