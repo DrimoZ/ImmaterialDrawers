@@ -109,6 +109,10 @@ public class ControllerEnergyStorage implements IEnergyStorage {
      */
     @Override
     public int receiveEnergy(int toReceive, boolean simulate) {
+        // A void drawer in the network reports the whole amount as accepted while storing less, so
+        // this can report acceptance of energy that was deliberately destroyed. That is the void
+        // contract, not a leak: a void drawer exists to swallow the overflow without making the
+        // machine upstream stall. Noted because it reads exactly like an accounting bug.
         int accepted = 0;
         for (EnergyDrawerTile drawer : drawers()) {
             accepted += drawer.getEnergyStorage().receiveEnergy(toReceive - accepted, simulate);
