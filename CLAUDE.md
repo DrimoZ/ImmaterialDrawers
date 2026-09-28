@@ -182,6 +182,29 @@ Jade, ou par le `@FeaturePlugin` de Titanium pour TOP.
 **Une coordonnée maven `runtimeOnly` amène le jar, pas les mods dont ce jar a besoin**, et FML fait
 échouer le lancement entier plutôt que de sauter le mod. D'où les deux dernières lignes.
 
+### Run vitrine — screenshots de la page du mod
+
+`./gradlew runClient -Pshowcase "-PquickPlay=Drawer Preview"`. Deux propriétés, toutes deux absentes
+par défaut, donc le client de tous les jours et le serveur de game tests n'en paient rien :
+
+- **`-Pshowcase`** ajoute Mekanism + Mekanism Generators (machines, câbles universels, panneaux
+  solaires : un décor qu'un joueur tech reconnaît) et Sodium + Iris pour un pack de shaders. Iris
+  1.8.12 exige Sodium 0.6.13 exactement — on les bouge ensemble ou pas du tout.
+- **`-PquickPlay=<monde>`** ouvre directement une sauvegarde, sans passer par les menus.
+
+Le pack de shaders n'est pas une dépendance Gradle : `run/shaderpacks/ComplementaryReimagined_r5.9.3.zip`
+(Modrinth), activé par `run/config/iris.properties`. Tout ça vit dans `run/`, gitignoré.
+
+Les scènes (atelier, centrale Mekanism, bibliothèque framed, abri solaire) sont un datapack dans la
+sauvegarde `run/saves/Drawer Preview` : une fonction `preview:scene_*` construit, une fonction
+`preview:shot_*` place la caméra en spectateur. Les captures sélectionnées sont dans
+`run/store-screenshots/`.
+
+**Piloter le jeu au clavier depuis un script est dangereux** : `SetForegroundWindow` ne garantit pas
+le focus, et des commandes destinées au chat du jeu ont atterri dans une autre application. Toute
+frappe doit être précédée d'une vérification `GetForegroundWindow() == fenêtre Minecraft`, et
+abandonner sinon.
+
 À noter : **JEI est déjà dans le run sans être déclaré nulle part** — il arrive par le pom de
 Titanium. C'est aussi la preuve que `runtimeOnly` suffit pour qu'un mod soit découvert par FML dans
 un run MDG, sans le détour par `run/mods` qu'utilise PortableBeacons.
@@ -851,7 +874,7 @@ ouverture, y compris ce qu'il n'est pas.**
 | `CHANGELOG.md` | en | Newest first, `Added`/`Changed`/`Fixed`/`Notes`, versions `{mod}+{minecraft}` | ✅ |
 | `SPIKE.md` | en | Le spike bloquant : analyse, puis ce qui s'est réellement passé | ✅ |
 | `NOTICE` | en | Attribution MIT que FS impose de préserver | ✅ |
-| `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | à écrire avant la release |
+| `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | ✅ publiée sur la page CurseForge (28 sept. 2026) |
 | `PORTING.md` | en | Seulement quand un port est envisagé | — |
 | `LICENSE` / `LICENSE-ASSETS` | — | Code MIT / assets ARR | ✅ |
 

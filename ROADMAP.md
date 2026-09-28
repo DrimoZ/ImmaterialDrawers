@@ -35,7 +35,7 @@ the throwaway behaviour the plan called for, because it proves the same thing - 
 Storage really calls `work()` on an upgrade of ours - and leaves something behind.
 
 The three that were listed after it are settled rather than built - see **Then**. What is left before
-a release is the store copy.
+a release is a published file: the CurseForge page (logo, gallery, description) is filled in from STORE.md.
 
 ## Then
 
@@ -53,8 +53,9 @@ each for its own reason:
 
 ## Still open
 
-- The CurseForge project is created as `immaterial-drawers` and waits for approval; the same slug is
-  still to be reserved on Modrinth.
+- The CurseForge project is created as `immaterial-drawers`, its page is filled in (logo, 14 screenshots,
+  the STORE.md description), and it waits for approval with its first file. The same slug is still to
+  be reserved on Modrinth.
 
 ## Settled
 

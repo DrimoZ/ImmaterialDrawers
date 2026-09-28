@@ -5,6 +5,8 @@ Newest first. Versions are `{mod}+{minecraft}`.
 ## Unreleased
 
 ### Added
+- A logo, shown in the in-game mod list: four drawers glowing in four colours, because the mod is a
+  family of drawers and energy is only the first.
 - Energy Drawer: a Functional Storage drawer that holds FE and exposes
   `Capabilities.EnergyStorage.BLOCK`.
 - Game tests covering the two third-party readings the architecture rests on — the second
