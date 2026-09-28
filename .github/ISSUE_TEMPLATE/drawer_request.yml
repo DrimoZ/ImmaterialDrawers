@@ -1,0 +1,51 @@
+name: New drawer type
+description: Suggest something immaterial that deserves its own drawer.
+title: "[Drawer] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Immaterial Drawers is a family: Functional Storage stores items and fluids, and every drawer here stores something that is neither. Energy is the first, **Mekanism chemicals** are next.
+
+        A new drawer works best when what it stores is exposed by its mod through a **standard capability or a public API** that other mods use too. Things that only one mod understands, through its own private system, are much harder to support and break with every update of that mod.
+
+  - type: input
+    id: what
+    attributes:
+      label: What should the drawer store?
+      placeholder: Botania mana
+    validations:
+      required: true
+
+  - type: input
+    id: mod
+    attributes:
+      label: Which mod adds it?
+      description: With a link to its page or repository if you have one.
+      placeholder: Botania, https://github.com/VazkiiMods/Botania
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why a drawer?
+      description: What would you do with it that the mod's own storage does not already do well? A wall of these next to your item drawers, one network through the Storage Controller, upgrades you already own...
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: How do other mods move it around?
+      description: Pipes, cables, a capability, an API. If you know how other mods interact with it, it tells us how feasible it is.
+      placeholder: Mana is moved by spreaders and pools; other mods use the ManaReceiver capability...
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and nobody has suggested this drawer yet. (If they have, add a thumbs up to theirs.)
+          required: true

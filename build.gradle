@@ -156,6 +156,9 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 // Generated resources are committed, so a clone builds without running datagen first.
 sourceSets.main.resources.srcDir 'src/generated/resources'
+// Datagen's hash cache sits in that folder too. It is bookkeeping for the next datagen run, not a
+// resource, and without this it ships inside the jar.
+processResources { exclude '.cache/**' }
 neoForge.ideSyncTask generateModMetadata
 
 // Both licences travel with the jar. A distributed artifact that does not carry its own terms

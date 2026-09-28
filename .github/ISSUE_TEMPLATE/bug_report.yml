@@ -1,0 +1,95 @@
+name: Bug report
+description: Something in Immaterial Drawers does not work the way it should.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A good report is one we can reproduce: versions, steps, and a log get it fixed fastest.
+
+        **Is it a Functional Storage bug?** If it also happens with Functional Storage's own drawers and without this mod, please report it [to Functional Storage](https://github.com/Buuz135/FunctionalStorage/issues) instead.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected to see instead.
+      placeholder: A fully charged Energy Drawer shows 0 FE after I reload the world.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem, starting from a new world if you can.
+      placeholder: |
+        1. Place an Energy Drawer
+        2. Charge it with ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: Immaterial Drawers version
+      description: From the mods list, or the jar name.
+      placeholder: 0.1.0+1.21.1
+    validations:
+      required: true
+
+  - type: input
+    id: fs-version
+    attributes:
+      label: Functional Storage version
+      placeholder: 1.21-1.5.7
+    validations:
+      required: true
+
+  - type: input
+    id: neoforge-version
+    attributes:
+      label: NeoForge version
+      placeholder: 21.1.248
+    validations:
+      required: true
+
+  - type: dropdown
+    id: side
+    attributes:
+      label: Where does it happen?
+      options:
+        - Singleplayer
+        - Multiplayer (dedicated server)
+        - Multiplayer (LAN / hosted from the client)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other relevant mods
+      description: Especially the mod whose cables, machines or generators are involved (Mekanism, Powah, Thermal...), and any modpack name and version.
+      placeholder: Mekanism 10.7.19, Powah 6.2.10, All The Mods 10 v1.2
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or crash report
+      description: |
+        Upload `logs/latest.log`, or the file from `crash-reports/`, to [mclo.gs](https://mclo.gs) or a Gist and paste the link here.
+        Please do not paste whole logs into the issue.
+      placeholder: https://mclo.gs/...
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: I am using the latest release of Immaterial Drawers for my Minecraft version.
+          required: false

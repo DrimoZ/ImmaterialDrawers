@@ -1,0 +1,35 @@
+name: Idea or improvement
+description: A new upgrade, a config option, a better display - anything that is not a new drawer type.
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Start from what you are trying to do in your world, not from the solution.
+      placeholder: I want my wall of Energy Drawers to stop feeding a machine when it drops below half.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How you imagine it working. An upgrade item, a Configuration Tool option, a config value...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you use today?
+      description: Other mods or workarounds you have tried, and why they fall short.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this has not been suggested yet.
+          required: true

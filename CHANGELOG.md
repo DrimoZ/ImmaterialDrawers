@@ -2,7 +2,9 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## Unreleased
+## 0.1.0+1.21.1 — 2026-09-28
+
+The first release: the Energy Drawer, its framed variant, and the Wireless Charger.
 
 ### Added
 - A logo, shown in the in-game mod list: four drawers glowing in four colours, because the mod is a
@@ -58,9 +60,5 @@ Newest first. Versions are `{mod}+{minecraft}`.
   variant, mirroring the shapes Functional Storage uses for its fluid drawers.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and
   Functional Storage as hard dependencies.
-
-### Notes
-- Nothing is released yet and nothing is published. There is no texture, model, recipe or controller
-  integration; the block exists and works, and that is all.
 - Comparator output is redefined here rather than inherited: Functional Storage dispatches on its
   own tile types and would report an energy drawer as permanently empty.

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wiki
+    url: https://github.com/DrimoZ/ImmaterialDrawers/wiki
+    about: How the drawers work, every config option, and the answers to the common questions.
+  - name: A bug in Functional Storage itself
+    url: https://github.com/Buuz135/FunctionalStorage/issues
+    about: If it also happens with Functional Storage's own drawers and without this mod, it belongs there.
+  - name: CurseForge page
+    url: https://www.curseforge.com/minecraft/mc-mods/immaterial-drawers
+    about: Downloads, screenshots and the changelog.
