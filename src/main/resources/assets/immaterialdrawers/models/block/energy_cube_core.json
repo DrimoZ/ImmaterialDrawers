@@ -1,0 +1,51 @@
+{
+  "credit": "Immaterial Drawers - generated, safe to edit in Blockbench",
+  "__comment": "The glowing core, drawn translucent at full brightness with an alpha that follows the charge. Three cubes: one square, one turned 45 degrees on Y, one on X.",
+  "textures": {
+    "particle": "immaterialdrawers:block/energy_core",
+    "core": "immaterialdrawers:block/energy_core"
+  },
+  "elements": [
+    {
+      "name": "core",
+      "from": [5, 5, 5],
+      "to": [11, 11, 11],
+      "faces": {
+        "north": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "south": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "east": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "west": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "up": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "down": {"uv": [5, 5, 11, 11], "texture": "#core"}
+      }
+    },
+    {
+      "name": "core_y",
+      "from": [5, 5, 5],
+      "to": [11, 11, 11],
+      "rotation": {"angle": 45, "axis": "y", "origin": [8, 8, 8]},
+      "faces": {
+        "north": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "south": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "east": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "west": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "up": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "down": {"uv": [5, 5, 11, 11], "texture": "#core"}
+      }
+    },
+    {
+      "name": "core_x",
+      "from": [5, 5, 5],
+      "to": [11, 11, 11],
+      "rotation": {"angle": 45, "axis": "x", "origin": [8, 8, 8]},
+      "faces": {
+        "north": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "south": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "east": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "west": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "up": {"uv": [5, 5, 11, 11], "texture": "#core"},
+        "down": {"uv": [5, 5, 11, 11], "texture": "#core"}
+      }
+    }
+  ]
+}

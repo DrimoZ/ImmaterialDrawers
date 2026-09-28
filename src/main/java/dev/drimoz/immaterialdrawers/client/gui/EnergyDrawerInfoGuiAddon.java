@@ -2,6 +2,7 @@ package dev.drimoz.immaterialdrawers.client.gui;
 
 import com.hrznstudio.titanium.client.screen.addon.BasicScreenAddon;
 import com.hrznstudio.titanium.client.screen.asset.IAssetProvider;
+import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import net.minecraft.ChatFormatting;
@@ -38,7 +39,11 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
     /** Their single-slot content well: inset 9, 30 across. */
     private static final Rect2i WELL = new Rect2i(9, 9, 30, 30);
 
-    private static final int FILL = 0xFFD8452A;
+    /** The core's colour in the drawer, so the screen and the block agree on what charge looks like. */
+    private static final int FILL = 0xFFEE6A2C;
+
+    private static final ResourceLocation INNER = ResourceLocation.fromNamespaceAndPath(
+            ImmaterialDrawers.MOD_ID, "textures/block/energy_drawer_inner.png");
 
     private final ResourceLocation front;
     private final Supplier<BigEnergyStorage> storage;
@@ -67,6 +72,11 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
         int y = guiY + getPosY();
         BigEnergyStorage energy = storage.get();
         long capacity = energy.getCapacityLong();
+
+        // The tank walls first, so an empty drawer shows an empty drawer rather than the screen
+        // background through its window. The window is texels 3..13 of the 16px texture.
+        graphics.blit(INNER, x + WELL.getX(), y + WELL.getY(), WELL.getWidth(), WELL.getHeight(),
+                3f, 3f, 10, 10, 16, 16);
 
         // Behind the front, filling from the bottom.
         if (capacity > 0 && energy.getStoredLong() > 0) {

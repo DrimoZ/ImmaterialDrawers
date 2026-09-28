@@ -588,24 +588,47 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   **Le `@FeaturePlugin` de Titanium est ce qui rend le `compileOnly` sûr** : le plugin manager
   n'instancie la classe que si `theoneprobe` est chargé, donc rien n'est classloadé dans un pack
   sans TOP. L'entrée se fait par `InterModComms`, la porte publiée de TOP, pas par un appel direct.
-- **Rendu** — **[fait, à regarder]** l'énergie n'a pas de texture de fluide, donc la jauge se conçoit
-  à partir de rien. Choix retenu : **le panneau encastré de la façade s'allume par le bas**, pas une
-  barre verticale de machine — un mur de tiroirs ne doit pas contenir un bloc qui vient d'ailleurs.
-  C'est l'idée que FS applique au fluide (le contenu se voit par la fenêtre de la façade), avec une
-  lueur à la place d'une texture de fluide.
+- **Rendu** — **[vérifié en client, 28 septembre 2026]** le bloc **est** le Fluid Drawer de FS vide,
+  et il contient un **cube d'énergie** qui tourne, dans la tradition du cube de Mekanism.
 
-  Dessiné à `LightTexture.FULL_BRIGHT` plutôt qu'à la lumière du bloc : une jauge illisible dans une
-  pièce sombre ne sert à rien. Les V suivent le remplissage au lieu de s'étirer dessus, donc le
-  dégradé et ses stries restent en place quand le niveau monte. Marche sur le framed sans rien de
-  plus — c'est dessiné par-dessus la texture du joueur.
+  **La carcasse n'est pas copiée, elle est héritée.** `models/block/energy_drawer.json` est un
+  `neoforge:composite` dont les trois enfants ont pour parent les modèles de FS —
+  `side_machine`, `fluid_front_1`, `fluid_inner_1` — avec nos textures. Même géométrie au pixel que
+  leur Fluid Drawer, zéro coordonnée recopiée. Le framed fait pareil avec `side` / `fluid_front_1` /
+  `fluid_inner_1` et leurs textures framed : c'est `framed_fluid_1.json` enfant pour enfant.
+  Les trois modèles existent dans le jar 1.5.7 (vérifié). S'ils sont renommés un jour, le symptôme est
+  un tiroir en damier rose — rien ne le teste, c'est le prix de ne pas les dupliquer.
 
-  **Le reste des textures = placeholders générés**, volontairement plats, à remplacer.
+  Nos textures (`energy_drawer_side/top/front/inner`) sont les leurs recolorées : même dessin, pierre
+  → graphite, verre de la fenêtre → cuivre. Un tiroir d'énergie se reconnaît d'un tiroir de fluide au
+  premier coup d'œil, et se pose dans le même mur sans détonner.
+
+  **Pourquoi un objet et pas un niveau.** Un fluide a une surface, donc le Fluid Drawer montre son
+  remplissage par la hauteur du fluide. L'énergie n'a ni texture ni surface, et une barre sur une
+  façade de tiroir lit comme une jauge de machine. Le tiroir contient donc un objet, et la charge est
+  dans son noyau : absent à vide, translucide et lent à faible charge, opaque et rapide plein. Le
+  chiffre exact est le nombre sur la façade ; le cube, c'est le coup d'œil.
+
+  **Deux modèles autonomes**, `models/block/energy_cube_frame.json` (8 coins, 12 arêtes, ouvert) et
+  `energy_cube_core.json` (trois cubes imbriqués, dont deux tournés à 45° — c'est ce qui lui donne
+  des facettes plutôt qu'une boîte). Enregistrés par `ModelEvent.RegisterAdditional` dans
+  `IDClientSetup` : **sans ça, `getModel` ne plante pas, il rend le modèle manquant** — un cube rose
+  et noir qui tourne dans chaque tiroir. Rendus par `EnergyDrawerRenderer` à l'échelle 9/16 :
+  le cadre tourne sur Y, donc c'est sa diagonale (9 × √2 ≈ 12,7 px) qui doit tenir dans les 13 px du
+  réservoir. Le cadre prend la lumière du bloc, le noyau est `FULL_BRIGHT` et translucide. Chaque
+  tiroir est déphasé d'après sa position, pour qu'un mur ne tourne pas au pas comme une seule machine.
+  Éditables dans Blockbench, comme n'importe quel modèle de bloc.
+
+  **Le nombre suit le Fluid Drawer, pas l'Item Drawer.** Le placement de `DrawerRenderer.renderStack`
+  met le texte un pixel trop bas pour cette carcasse : derrière le rebord inférieur de `side_machine`,
+  invisible. `EnergyDrawerRenderer` reprend les 0,84 / 0,453 et l'échelle 0,007 de
+  `FluidDrawerRenderer`, convertis dans le repère de `BaseDrawerRenderer`.
 
   **Le modèle framed passe par le loader de FS.** `models/block/framed_energy_drawer.json` déclare
   `"loader": "functionalstorage:framedblock"`. `FramedModel` est générique : il indexe ses
-  `children` par nom et remplace leurs textures depuis `FramedDrawerModelData` lu sur la
-  `ModelData` du tile — le nôtre la fournit. Les enfants s'appellent `side` et `front` parce que
-  ce sont les clés du design.
+  `children` par nom et remplace les textures de ceux qui sont dans le design (`side`, `front`) depuis
+  `FramedDrawerModelData` lu sur la `ModelData` du tile — le nôtre la fournit. `tank` n'est pas une
+  clé du design, donc il garde nos parois et le cube se voit derrière n'importe quelle façade.
 
   **[vérifié] Le client charge tout ça sans une seule plainte.** `./gradlew runClient`, 22 août 2026 :
   0 erreur, 0 texture manquante, 0 ligne mentionnant `immaterialdrawers` autrement que pour dire
@@ -659,29 +682,26 @@ eux demanderait un mixin. **Override à supprimer quand le plancher passera à 1
 Troisième instance de la dérive 1.5.7 / branche, et la première qui casse un monde plutôt qu'une
 compilation.
 
-### Le design est repris à la main — deux contraintes à ne pas casser
+### L'art — ce qui n'est pas un choix esthétique
 
-Les textures et modèles actuels sont des placeholders générés, destinés à être remplacés à la main.
-**Deux choses dans ces fichiers ne sont pas des choix esthétiques**, et les casser donne un bloc qui
-compile, se pose, et n'affiche rien :
+Les textures sont modifiables librement, les deux modèles du cube aussi (Blockbench). **Trois choses
+ne sont pas des choix esthétiques**, et les casser donne un bloc qui compile, se pose, et n'affiche
+rien :
 
-1. **La façade doit être encastrée d'au moins 1 pixel** (`models/block/energy_drawer.json` : corps de
-   z=1 à 16, plus un rebord). `BaseDrawerRenderer` fait `translate(0, 0, -0.5/16)` avant de rendre la
-   main : sur un cube plein, le plan de dessin tombe *dans* la géométrie, et la jauge comme le nombre
-   sont masqués par notre propre face. C'est pour ça que les modèles de FS ont une plaque avant à
-   z=0,5..2,5.
-2. **La texture de façade doit avoir une fenêtre transparente**, avec `energy_drawer_back` derrière.
-   La GUI dessine le contenu *puis* blitte la façade par-dessus — l'ordre de
-   `FluidDrawerInfoGuiAddon`. Sur une façade opaque il ne reste qu'à peindre par-dessus, ce qui donne
-   un aplat de couleur et pas une fenêtre de tiroir.
+1. **La façade reste celle du Fluid Drawer** (`fluid_front_1`, encastrée à z=0,5). `BaseDrawerRenderer`
+   dessine à 0,5 px dans le bloc : sur une façade affleurante, le nombre et l'indicateur tombent
+   *dans* la géométrie. Changer de parent, c'est revérifier `TEXT_Y` / `INDICATOR_Y` en jeu.
+2. **`energy_drawer_front.png` garde sa fenêtre transparente** (texels 3..13). Le cube se voit à
+   travers, et la GUI dessine les parois puis le remplissage *puis* la façade par-dessus — l'ordre de
+   `FluidDrawerInfoGuiAddon`.
+3. **Le cube tient dans le réservoir.** `CUBE_SCALE` × √2 ≤ 13 px, parce que le cadre tourne sur Y.
+   Un modèle de cadre plus large que 16 unités, ou une échelle plus grande, traverse les parois.
 
-Reste entièrement libre : couleurs, formes, le `FILL` de `EnergyDrawerInfoGuiAddon`,
-`energy_gauge.png`, et les constantes `PANEL_*` de `EnergyDrawerRenderer` si la fenêtre change de
-taille.
+`energy_core.png` est animée (12 frames, `.mcmeta`) et seule la zone 5..11 de chaque frame est
+utilisée par les faces du noyau.
 
-Deux détails qui accrochent : les variantes framed ont besoin de `"tintindex": 0` sur leurs faces,
-sinon `IDColors` n'a rien à teindre ; et les chemins de modèles restent
-`immaterialdrawers:block/<nom de registre>`, dérivés par `IDBlockStateProvider`.
+Les chemins de modèles des blocs restent `immaterialdrawers:block/<nom de registre>`, dérivés par
+`IDBlockStateProvider`.
 
 ### Dette permanente
 
@@ -711,9 +731,10 @@ une raison de plus de viser un périmètre livrable en un mois.
 **État : tâches 1 à 6 faites, tâche 7 en cours (26 août 2026).** Client lancé et validé. Datagen,
 teinte, affichages (face, écran, tooltip), config complète, stockage en `long`, agrégation
 contrôleur, push vers les voisins, Jade et TOP : faits. Le premier augment — le **Wireless Charger**
-— est en place, ce qui valide `FunctionalUpgradeBehavior` de bout en bout (§9). 17 game tests au
+— est en place, ce qui valide `FunctionalUpgradeBehavior` de bout en bout (§9). 18 game tests au
 vert. La tâche 7 est close : les trois augments qui suivaient sont réglés plutôt que construits
-(voir §12). Reste l'art, que le propriétaire du projet reprend lui-même.
+(voir §12). L'art est fait (28 septembre 2026) : la carcasse du Fluid Drawer et un cube d'énergie
+qui tourne dedans, voir §11. Reste le texte de la page CurseForge.
 La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme ordre de référence.
 
 1. ✅ **[BLOQUANT — FAIT] Spike capability — sous forme de GameTest.**
@@ -770,9 +791,9 @@ La liste vivante de ce qui vient est dans `ROADMAP.md` ; celle-ci reste comme or
    faits, et le client charge le tout sans une plainte — `models/block/framed_energy_drawer.json` et
    son loader `functionalstorage:framedblock` compris, qui était le suspect nº1.
 
-   Reste l'art, et il n'est pas de notre ressort : les textures sont des placeholders générés, et
-   c'est le propriétaire du projet qui les reprend à la main. Les deux contraintes que ce travail ne
-   doit pas casser sont en §11.
+   **L'art est fait** (28 septembre 2026) : la carcasse du Fluid Drawer de FS, héritée plutôt que
+   recopiée, et un cube d'énergie à la Mekanism qui tourne dans le réservoir. Vérifié en client, sur
+   un mur de six tiroirs de 0 à 100 %. Ce que l'art ne doit pas casser est en §11.
 
 7. ✅ **[FAIT] Augments.** Le **Wireless Charger** est fait, et il a servi de validation du registre :
    pas de behaviour jetable, le premier vrai augment prouve la même chose. `augment/ChargeNearbyBehavior`,
@@ -895,10 +916,10 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 - ✅ **Le chargement client (tâche 6, partie code)** — `./gradlew runClient` : blockstates, modèles,
   textures et lang chargent sans erreur ni warning nous concernant, loader `functionalstorage:framedblock`
   compris. Voir §11.
+- ✅ **À quoi ça ressemble (tâche 6, partie art)** — regardé en client le 28 septembre 2026 : six
+  tiroirs de 0 à 100 % et un framed, cube et nombre visibles sur chacun. Voir §11.
 
 ### Toujours non vérifié
 
-- **À quoi ça ressemble.** Le client charge les modèles ; personne n'a encore regardé le résultat.
-  Les textures sont des placeholders générés et la jauge d'énergie n'existe pas.
 - **Les APIs NeoForge sensibles à la version** — vérifier sur `https://docs.neoforged.net/`
   avant d'écrire du code de registre ou de capability.

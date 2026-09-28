@@ -1,69 +1,36 @@
 {
+  "__comment": "Functional Storage's fluid drawer, empty: their frame, their recessed front, their tank walls, with our textures. The energy cube inside is not part of this model - EnergyDrawerRenderer draws it, because it turns.",
   "parent": "minecraft:block/block",
+  "loader": "neoforge:composite",
   "textures": {
-    "particle": "immaterialdrawers:block/energy_drawer_side",
-    "side": "immaterialdrawers:block/energy_drawer_side",
-    "front": "immaterialdrawers:block/energy_drawer_front",
-    "back": "immaterialdrawers:block/energy_drawer_back"
+    "particle": "immaterialdrawers:block/energy_drawer_side"
   },
-  "elements": [
-    {
-      "__comment": "Body, pushed back one pixel. That pixel is the whole point: BaseDrawerRenderer draws the contents half a pixel in front of this face, and on a flush cube that plane falls inside the block.",
-      "from": [0, 0, 1],
-      "to": [16, 16, 16],
-      "faces": {
-        "north": {"uv": [0, 0, 16, 16], "texture": "#back"},
-        "south": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south"},
-        "east":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east"},
-        "west":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west"},
-        "up":    {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "up"},
-        "down":  {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "down"}
+  "children": {
+    "side": {
+      "parent": "functionalstorage:block/side_machine",
+      "textures": {
+        "bottom": "immaterialdrawers:block/energy_drawer_top",
+        "side": "immaterialdrawers:block/energy_drawer_side",
+        "top": "immaterialdrawers:block/energy_drawer_top"
       }
     },
-    {
-      "__comment": "The front plate, in front of the backing. Its window is transparent, so what the block entity renderer draws in the well shows through - the same arrangement the fluid drawer uses.",
-      "from": [0, 0, 0.98],
-      "to": [16, 16, 1],
-      "faces": {
-        "north": {"uv": [0, 0, 16, 16], "texture": "#front"}
+    "front": {
+      "parent": "functionalstorage:block/fluid_front_1",
+      "textures": {
+        "particle": "immaterialdrawers:block/energy_drawer_front",
+        "front": "immaterialdrawers:block/energy_drawer_front"
       }
     },
-    {
-      "__comment": "Rim, so the recess reads as a frame rather than a hole. Left.",
-      "from": [0, 0, 0],
-      "to": [1, 16, 1],
-      "faces": {
-        "north": {"uv": [0, 0, 1, 16], "texture": "#side", "cullface": "north"},
-        "east":  {"uv": [15, 0, 16, 1], "texture": "#side"},
-        "west":  {"uv": [0, 0, 1, 16], "texture": "#side", "cullface": "west"}
-      }
-    },
-    {
-      "from": [15, 0, 0],
-      "to": [16, 16, 1],
-      "faces": {
-        "north": {"uv": [15, 0, 16, 16], "texture": "#side", "cullface": "north"},
-        "west":  {"uv": [0, 0, 1, 16], "texture": "#side"},
-        "east":  {"uv": [0, 0, 1, 16], "texture": "#side", "cullface": "east"}
-      }
-    },
-    {
-      "from": [1, 15, 0],
-      "to": [15, 16, 1],
-      "faces": {
-        "north": {"uv": [1, 0, 15, 1], "texture": "#side", "cullface": "north"},
-        "down":  {"uv": [1, 0, 15, 1], "texture": "#side"},
-        "up":    {"uv": [1, 0, 15, 1], "texture": "#side", "cullface": "up"}
-      }
-    },
-    {
-      "from": [1, 0, 0],
-      "to": [15, 1, 1],
-      "faces": {
-        "north": {"uv": [1, 15, 15, 16], "texture": "#side", "cullface": "north"},
-        "up":    {"uv": [1, 0, 15, 1], "texture": "#side"},
-        "down":  {"uv": [1, 0, 15, 1], "texture": "#side", "cullface": "down"}
+    "tank": {
+      "parent": "functionalstorage:block/fluid_inner_1",
+      "textures": {
+        "fluid_inner": "immaterialdrawers:block/energy_drawer_inner"
       }
     }
+  },
+  "item_render_order": [
+    "tank",
+    "front",
+    "side"
   ]
 }

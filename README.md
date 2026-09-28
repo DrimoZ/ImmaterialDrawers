@@ -9,9 +9,9 @@ next to one.
 
 The umbrella name is deliberate. Energy is the first module, not the mod.
 
-> **Status: pre-release.** The block works, holds energy and answers the energy capability, proven
-> by game tests. It has no texture, no recipe and no controller integration yet. Nothing is
-> published anywhere. See [ROADMAP.md](ROADMAP.md).
+> **Status: pre-release.** The drawer works, is drawn, joins a Storage Controller's network and
+> answers the energy capability, proven by game tests and looked at in game. Nothing is published
+> anywhere yet. See [ROADMAP.md](ROADMAP.md).
 
 ## Requires
 

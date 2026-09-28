@@ -24,9 +24,11 @@ Newest first. Versions are `{mod}+{minecraft}`.
   ecosystem pulls - a cable set to "extract" is describing its own output side, not draining what is
   behind it.
 - Every number is in a config file, including the ones Functional Storage keeps fixed in code.
-- The drawer front lights from the bottom with the charge, at full brightness so it reads in the
-  dark. A recessed panel rather than the vertical bar every energy block wears, because a wall of
-  drawers should not contain one block from somewhere else.
+- The drawer looks like Functional Storage's fluid drawer, empty, in graphite and copper - its models
+  are inherited from theirs, not copied. Inside, an energy cube turns: an open frame, and a faceted
+  core that is absent when the drawer is empty and grows more solid, and spins faster, as it fills.
+  The core is drawn at full brightness, so a charged drawer reads in the dark. The amount is written
+  where a fluid drawer writes its own, on the bottom rail of the front.
 - Void and creative behave as they do on a fluid drawer. Locking does not, deliberately: energy has
   one content type, so there is nothing to lock a drawer to.
 - Framed Energy Drawer. Framable with Functional Storage's own recipe — its `FramedBlock` check is
@@ -48,9 +50,8 @@ Newest first. Versions are `{mod}+{minecraft}`.
   reports, because two ways of asking how full a drawer is should not disagree.
 
 ### Notes on this release
-- The client loads every asset without an error or a warning of ours, framed model loader included.
-  Nobody has looked at the result yet: textures are flat generated placeholders and there is no
-  energy gauge.
+- The client loads every asset without an error or a warning of ours, framed model loader included,
+  and the result has been looked at in game: six drawers from empty to full, and a framed one.
 - Recipes: planks around a redstone block, and iron nuggets around a redstone block for the framed
   variant, mirroring the shapes Functional Storage uses for its fluid drawers.
 - Project scaffolding: NeoForge 21.1.248 / Minecraft 1.21.1, ModDevGradle 2.0.75, Titanium and

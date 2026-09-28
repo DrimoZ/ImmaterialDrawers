@@ -22,11 +22,11 @@ The client loads all of it cleanly — `./gradlew runClient`, no errors, no miss
 nothing in the log about this mod beyond it being loaded. That includes the framed block model going
 through Functional Storage's `framedblock` loader, which was the part most likely to break.
 
-What is left is the art, and looking at it. The client bakes the models; nobody has yet seen the
-result.
-
-Then the gauge itself: energy has no fluid texture to borrow, so it is designed from nothing. The
-current textures are flat generated placeholders and are meant to be thrown away.
+The art is in, and it has been looked at in game. The drawer is Functional Storage's fluid drawer,
+empty - their casing, their recessed front, their tank, inherited from their models rather than
+copied, in a graphite-and-copper recolour of their textures. Inside the tank an energy cube turns, in
+the Mekanism tradition: an open frame, and a faceted core that is absent when the drawer is empty
+and grows more solid and faster as it fills. The number sits where a fluid drawer puts its own.
 
 **7 — Augments.** These are the product; the block is the support - a drawer that only
 holds FE duplicates a Powah energy cell. The **Wireless Charger** is in: put it in a utility slot and
@@ -35,7 +35,7 @@ the throwaway behaviour the plan called for, because it proves the same thing - 
 Storage really calls `work()` on an upgrade of ours - and leaves something behind.
 
 The three that were listed after it are settled rather than built - see **Then**. What is left before
-a release is the art and the store copy.
+a release is the store copy.
 
 ## Then
 

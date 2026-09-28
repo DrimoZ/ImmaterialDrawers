@@ -12,6 +12,10 @@ Functional Storage's MIT licence permits reuse and requires its copyright notice
 preserved. Files in this repository that are directly derived from Functional Storage carry an
 attribution header naming the file they came from; this notice covers the work as a whole.
 
+The energy drawer's block textures (energy_drawer_side, energy_drawer_top, energy_drawer_front,
+energy_drawer_inner) are recolours of Functional Storage's fluid drawer textures, and its block
+models inherit Functional Storage's fluid drawer models as parents.
+
 This product depends on, but does not include or modify, Titanium.
 
     Titanium

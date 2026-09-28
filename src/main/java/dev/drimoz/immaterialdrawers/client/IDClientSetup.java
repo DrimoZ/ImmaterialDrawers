@@ -8,6 +8,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 
 /** Client-side registrations that belong on the mod bus. */
 @EventBusSubscriber(modid = ImmaterialDrawers.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
@@ -31,5 +32,16 @@ public final class IDClientSetup {
                     (BlockEntityType<? extends EnergyDrawerTile>) drawer.type().get(),
                     context -> new EnergyDrawerRenderer());
         }
+    }
+
+    /**
+     * The energy cube's two halves. No block or item points at these models, so nothing would load
+     * them otherwise — and asking the model manager for one that was never registered does not
+     * fail, it hands back the missing model, a pink-and-black cube turning in every drawer.
+     */
+    @SubscribeEvent
+    public static void registerModels(ModelEvent.RegisterAdditional event) {
+        event.register(EnergyDrawerRenderer.CUBE_FRAME);
+        event.register(EnergyDrawerRenderer.CUBE_CORE);
     }
 }
