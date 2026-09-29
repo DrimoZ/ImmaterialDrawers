@@ -21,7 +21,7 @@
     "tank": {
       "parent": "functionalstorage:block/fluid_inner_1",
       "textures": {
-        "fluid_inner": "immaterialdrawers:block/energy_drawer_inner"
+        "fluid_inner": "immaterialdrawers:block/drawer_inner"
       }
     }
   },

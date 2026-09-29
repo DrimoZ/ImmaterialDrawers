@@ -3,15 +3,15 @@
   "parent": "minecraft:block/block",
   "loader": "neoforge:composite",
   "textures": {
-    "particle": "immaterialdrawers:block/energy_drawer_side"
+    "particle": "immaterialdrawers:block/drawer_side"
   },
   "children": {
     "side": {
       "parent": "functionalstorage:block/side_machine",
       "textures": {
-        "bottom": "immaterialdrawers:block/energy_drawer_top",
-        "side": "immaterialdrawers:block/energy_drawer_side",
-        "top": "immaterialdrawers:block/energy_drawer_top"
+        "bottom": "immaterialdrawers:block/drawer_top",
+        "side": "immaterialdrawers:block/drawer_side",
+        "top": "immaterialdrawers:block/drawer_top"
       }
     },
     "front": {
@@ -24,7 +24,7 @@
     "tank": {
       "parent": "functionalstorage:block/fluid_inner_1",
       "textures": {
-        "fluid_inner": "immaterialdrawers:block/energy_drawer_inner"
+        "fluid_inner": "immaterialdrawers:block/drawer_inner"
       }
     }
   },

@@ -43,7 +43,7 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
     private static final int FILL = 0xFFEE6A2C;
 
     private static final ResourceLocation INNER = ResourceLocation.fromNamespaceAndPath(
-            ImmaterialDrawers.MOD_ID, "textures/block/energy_drawer_inner.png");
+            ImmaterialDrawers.MOD_ID, "textures/block/drawer_inner.png");
 
     private final ResourceLocation front;
     private final Supplier<BigEnergyStorage> storage;

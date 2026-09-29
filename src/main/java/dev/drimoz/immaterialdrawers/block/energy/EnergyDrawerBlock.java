@@ -1,61 +1,44 @@
 package dev.drimoz.immaterialdrawers.block.energy;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
-import com.buuz135.functionalstorage.block.Drawer;
-import com.buuz135.functionalstorage.block.DrawerBlock;
-import com.buuz135.functionalstorage.block.FramedBlock;
 import com.buuz135.functionalstorage.item.FSAttachments;
 import com.buuz135.functionalstorage.item.component.EmitRedstoneBehavior;
-import dev.drimoz.immaterialdrawers.util.EnergyFormat;
+import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import com.hrznstudio.titanium.util.TileUtil;
-import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * The Energy Drawer block.
  *
  * <p>Modelled on Functional Storage's {@code block/FluidDrawerBlock}.
- * Copyright (c) 2021 Buuz135, Rid - MIT. See NOTICE.
- *
- * <p>The geometry is Functional Storage's own, taken from the public
- * {@link DrawerBlock#CACHED_SHAPES} and {@link DrawerBlock#getDefaultHitShapes}, so an energy
- * drawer clicks exactly like the drawers around it in the wall rather than approximately like them.
+ * Copyright (c) 2021 Buuz135, Rid - MIT. See NOTICE. Geometry, tooltip frame and creative tab are
+ * shared with every drawer of ours, in {@link ImmaterialDrawerBlock}.
  */
-public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
+public class EnergyDrawerBlock extends ImmaterialDrawerBlock<EnergyDrawerTile> {
 
     /** One kind of content, one slot layout. See CLAUDE.md §5. */
     public static final FunctionalStorage.DrawerType TYPE = FunctionalStorage.DrawerType.X_1;
 
     public EnergyDrawerBlock(Properties properties) {
-        super(IDContent.ENERGY_DRAWER_NAME, properties, EnergyDrawerTile.class);
-        setItemGroup(ImmaterialDrawers.TAB);
-        registerDefaultState(defaultBlockState()
-                .setValue(Drawer.FACING_HORIZONTAL_CUSTOM, Direction.NORTH)
-                .setValue(DrawerBlock.LOCKED, false));
+        super(IDContent.ENERGY_DRAWER_NAME, properties, EnergyDrawerTile.class, TYPE);
     }
 
     @SuppressWarnings("unchecked")
@@ -63,19 +46,6 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
     public BlockEntityType.BlockEntitySupplier<EnergyDrawerTile> getTileEntityFactory() {
         return (pos, state) -> new EnergyDrawerTile(this,
                 (BlockEntityType<EnergyDrawerTile>) IDContent.ENERGY_DRAWER.type().get(), pos, state);
-    }
-
-    @Override
-    public List<VoxelShape> getBoundingBoxes(BlockState state, BlockGetter source, BlockPos pos) {
-        List<VoxelShape> boxes = new ArrayList<>();
-        DrawerBlock.CACHED_SHAPES.get(TYPE).get(state.getValue(Drawer.FACING_HORIZONTAL_CUSTOM)).forEach(boxes::add);
-        boxes.add(Shapes.block());
-        return boxes;
-    }
-
-    @Override
-    public Collection<VoxelShape> getHitShapes(BlockState state) {
-        return DrawerBlock.getDefaultHitShapes(TYPE, state);
     }
 
     /**
@@ -136,12 +106,7 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
         var storage = tile.getEnergyStorage();
         long capacity = storage.getCapacityLong();
         long stored = storage.getStoredLong();
-        if (capacity <= 0 || stored <= 0) {
-            return 0;
-        }
-        // Same shape as vanilla's container signal: anything at all lights the comparator to 1,
-        // full reads 15.
-        return 1 + (int) ((stored / (double) capacity) * 14);
+        return comparatorSignal(capacity <= 0 ? 0 : stored / (double) capacity, capacity > 0 && stored > 0);
     }
 
     /**
@@ -162,59 +127,18 @@ public class EnergyDrawerBlock extends Drawer<EnergyDrawerTile> {
     }
 
     /**
-     * Says how much FE the drawer in your hand is holding.
-     *
-     * <p>{@code Drawer.appendHoverText} writes a "Contents:" heading followed by two literal empty
-     * lines — placeholders for the two stored item stacks a normal drawer fills in. An energy
-     * drawer has none, so the inherited tooltip was a heading and two blank lines, which is what a
-     * bug looks like.
-     *
-     * <p>Replaced outright rather than appended to, the same way {@code FluidDrawerBlock} does it:
-     * calling {@code super} would print the empty section as well as ours. The upgrade lines below
-     * are theirs, kept identical so both drawers read the same.
-     *
-     * <p>The numbers come out of the tile NBT that {@code Drawer.copyTo} puts on the dropped stack,
-     * under the field name Titanium's {@code @Save} gave it.
+     * The charge, as FE stored over FE capacity, read from the field name Titanium's {@code @Save}
+     * gave the storage.
      */
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context,
-                                List<Component> tooltip, TooltipFlag flag) {
-        if (stack.has(FSAttachments.TILE)) {
-            CompoundTag tile = stack.get(FSAttachments.TILE);
-            CompoundTag energy = tile.getCompound("energyStorage");
-
-            tooltip.add(Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY));
-            tooltip.add(Component.literal(" - ")
-                    .append(Component.literal(EnergyFormat.format(energy.getLong("Energy")))
-                            .withStyle(ChatFormatting.YELLOW))
-                    .append(Component.literal(" / ").withStyle(ChatFormatting.WHITE))
-                    .append(Component.literal(EnergyFormat.format(energy.getLong("Capacity")) + " FE")
-                            .withStyle(ChatFormatting.GOLD)));
-
-            tooltip.add(Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY));
-            boolean anyUpgrade = false;
-            if (tile.getBoolean("isCreative")) {
-                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
-                        .append(Component.translatable("drawer.block.upgrades.is_creative")
-                                .withStyle(ChatFormatting.LIGHT_PURPLE)));
-                anyUpgrade = true;
-            }
-            if (tile.getBoolean("isVoid")) {
-                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
-                        .append(Component.translatable("drawer.block.upgrades.is_void")
-                                .withStyle(ChatFormatting.BLUE)));
-                anyUpgrade = true;
-            }
-            if (!anyUpgrade) {
-                tooltip.add(Component.literal("- ").withStyle(ChatFormatting.GRAY)
-                        .append(Component.translatable("drawer.block.upgrades.none")
-                                .withStyle(ChatFormatting.GRAY)));
-            }
-        }
-
-        if (this instanceof FramedBlock) {
-            tooltip.add(Component.translatable("frameddrawer.use").withStyle(ChatFormatting.GRAY));
-        }
+    protected void appendContents(CompoundTag tile, List<Component> tooltip) {
+        CompoundTag energy = tile.getCompound("energyStorage");
+        tooltip.add(Component.literal(" - ")
+                .append(Component.literal(EnergyFormat.format(energy.getLong("Energy")))
+                        .withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal(" / ").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal(EnergyFormat.format(energy.getLong("Capacity")) + " FE")
+                        .withStyle(ChatFormatting.GOLD)));
     }
 
     /**
