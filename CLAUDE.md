@@ -1148,6 +1148,5 @@ Wireless Charger et logo refaits, et les deux correctifs de la 0.1.0 (clic qui l
 sans drop). Le jar ne contient aucune classe Mekanism, Ars ou GeckoLib.
 
 **Botania : reporté.** Aucune release 1.21.1 (dernière : 1.20.1-456, le portage est une branche). Voir
-ROADMAP. **Images de la page CurseForge :** régénérées (en-tête, bandeaux Chimie/Source/famille), à
-téléverser à la main — marqueurs `UPLOAD:` dans STORE.md. **Wiki :** mis à jour dans un clone local,
-pas encore poussé.
+ROADMAP. **Images de la page CurseForge :** régénérées et téléversées ; description, résumé, logo et galerie à jour (29 sept.).
+La galerie CurseForge refuse les fichiers de plus de 2 Mo : JPG pleine résolution. **Wiki :** poussé.
