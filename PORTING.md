@@ -43,7 +43,7 @@ Three things follow from this table, and together they are the whole plan:
 three drawers, plus mana), and it is the harder port. 26.1 is a smaller port with a smaller payoff.
 Doing the harder one first also teaches the most about which of our abstractions actually hold.
 
-Both branches exist and build as far as `compileJava` (§5). Neither port has started.
+Both branches exist and build as far as `compileJava` (§5). Neither port has started. **26.1 is on hold** (29 September 2026): the branch stays as it is until 1.20.1 ships.
 
 ---
 
@@ -120,7 +120,7 @@ condition becomes a Forge `ICondition` + serializer. I expect this layer to be m
 
 ### The optional mods on 1.20.1
 
-**Mekanism 10.4: four handlers, not one.** The unified Chemical API is 10.7. In 10.4, gases, infusion
+**Mekanism 10.4: four handlers, not one.** **Decided 29 September 2026: one drawer for all four types**, same registry names as 1.21.1. The unified Chemical API is 10.7. In 10.4, gases, infusion
 types, pigments and slurries each have their own handler and capability (`IGasHandler`,
 `IInfusionHandler`, `IPigmentHandler`, `ISlurryHandler`) **[verified in the jar]**. Mekanism's own tanks
 bridge the four with `mekanism.api.chemical.merged.MergedChemicalTank` / `BoxedChemical`, which are
@@ -246,8 +246,6 @@ Same logic as CLAUDE.md §12: the first task decides whether the rest is worth d
 
 ## 7. Still open
 
-- **Chemical Drawers on 1.20.1: one drawer for all four types (recommended, what Mekanism's own tanks
-  do), or four drawer families?** Four families would mean registry names that 1.21.1 does not have.
 - **The Mana Drawer's design**: capacity, whether it is a pool for spreaders or only a buffer, sparks.
 - **Is the Mana Drawer 1.20.1-only for good?** Only if Botania never ships 1.21.1. If it does, the
   drawer is ported forward like the others.
