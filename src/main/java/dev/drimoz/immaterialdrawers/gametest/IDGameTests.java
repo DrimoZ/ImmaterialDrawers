@@ -806,6 +806,35 @@ public final class IDGameTests {
         helper.succeed();
     }
 
+    /**
+     * The config switches reach the recipes: the condition answers the config as it is now, and
+     * with everything on - the default - the recipes are really loaded.
+     *
+     * <p>The creative-tab half is not tested here; it needs a client.
+     */
+    @GameTest(template = PLATFORM)
+    public static void aDisabledFeatureLosesItsRecipe(GameTestHelper helper) {
+        var condition = dev.drimoz.immaterialdrawers.registry.IDFeatures.enabled(
+                dev.drimoz.immaterialdrawers.registry.IDFeatures.Feature.ENERGY_DRAWER);
+        boolean before = dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED;
+        try {
+            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = false;
+            helper.assertTrue(!condition.test(net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY),
+                    "the recipe condition ignores a disabled energy drawer");
+            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = true;
+            helper.assertTrue(condition.test(net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY),
+                    "the recipe condition refuses an enabled energy drawer");
+        } finally {
+            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = before;
+        }
+        for (String recipe : List.of("energy_drawer", "framed_energy_drawer", "wireless_charger")) {
+            helper.assertTrue(helper.getLevel().getRecipeManager()
+                            .byKey(ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, recipe)).isPresent(),
+                    "recipe " + recipe + " is missing although its feature is enabled");
+        }
+        helper.succeed();
+    }
+
     private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
         return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
     }

@@ -9,6 +9,7 @@ import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.chemical.ChemicalDrawerTile;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.storage.chemical.BigChemicalHandler;
 import dev.drimoz.immaterialdrawers.util.ChemicalFormat;
 import mekanism.api.chemical.ChemicalStack;
@@ -129,7 +130,7 @@ public class ChemicalDrawerBlock extends ImmaterialDrawerBlock<ChemicalDrawerTil
      */
     @Override
     public void registerRecipe(RecipeOutput consumer) {
-        RecipeOutput output = consumer.withConditions(new ModLoadedCondition(Mods.MEKANISM));
+        RecipeOutput output = consumer.withConditions(new ModLoadedCondition(Mods.MEKANISM), IDFeatures.enabled(IDFeatures.Feature.CHEMICAL_DRAWERS));
         Item tube = BuiltInRegistries.ITEM.get(PRESSURIZED_TUBE);
         switch (type) {
             case X_2 -> TitaniumShapedRecipeBuilder.shapedRecipe(this, 2)

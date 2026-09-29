@@ -8,6 +8,7 @@ import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -124,7 +125,7 @@ public class EnergyDrawerBlock extends ImmaterialDrawerBlock<EnergyDrawerTile> {
                 .pattern("PPP").pattern("PRP").pattern("PPP")
                 .define('P', ItemTags.PLANKS)
                 .define('R', Blocks.REDSTONE_BLOCK)
-                .save(consumer);
+                .save(consumer.withConditions(IDFeatures.enabled(IDFeatures.Feature.ENERGY_DRAWER)));
     }
 
     /**

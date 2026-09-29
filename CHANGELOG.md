@@ -16,6 +16,13 @@ Newest first. Versions are `{mod}+{minecraft}`.
   like a fluid.
 - Without Mekanism nothing changes: the blocks are not registered, no Mekanism class is loaded, and
   the recipes are conditioned on it.
+- A switch per feature in the config - Energy Drawer, Chemical Drawers, Wireless Charger. Off means
+  no recipe and no creative-tab entry; drawers already placed keep working, and worlds and
+  multiplayer are unaffected.
+
+### Changed
+- The Wireless Charger has a new face: Functional Storage's own utility-upgrade plate and port,
+  with copper wave arcs and a lit port, instead of a flat dark tile that belonged to no mod.
 
 ### Fixed
 - Right-clicking or left-clicking the front of an Energy Drawer with anything in hand threw on the

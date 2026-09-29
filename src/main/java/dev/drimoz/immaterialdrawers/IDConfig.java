@@ -79,4 +79,25 @@ public class IDConfig {
             + "it with the fluid multipliers. Only read when Mekanism is installed.")
     @ConfigVal.InRangeInt(min = 1)
     public static int CHEMICAL_MB_PER_UNIT = 1000;
+
+    // ---- Switching content off -------------------------------------------------------------------
+    //
+    // "Off" means unobtainable: no recipe, and gone from the creative tab. The blocks stay
+    // registered, and the ones already placed keep working. Unregistering them would delete every
+    // placed drawer and its contents from existing worlds, and would make a server and a client with
+    // different configs refuse to connect - registries must match on both sides. See CLAUDE.md §17.
+
+    @ConfigVal(comment = "Whether the Energy Drawer and its framed variant can be crafted and appear in "
+            + "the creative tab. Turning this off never removes drawers already placed; they keep "
+            + "working and keep their energy.")
+    public static boolean ENERGY_DRAWER_ENABLED = true;
+
+    @ConfigVal(comment = "Whether the Chemical Drawers (all three layouts, framed or not) can be crafted "
+            + "and appear in the creative tab. They only exist with Mekanism installed; this switch "
+            + "cannot bring them back without it. Drawers already placed keep working.")
+    public static boolean CHEMICAL_DRAWERS_ENABLED = true;
+
+    @ConfigVal(comment = "Whether the Wireless Charger augment can be crafted and appears in the "
+            + "creative tab. Chargers already in drawers keep working.")
+    public static boolean WIRELESS_CHARGER_ENABLED = true;
 }

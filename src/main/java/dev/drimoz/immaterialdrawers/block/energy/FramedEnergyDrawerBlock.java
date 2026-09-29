@@ -4,6 +4,7 @@ import com.buuz135.functionalstorage.block.FramedBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.item.Items;
@@ -42,7 +43,7 @@ public class FramedEnergyDrawerBlock extends EnergyDrawerBlock implements Framed
                 .pattern("NNN").pattern("NRN").pattern("NNN")
                 .define('N', Items.IRON_NUGGET)
                 .define('R', Blocks.REDSTONE_BLOCK)
-                .save(consumer);
+                .save(consumer.withConditions(IDFeatures.enabled(IDFeatures.Feature.ENERGY_DRAWER)));
     }
 
     /**

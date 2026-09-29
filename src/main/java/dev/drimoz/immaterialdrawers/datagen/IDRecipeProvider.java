@@ -3,6 +3,7 @@ package dev.drimoz.immaterialdrawers.datagen;
 import com.hrznstudio.titanium.block.BasicBlock;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.Tags;
 import net.minecraft.core.HolderLookup;
@@ -43,6 +44,6 @@ public class IDRecipeProvider extends RecipeProvider {
                 .define('C', Tags.Items.INGOTS_COPPER)
                 .define('R', Tags.Items.DUSTS_REDSTONE)
                 .define('E', Items.ENDER_PEARL)
-                .save(output);
+                .save(output.withConditions(IDFeatures.enabled(IDFeatures.Feature.WIRELESS_CHARGER)));
     }
 }

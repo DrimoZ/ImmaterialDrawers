@@ -1,6 +1,10 @@
 {
   "neoforge:conditions": [
     {
+      "type": "immaterialdrawers:feature_enabled",
+      "feature": "energy_drawer"
+    },
+    {
       "type": "neoforge:item_exists",
       "item": "immaterialdrawers:energy_drawer"
     }

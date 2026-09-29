@@ -5,6 +5,10 @@
       "modid": "mekanism"
     },
     {
+      "type": "immaterialdrawers:feature_enabled",
+      "feature": "chemical_drawers"
+    },
+    {
       "type": "neoforge:item_exists",
       "item": "immaterialdrawers:framed_chemical_drawer_4"
     }

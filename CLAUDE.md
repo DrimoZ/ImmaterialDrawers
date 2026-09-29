@@ -1030,3 +1030,31 @@ texture ; façades, niveaux, textures et teintes des chimiques, nombres, cadenas
 Pas de provider Jade/TOP dédié (l'API chemical est déjà en `long`, ce que Jade affiche via ses propres
 intégrations Mekanism n'a pas été vérifié) ; item en main rendu comme le bloc, sans contenu (même dette
 que l'énergie) ; pas de gestion de la radioactivité à la casse.
+
+---
+
+## 17. Activer / désactiver un contenu — la config, et ce qu'« off » veut dire
+
+**Ajouté le 29 septembre 2026.** Trois interrupteurs dans `immaterialdrawers-common.toml` :
+`ENERGY_DRAWER_ENABLED`, `CHEMICAL_DRAWERS_ENABLED`, `WIRELESS_CHARGER_ENABLED`.
+
+**« Off » = inobtenable, pas désenregistré.** Plus de recette (condition
+`immaterialdrawers:feature_enabled`, évaluée au chargement des datapacks, donc effective au prochain
+chargement de monde ou `/reload`), retiré de l'onglet créatif (`BuildCreativeModeTabContentsEvent`, en
+`LOWEST` pour passer après Titanium qui remplit l'onglet). Les blocs restent enregistrés et **ceux déjà
+posés continuent de marcher**.
+
+Pourquoi pas désenregistrer, pour mémoire :
+- **Titanium enregistre avant de charger la config.** `ModuleController` appelle `initModules()`
+  depuis son constructeur, et n'ajoute les `@ConfigFile` que dans `onPostInit()`, après. Au moment de
+  l'enregistrement, `IDConfig` vaut ses défauts. Un interrupteur ne peut pas y toucher.
+- **Désenregistrer supprime** chaque tiroir posé, avec son contenu, dans les mondes existants.
+- **Les registres doivent être identiques** entre serveur et client : une config différente des deux
+  côtés refuserait toute connexion.
+
+Le seul interrupteur qui empêche vraiment un bloc d'exister, c'est l'absence de Mekanism (§16) — et
+celui-là est le même des deux côtés par construction.
+
+Couvert par `aDisabledFeatureLosesItsRecipe` (la condition suit la config ; les recettes sont bien
+chargées par défaut, ce qui prouve aussi que le codec de condition est enregistré). L'onglet créatif
+n'est **pas** testé automatiquement : il faut un client.

@@ -17,6 +17,7 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
@@ -64,6 +65,7 @@ public class ImmaterialDrawers extends ModuleController {
         NBTManager.getInstance().scanTileClassForAnnotations(FramedEnergyDrawerTile.class);
 
         IDComponents.DR.register(modBus);
+        IDFeatures.init(modBus);
 
         // The chemical drawers exist only with Mekanism, and nothing that touches its classes may
         // run without it - see compat.Mods. The registration half is in initModules.
@@ -86,7 +88,7 @@ public class ImmaterialDrawers extends ModuleController {
         // extension point (CLAUDE.md §9) and it is a plain registry entry - no mixin, no hook.
         getRegistries().registerGeneric(FunctionalUpgradeBehavior.REGISTRY_KEY, "charge_nearby",
                 () -> ChargeNearbyBehavior.CODEC);
-        addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getBlock()), MOD_ID, TAB);
+        addCreativeTab("main", IDFeatures.tabIcon(), MOD_ID, TAB);
     }
 
     /**
