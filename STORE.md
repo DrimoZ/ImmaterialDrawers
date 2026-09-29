@@ -8,11 +8,13 @@ Images are referenced by the URL CurseForge gave them on upload, through the des
 committed: `run/store-screenshots/` for the in-game shots, the banner and headers from the showcase
 run (CLAUDE.md §4).
 
+**`UPLOAD:<file>` marks an image not uploaded yet.** Upload `<file>` (850 px wide, from the scratchpad `store850/`) through the description editor, then replace the marker with the URL CurseForge gives it.
+
 ## Summary
 
 > One line, 256 characters at most, shown under the name in every search result.
 
-Functional Storage drawers for everything that isn't an item or a fluid. Energy Drawers are here, up to 2 billion FE each and linkable to the Storage Controller. Chemical drawers and more are on the way.
+Functional Storage drawers for what isn't an item or a fluid: Energy (2 billion FE), Mekanism chemicals and Ars Nouveau Source. Same upgrades, same Storage Controller, framed variants for all.
 
 ## Categories
 
@@ -22,24 +24,25 @@ Main: **Addons** (it is one, of Functional Storage). Additional: Storage, Energy
 
 <!-- Everything below this line is pasted into CurseForge's Markdown editor as-is. -->
 
-![Immaterial Drawers](https://media.forgecdn.net/attachments/description/1663641/description_ceb6cd3f-d240-45ad-a7ca-fb45c91f9bbd.jpg)
+![Immaterial Drawers](UPLOAD:banner.jpg)
 
 ### Functional Storage stores items and fluids. Immaterial Drawers stores everything else.
 
-A family of drawers for the things you can't pick up: power, chemicals, and whatever else your
-tech mods pipe around. Every one of them sits in your wall of drawers, takes the upgrades you
+A family of drawers for the things you can't pick up: power, Mekanism chemicals, Ars Nouveau
+Source, and whatever else your mods pipe around. Every one of them sits in your wall of drawers, takes the upgrades you
 already craft, and joins the Storage Controller like any other drawer. No new storage system to
 learn: if you know Functional Storage, you already know how to use this.
 
-![The family is growing](https://media.forgecdn.net/attachments/description/1663641/description_651ab81d-4ddf-4f66-b209-85a3b53069d6.jpg)
+![The family is growing](UPLOAD:header_more.jpg)
 
 The foundations are built once, for every kind of drawer: the Storage Controller link, the
-upgrades, the framed variants, the probe support, the numbers past two billion. **Energy is the
-first drawer on top of them, and it works.** Each new kind is a new drawer on the same base, so the
-next ones come fast:
+upgrades, the framed variants, the probe support, the numbers past two billion. Each kind of
+drawer is built on top of them, and three are here:
 
-- ✅ **Energy Drawer**, Forge Energy. Available now.
-- 🔜 **Chemical Drawer**, for Mekanism chemicals. Next up.
+- ✅ **Energy Drawer**, Forge Energy. Works with every FE mod.
+- ✅ **Chemical Drawers**, for Mekanism gases, slurries, pigments and infuse types. *With Mekanism.*
+- ✅ **Source Drawer**, for Ars Nouveau Source. *With Ars Nouveau.*
+- 🔜 **Mana**, for Botania, as soon as Botania is released for 1.21.1.
 - 💡 More after that. Tell us what you want to store in the [issues](https://github.com/DrimoZ/ImmaterialDrawers/issues).
 
 ![Drawer #1: Energy](https://media.forgecdn.net/attachments/description/1663641/description_3e24b98f-0bd2-4f37-bc1d-fc16cee86356.jpg)
@@ -71,11 +74,36 @@ really holds.
 
 ![A Mekanism power room built around one Storage Controller](https://media.forgecdn.net/attachments/description/1663641/description_b43dcca6-0a37-4d1f-81c7-aa4153a5a2f8.jpg)
 
+![Drawer #2: Chemicals](UPLOAD:header_chemical.jpg)
+
+With **Mekanism** installed, **Chemical Drawers** join the family. They are Functional Storage's fluid
+drawers for chemicals: the same 1x1, 1x2 and 2x2 layouts, the same capacities, the same upgrades.
+
+- **Every Mekanism chemical:** hydrogen, oxygen, chlorine, ore slurries, pigments, infuse types.
+- **Pressurized tubes connect from any side**, and a tube on a Storage Controller reaches every
+  tank on the wall.
+- **Fill and empty them by hand** with a Mekanism chemical tank: right-click to pour in, left-click
+  to fill back.
+- **Gases glow**, and their surface slowly breathes. Slurries and pigments sit still like a liquid.
+- **Lock, Void and Creative** behave as they do on a fluid drawer.
+
+![Drawer #3: Source](UPLOAD:header_source.jpg)
+
+With **Ars Nouveau** installed, the **Source Drawer** appears, and Ars treats it like a Source Jar:
+sourcelinks fill it, the Enchanting Apparatus and Imbuement Chamber draw from it, and relays link
+to it with the Dominion Wand. 32,000 Source unupgraded, over two billion with four Netherite
+upgrades, glowing with Ars's own Source behind a violet window.
+
+![Chemical and Source drawers next to an Energy Drawer](UPLOAD:family_shot.jpg)
+
+**Without Mekanism or Ars Nouveau, their drawers simply do not exist** and nothing else changes:
+both are optional.
+
 ![Framed](https://media.forgecdn.net/attachments/description/1663641/description_57ae690a-b9df-480c-9fca-23970a13b99d.jpg)
 
-The **Framed Energy Drawer** wears any block you give it through Functional Storage's framing
+Every drawer has a **framed** version that wears any block you give it through Functional Storage's framing
 recipe, the same one you use for your framed item drawers. Cherry cabinets, quartz walls, copper
-panels: the cube still glows through the window.
+panels: what the drawer holds still glows through the window.
 
 ![Framed energy drawers hiding in a cherry cabinet](https://media.forgecdn.net/attachments/description/1663641/description_b758d909-d3d0-45be-820a-386bfbffde45.jpg)
 
@@ -105,18 +133,22 @@ in the config.
 | Loader | NeoForge 21.1+ |
 | [Functional Storage](https://www.curseforge.com/minecraft/mc-mods/functional-storage) | 1.5.7+ |
 | [Titanium](https://www.curseforge.com/minecraft/mc-mods/titanium) | required by Functional Storage too |
+| [Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism) *(optional)* | 10.7+, for the Chemical Drawers |
+| [Ars Nouveau](https://www.curseforge.com/minecraft/mc-mods/ars-nouveau) *(optional)* | 5.13+, for the Source Drawer |
 
 ### FAQ
 
-**Do I need Mekanism, Powah or another tech mod?** No. Any mod that produces or uses Forge Energy
-works with it. The screenshots use Mekanism and Powah for scenery.
+**Do I need Mekanism, Ars Nouveau or another mod?** No. The Energy Drawer works with any mod that
+produces or uses Forge Energy. Mekanism adds the Chemical Drawers and Ars Nouveau the Source
+Drawer; without them, those drawers are simply not there.
 
 **Can I put it in my modpack?** Yes, as long as you ship the published jar unmodified.
 
 **Fabric?** No. Functional Storage is NeoForge on 1.21.1, and so is this.
 
-**Is every number configurable?** Yes: base capacity, how upgrades scale it, whether and how fast
-a drawer pushes power, and everything about the Wireless Charger.
+**Is every number configurable?** Yes: capacities, how upgrades scale them, whether and how fast
+a drawer pushes power, everything about the Wireless Charger, and a switch to turn off any drawer
+your pack does not want.
 
 ### Credits
 

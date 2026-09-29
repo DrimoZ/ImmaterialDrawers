@@ -1071,7 +1071,7 @@ Source n'a qu'une sorte de contenu. Même règle de garde que le §16, avec `Mod
 Ars, Curios et GeckoLib en `runtimeOnly` de dev (épinglés par **id de version Modrinth** : GeckoLib a le
 même numéro pour plusieurs loaders), `-PnoArs` pour le chemin « absent ». Déclaré `optional`, `[5.13,)`.
 
-**[vérifié]** 49 game tests avec Mekanism + Ars, 36 sans Ars, 21 sans aucun des deux. Vu en client
+**[vérifié]** 52 game tests avec Mekanism + Ars, 21 sans aucun des deux. Vu en client
 (façade violette, texture de Source d'Ars, niveaux, framed) le 29 septembre 2026 ; l'écran n'a pas été
 ouvert.
 
@@ -1125,3 +1125,29 @@ Jar (pépites de fer pour le framed), sous `mod_loaded` + `feature_enabled`. Int
 ### Non fait
 
 Pas de provider Jade/TOP (Jade n'affiche pas la quantité de Source) ; item en main sans contenu.
+
+---
+
+## 19. Tests par les vrais blocs des mods, et release 0.2.0
+
+**Ajouté le 29 septembre 2026.** Les tests des §16 et §18 appelaient nos handlers et les utilitaires
+des mods. Trois tests font maintenant passer le contenu **par les blocs des autres mods**, entre deux
+de nos tiroirs, avec contrôle de conservation (rien créé en route) :
+
+- `aPressurizedTubeMovesChemicalsBetweenDrawers` — tube Mekanism en *pull* (`setConnectionTypeRaw`) ;
+- `aUniversalCableCarriesEnergyBetweenDrawers` — câble universel Mekanism, Joules convertis à la frontière ;
+- `anArsRelayMovesSourceBetweenDrawers` — relais Ars lié par `setTakeFrom` / `setSendTo`, comme la Dominion Wand.
+
+**Écartés, parce que ce n'est pas ce que fait un joueur :** insérer dans un tube par sa capability
+(Mekanism rend tout — un tube se remplit en tirant ou par l'éjection d'une machine) ; remplir un
+`basic_chemical_tank` Mekanism fraîchement posé (aucune face n'expose la capability tant que la config de
+côtés n'est pas faite). GeckoLib est `compileOnly` parce que `RelayTile` en étend un type — tests seulement.
+
+**Release 0.2.0** (`mod_version=0.2.0`) : Chemical Drawers, Source Drawer, interrupteurs de config,
+Wireless Charger et logo refaits, et les deux correctifs de la 0.1.0 (clic qui lève une exception, casse
+sans drop). Le jar ne contient aucune classe Mekanism, Ars ou GeckoLib.
+
+**Botania : reporté.** Aucune release 1.21.1 (dernière : 1.20.1-456, le portage est une branche). Voir
+ROADMAP. **Images de la page CurseForge :** régénérées (en-tête, bandeaux Chimie/Source/famille), à
+téléverser à la main — marqueurs `UPLOAD:` dans STORE.md. **Wiki :** mis à jour dans un clone local,
+pas encore poussé.

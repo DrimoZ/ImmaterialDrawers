@@ -61,6 +61,11 @@ each for its own reason:
 
 ## Still open
 
+- **Mana (Botania).** Asked for, and deferred: Botania has no release for 1.21.1 (the latest is
+  1.20.1-456; the port is an unreleased branch). Build it when Botania ships, the way the Source
+  Drawer was built: capability or public registry, never a mixin.
+- **Probes for chemicals and Source.** Jade and The One Probe show energy only.
+
 - The CurseForge project is created as `immaterial-drawers`, its page is filled in (logo, 14 screenshots,
   the STORE.md description), and it waits for approval with its first file. The same slug is still to
   be reserved on Modrinth.

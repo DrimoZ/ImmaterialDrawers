@@ -2,7 +2,10 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## Unreleased
+## 0.2.0+1.21.1 — 2026-09-29
+
+Two new kinds of drawer, each arriving with the mod it belongs to, and two fixes every 0.1.0 player
+should have.
 
 ### Added
 - Chemical Drawers, when Mekanism is installed: gases, infuse types, pigments and slurries, in the
@@ -27,6 +30,8 @@ Newest first. Versions are `{mod}+{minecraft}`.
   multiplayer are unaffected.
 
 ### Changed
+- A new logo showing the whole family - the energy drawer's cube, a chemical drawer, a source
+  drawer and a 2x2 chemical drawer - instead of four energy drawers.
 - The Wireless Charger has a new face: Functional Storage's own utility-upgrade plate and port,
   with copper wave arcs and a lit port, instead of a flat dark tile that belonged to no mod.
 
@@ -39,6 +44,15 @@ Newest first. Versions are `{mod}+{minecraft}`.
   The drawers need the correct tool to drop, and were in no `mineable` tag, so no tool was correct.
   Every block of the mod is now generated into `minecraft:mineable/pickaxe`, like Functional
   Storage's own drawers.
+
+### Notes
+- Mekanism and Ars Nouveau are optional dependencies, declared as such. Tested with both, with one,
+  and with neither: 52 game tests with both installed, 21 with neither, and no Mekanism or Ars class
+  is ever loaded without its mod.
+- Tested through the other mods' own blocks, not only through our code: a Mekanism pressurized tube
+  moving chemicals between two drawers, a Mekanism universal cable moving energy, an Ars Nouveau
+  relay moving Source - each checked to create nothing on the way.
+- Botania mana is planned, and waits for a Botania release on 1.21.1.
 
 ## 0.1.0+1.21.1 — 2026-09-28
 
