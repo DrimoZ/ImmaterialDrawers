@@ -16,7 +16,13 @@ Newest first. Versions are `{mod}+{minecraft}`.
   like a fluid.
 - Without Mekanism nothing changes: the blocks are not registered, no Mekanism class is loaded, and
   the recipes are conditioned on it.
-- A switch per feature in the config - Energy Drawer, Chemical Drawers, Wireless Charger. Off means
+- Source Drawer, when Ars Nouveau is installed: a drawer of Source, framed or not. Relays connect
+  to it through Ars's Source capability, and everything that draws Source from nearby - the
+  enchanting apparatus, imbuement, sourcelinks filling it - finds it the way it finds a Source Jar.
+  32,000 Source unupgraded, over two billion with four Netherite upgrades. A Storage Controller
+  exposes the Source of its whole network to a relay. Violet-rimmed, with Ars's own Source glowing
+  inside.
+- A switch per feature in the config - Energy Drawer, Chemical Drawers, Source Drawer, Wireless Charger. Off means
   no recipe and no creative-tab entry; drawers already placed keep working, and worlds and
   multiplayer are unaffected.
 

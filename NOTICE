@@ -13,7 +13,7 @@ preserved. Files in this repository that are directly derived from Functional St
 attribution header naming the file they came from; this notice covers the work as a whole.
 
 The drawers' block textures (drawer_side, drawer_top, drawer_inner, drawer_divider,
-energy_drawer_front, chemical_drawer_front, chemical_drawer_front_2, chemical_drawer_front_4) are
+energy_drawer_front, chemical_drawer_front, chemical_drawer_front_2, chemical_drawer_front_4, source_drawer_front) are
 recolours of Functional Storage's fluid drawer textures, and their block models inherit Functional
 Storage's fluid drawer models as parents.
 

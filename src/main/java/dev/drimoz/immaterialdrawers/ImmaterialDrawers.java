@@ -19,6 +19,7 @@ import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
+import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
@@ -72,6 +73,9 @@ public class ImmaterialDrawers extends ModuleController {
         if (Mods.mekanism()) {
             IDChemicalContent.init(modBus);
         }
+        if (Mods.arsNouveau()) {
+            IDSourceContent.init(modBus);
+        }
 
         modBus.addListener(this::registerCapabilities);
         modBus.addListener(this::addEnergyScalingToStorageUpgrades);
@@ -82,6 +86,9 @@ public class ImmaterialDrawers extends ModuleController {
         IDContent.register(getRegistries());
         if (Mods.mekanism()) {
             IDChemicalContent.register(getRegistries());
+        }
+        if (Mods.arsNouveau()) {
+            IDSourceContent.register(getRegistries());
         }
 
         // The augment's codec, in Functional Storage's registry. This is their one supported

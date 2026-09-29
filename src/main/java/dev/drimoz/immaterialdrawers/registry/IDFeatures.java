@@ -40,6 +40,7 @@ public final class IDFeatures {
     public enum Feature implements StringRepresentable {
         ENERGY_DRAWER("energy_drawer", () -> IDConfig.ENERGY_DRAWER_ENABLED),
         CHEMICAL_DRAWERS("chemical_drawers", () -> IDConfig.CHEMICAL_DRAWERS_ENABLED),
+        SOURCE_DRAWER("source_drawer", () -> IDConfig.SOURCE_DRAWER_ENABLED),
         WIRELESS_CHARGER("wireless_charger", () -> IDConfig.WIRELESS_CHARGER_ENABLED);
 
         public static final Codec<Feature> CODEC = StringRepresentable.fromEnum(Feature::values);
@@ -76,6 +77,11 @@ public final class IDFeatures {
                 case CHEMICAL_DRAWERS -> {
                     if (Mods.mekanism()) {
                         IDChemicalContent.all().forEach(drawer -> items.add(drawer.getBlock()));
+                    }
+                }
+                case SOURCE_DRAWER -> {
+                    if (Mods.arsNouveau()) {
+                        IDSourceContent.all().forEach(drawer -> items.add(drawer.getBlock()));
                     }
                 }
                 case WIRELESS_CHARGER -> items.add(IDContent.WIRELESS_CHARGER.get());

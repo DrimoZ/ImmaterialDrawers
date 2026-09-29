@@ -115,6 +115,14 @@ même tiroir, la sémantique d'origine du drawer retrouvée. Dépendance optionn
 d'énergie » mais des APIs propriétaires, une intégration bespoke chacune, cassée à chaque release
 du mod source. Si repris un jour : jar séparé.
 
+> **⚠️ RENVERSÉ pour la Source, le 29 septembre 2026** — à la demande de l'auteur, et dans le même
+> jar. Ce qui a changé depuis cette note : Ars expose un point d'extension public (`SourceManager`)
+> en plus de sa capability, donc l'intégration n'a demandé ni mixin ni classe interne ; la garde
+> `Mods` du Mekanism a prouvé qu'une dépendance optionnelle dans le même jar ne coûte rien sans le
+> mod ; et le risque « cassé à chaque release » est couvert par des game tests qui exercent les
+> vrais chemins d'Ars (`SourceUtil`), épinglés sur une version. Le risque n'a pas disparu — il est
+> maintenant détecté. Voir `CLAUDE.md` §18. Le Mana de Botania reste écarté.
+
 **« Spark » façon Botania** — un Spark est une *entité* greffée sur un Mana Pool avec son propre
 réseau. Ce n'est pas un comportement d'upgrade ; rien à voir avec les autres augments.
 

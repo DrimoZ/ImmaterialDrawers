@@ -19,6 +19,7 @@ import net.neoforged.fml.ModList;
 public final class Mods {
 
     public static final String MEKANISM = "mekanism";
+    public static final String ARS_NOUVEAU = "ars_nouveau";
 
     private Mods() {
     }
@@ -29,5 +30,10 @@ public final class Mods {
      */
     public static boolean mekanism() {
         return ModList.get().isLoaded(MEKANISM);
+    }
+
+    /** Whether Ars Nouveau is installed - the Source Drawer. Same contract as {@link #mekanism()}. */
+    public static boolean arsNouveau() {
+        return ModList.get().isLoaded(ARS_NOUVEAU);
     }
 }

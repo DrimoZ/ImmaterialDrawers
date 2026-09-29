@@ -41,6 +41,10 @@ a release is a published file: the CurseForge page (logo, gallery, description) 
 registered only when Mekanism is installed. Tested with Mekanism (35 game tests) and without it
 (20). Still to look at: a probe provider for Jade/TOP, and the in-hand item showing its contents.
 
+**Source Drawer (Ars Nouveau, optional).** Found by relays through the Source capability and by
+every nearby consumer through Ars's `SourceManager`. 49 game tests with both optional mods, 36 without
+Ars, 21 without either.
+
 ## Then
 
 **7 — Augments.** The Wireless Charger is in. The other three the plan listed are not coming, and
@@ -91,5 +95,7 @@ each for its own reason:
 - **Titanium by composition, not inheritance.** `PoweredTile` and `ControllableDrawerTile` are
   sibling subclasses of `ActiveTile` and the drawer half is not negotiable.
 - **Chemical Drawer (Mekanism) is v2 of this mod, not a separate one.** It is the first content that
-  would justify X_2 / X_4 variants. Mana, Source and other bespoke APIs are out — they are not
-  "other kinds of energy", they are one integration each, broken on every upstream release.
+  would justify X_2 / X_4 variants. Mana and other bespoke APIs are out — they are not "other kinds of energy", they are one
+  integration each, broken on every upstream release. **Source was reversed** (2026-09-29): Ars
+  Nouveau publishes an extension point (`SourceManager`) as well as its capability, and game tests on
+  its real code paths catch the breakage this note feared. See CLAUDE.md §18.

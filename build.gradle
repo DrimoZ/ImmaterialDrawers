@@ -127,6 +127,15 @@ dependencies {
         runtimeOnly "maven.modrinth:mekanism:${mekanism_version}"
     }
 
+    // Ars Nouveau, same arrangement: the Source Drawer is behind Mods.arsNouveau(). `-PnoArs` drops it
+    // (and the two mods it needs) from the run, to exercise the "absent" path.
+    compileOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
+    if (!project.hasProperty('noArs')) {
+        runtimeOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
+        runtimeOnly "maven.modrinth:curios:${curios_version}"
+        runtimeOnly "maven.modrinth:geckolib:${geckolib_version}"
+    }
+
     // Scenery for store screenshots, and only when asked for: `runClient -Pshowcase`. Behind a
     // flag because these are heavy, Sodium and Iris are client-only, and the game test server
     // and the everyday client should not pay for either.

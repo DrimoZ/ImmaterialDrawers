@@ -80,6 +80,14 @@ public class IDConfig {
     @ConfigVal.InRangeInt(min = 1)
     public static int CHEMICAL_MB_PER_UNIT = 1000;
 
+    @ConfigVal(comment = "Source per unit of the Source Drawer's base size, the role 1000 mB plays for a "
+            + "fluid drawer. The drawer is 32 units and scales with the fluid multipliers, so the default "
+            + "holds 32,000 Source (3.2 Source Jars) unupgraded and 2,097,152,000 with four Netherite "
+            + "upgrades - just under the int ceiling of Ars Nouveau's Source API. Raising this makes the "
+            + "top of the curve saturate there. Only read when Ars Nouveau is installed.")
+    @ConfigVal.InRangeInt(min = 1)
+    public static int SOURCE_PER_UNIT = 1000;
+
     // ---- Switching content off -------------------------------------------------------------------
     //
     // "Off" means unobtainable: no recipe, and gone from the creative tab. The blocks stay
@@ -96,6 +104,11 @@ public class IDConfig {
             + "and appear in the creative tab. They only exist with Mekanism installed; this switch "
             + "cannot bring them back without it. Drawers already placed keep working.")
     public static boolean CHEMICAL_DRAWERS_ENABLED = true;
+
+    @ConfigVal(comment = "Whether the Source Drawer and its framed variant can be crafted and appear in "
+            + "the creative tab. They only exist with Ars Nouveau installed. Drawers already placed "
+            + "keep working.")
+    public static boolean SOURCE_DRAWER_ENABLED = true;
 
     @ConfigVal(comment = "Whether the Wireless Charger augment can be crafted and appears in the "
             + "creative tab. Chargers already in drawers keep working.")

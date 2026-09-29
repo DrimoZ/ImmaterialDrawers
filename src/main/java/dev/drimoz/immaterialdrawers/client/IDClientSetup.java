@@ -36,6 +36,9 @@ public final class IDClientSetup {
         if (Mods.mekanism()) {
             ChemicalClient.registerRenderers(event);
         }
+        if (Mods.arsNouveau()) {
+            SourceClient.registerRenderers(event);
+        }
     }
 
     /**

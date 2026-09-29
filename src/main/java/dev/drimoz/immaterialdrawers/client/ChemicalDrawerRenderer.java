@@ -52,9 +52,6 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
     /** Their scale for the amount on a fluid drawer, in every layout. */
     private static final float TEXT_SCALE = 0.007f;
 
-    private static final float BREATH_HEIGHT = 0.25f / 16f;
-    private static final float BREATH_SPEED = 0.05f;
-
     /** A gas is seen through, but not so much that a pale one vanishes against the tank walls. */
     private static final float GAS_ALPHA = 0.8f;
 
@@ -65,7 +62,7 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
     public void renderItems(ChemicalDrawerTile tile, float partialTicks, PoseStack matrixStack,
                             MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         matrixStack.translate(0, 0, -FLUID_FRAME_Z);
-        float breath = breath(tile, partialTicks);
+        float breath = TankVolume.breath(tile.getLevel(), tile.getBlockPos(), partialTicks);
 
         FunctionalStorage.DrawerType type = tile.getDrawerType();
         for (int slot = 0; slot < type.getSlots(); slot++) {
@@ -82,13 +79,6 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
 
         // BaseDrawerRenderer pushes; the subclass pops. Their contract, not a choice.
         matrixStack.popPose();
-    }
-
-    /** How far the surface of the gas stands above its level right now, in block units. */
-    private static float breath(ChemicalDrawerTile tile, float partialTicks) {
-        float time = (tile.getLevel() == null ? 0 : tile.getLevel().getGameTime() % 72000L) + partialTicks;
-        float phase = Math.floorMod(tile.getBlockPos().asLong() * 31L, 360L);
-        return Mth.sin(time * BREATH_SPEED + phase) * BREATH_HEIGHT;
     }
 
     private void renderSlot(ChemicalDrawerTile tile, int slot, FunctionalStorage.DrawerType type, float breath,
@@ -120,7 +110,9 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
         if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_RENDER)) {
             boolean gas = stack.getChemical().isGaseous();
             float alpha = amount == 0 ? GHOST_ALPHA : gas ? GAS_ALPHA : 1f;
-            renderVolume(matrixStack, bufferIn, stack, 1 / 16f, 1.25f / 16f, 1 / 16f, x2, y2, 15 / 16f,
+            TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+                    .apply(stack.getChemical().getIcon());
+            TankVolume.render(matrixStack, bufferIn, sprite, stack.getChemicalTint(), 1 / 16f, 1.25f / 16f, 1 / 16f, x2, y2, 15 / 16f,
                     alpha, gas ? LightTexture.FULL_BRIGHT : light, overlay);
         }
 
@@ -145,37 +137,4 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
         matrixStack.popPose();
     }
 
-    /**
-     * The top and the front of the volume, which is all the tank walls leave visible - the two faces
-     * {@code FluidDrawerRenderer} draws, with the chemical's own texture and colour.
-     */
-    private static void renderVolume(PoseStack matrixStack, MultiBufferSource bufferIn, ChemicalStack stack,
-                                     float x1, float y1, float z1, float x2, float y2, float z2,
-                                     float alpha, int light, int overlay) {
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
-                .apply(stack.getChemical().getIcon());
-        int tint = stack.getChemicalTint();
-        float red = (tint >> 16 & 0xFF) / 255f;
-        float green = (tint >> 8 & 0xFF) / 255f;
-        float blue = (tint & 0xFF) / 255f;
-
-        VertexConsumer builder = bufferIn.getBuffer(RenderType.translucent());
-        Matrix4f pose = matrixStack.last().pose();
-
-        float u1 = sprite.getU(x1);
-        float u2 = sprite.getU(x2);
-        float vTop1 = sprite.getV(z1);
-        float vTop2 = sprite.getV(z2);
-        builder.addVertex(pose, x1, y2, z2).setColor(red, green, blue, alpha).setUv(u1, vTop2).setOverlay(overlay).setLight(light).setNormal(0f, 1f, 0f);
-        builder.addVertex(pose, x2, y2, z2).setColor(red, green, blue, alpha).setUv(u2, vTop2).setOverlay(overlay).setLight(light).setNormal(0f, 1f, 0f);
-        builder.addVertex(pose, x2, y2, z1).setColor(red, green, blue, alpha).setUv(u2, vTop1).setOverlay(overlay).setLight(light).setNormal(0f, 1f, 0f);
-        builder.addVertex(pose, x1, y2, z1).setColor(red, green, blue, alpha).setUv(u1, vTop1).setOverlay(overlay).setLight(light).setNormal(0f, 1f, 0f);
-
-        float vFront1 = sprite.getV(y1);
-        float vFront2 = sprite.getV(Math.min(1f, y2));
-        builder.addVertex(pose, x2, y1, z2).setColor(red, green, blue, alpha).setUv(u2, vFront1).setOverlay(overlay).setLight(light).setNormal(0f, 0f, 1f);
-        builder.addVertex(pose, x2, y2, z2).setColor(red, green, blue, alpha).setUv(u2, vFront2).setOverlay(overlay).setLight(light).setNormal(0f, 0f, 1f);
-        builder.addVertex(pose, x1, y2, z2).setColor(red, green, blue, alpha).setUv(u1, vFront2).setOverlay(overlay).setLight(light).setNormal(0f, 0f, 1f);
-        builder.addVertex(pose, x1, y1, z2).setColor(red, green, blue, alpha).setUv(u1, vFront1).setOverlay(overlay).setLight(light).setNormal(0f, 0f, 1f);
-    }
 }

@@ -4,6 +4,7 @@ import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 
@@ -37,6 +38,11 @@ public class IDLangProvider extends LanguageProvider {
         // sort and read side by side. The keys exist only if the blocks do, and datagen runs with
         // Mekanism, so they are always generated; a pack without it simply never asks for them.
         add("gui.immaterialdrawers.chemical", "Chemical: ");
+        add("gui.immaterialdrawers.source", "Source: ");
+        if (Mods.arsNouveau()) {
+            addBlock(() -> IDSourceContent.SOURCE_DRAWER.getBlock(), "Source Drawer");
+            addBlock(() -> IDSourceContent.FRAMED_SOURCE_DRAWER.getBlock(), "Framed Source Drawer");
+        }
         if (Mods.mekanism()) {
             IDChemicalContent.TYPES.forEach(type -> {
                 String layout = " (" + type.getDisplayName() + ")";

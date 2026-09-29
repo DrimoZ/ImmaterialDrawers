@@ -43,6 +43,9 @@ public final class IDColors {
         if (Mods.mekanism()) {
             ChemicalClient.registerBlockColors(event, HANDLER);
         }
+        if (Mods.arsNouveau()) {
+            SourceClient.registerBlockColors(event, HANDLER);
+        }
     }
 
     @SubscribeEvent
@@ -50,6 +53,9 @@ public final class IDColors {
         event.register(HANDLER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
         if (Mods.mekanism()) {
             ChemicalClient.registerItemColors(event, HANDLER);
+        }
+        if (Mods.arsNouveau()) {
+            SourceClient.registerItemColors(event, HANDLER);
         }
     }
 }

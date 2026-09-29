@@ -9,9 +9,12 @@
   "block.immaterialdrawers.framed_chemical_drawer_2": "Framed Chemical Drawer (1x2)",
   "block.immaterialdrawers.framed_chemical_drawer_4": "Framed Chemical Drawer (2x2)",
   "block.immaterialdrawers.framed_energy_drawer": "Framed Energy Drawer",
+  "block.immaterialdrawers.framed_source_drawer": "Framed Source Drawer",
+  "block.immaterialdrawers.source_drawer": "Source Drawer",
   "gui.immaterialdrawers.capacity": "Capacity: ",
   "gui.immaterialdrawers.chemical": "Chemical: ",
   "gui.immaterialdrawers.energy": "Energy: ",
+  "gui.immaterialdrawers.source": "Source: ",
   "item.immaterialdrawers.wireless_charger": "Wireless Charger",
   "itemGroup.immaterialdrawers": "Immaterial Drawers",
   "storageupgrade.obj.immaterialdrawers.energy_storage": "energy storage"

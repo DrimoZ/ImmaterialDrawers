@@ -13,6 +13,9 @@ The umbrella name is deliberate. Energy is the first module, not the mod.
 slurries, in the 1x1, 1x2 and 2x2 layouts of Functional Storage's fluid drawers. Mekanism is optional —
 without it those blocks simply do not exist.
 
+**Source**, with Ars Nouveau installed: a Source Drawer that relays, the enchanting apparatus and
+sourcelinks treat like a Source Jar. Also optional.
+
 > **Status: pre-release.** The drawer works, is drawn, joins a Storage Controller's network and
 > answers the energy capability, proven by game tests and looked at in game. Nothing is published
 > anywhere yet. See [ROADMAP.md](ROADMAP.md).
@@ -26,6 +29,7 @@ without it those blocks simply do not exist.
 | Functional Storage | 1.5.7+ |
 | Titanium | 4.0.34+ (Functional Storage needs it too) |
 | Mekanism *(optional)* | 10.7+, for the Chemical Drawers |
+| Ars Nouveau *(optional)* | 5.13+, for the Source Drawer |
 
 ## Building
 

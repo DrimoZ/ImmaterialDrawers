@@ -1058,3 +1058,70 @@ celui-là est le même des deux côtés par construction.
 Couvert par `aDisabledFeatureLosesItsRecipe` (la condition suit la config ; les recettes sont bien
 chargées par défaut, ce qui prouve aussi que le codec de condition est enregistré). L'onglet créatif
 n'est **pas** testé automatiquement : il faut un client.
+
+---
+
+## 18. Source Drawer — Ars Nouveau, dépendance optionnelle
+
+**Ajouté le 29 septembre 2026.** Deux blocs, présents **seulement si Ars Nouveau est installé** :
+`source_drawer` et `framed_source_drawer` (noms permanents). Un seul format, 1x1, comme l'énergie : la
+Source n'a qu'une sorte de contenu. Même règle de garde que le §16, avec `Mods.arsNouveau()` ; classes
+« Ars Nouveau only » dans `block/source`, `block/tile/source`, `storage/source`, `client/Source*`,
+`client/gui/SourceDrawerInfoGuiAddon`, `gametest/IDSourceGameTests`, `registry/IDSourceContent`.
+Ars, Curios et GeckoLib en `runtimeOnly` de dev (épinglés par **id de version Modrinth** : GeckoLib a le
+même numéro pour plusieurs loaders), `-PnoArs` pour le chemin « absent ». Déclaré `optional`, `[5.13,)`.
+
+**[vérifié]** 49 game tests avec Mekanism + Ars, 36 sans Ars, 21 sans aucun des deux. Vu en client
+(façade violette, texture de Source d'Ars, niveaux, framed) le 29 septembre 2026 ; l'écran n'a pas été
+ouvert.
+
+### Comment Ars trouve la Source — lu dans le jar 5.13.2 et la branche `main`
+
+| Qui | Chemin | Pour nous |
+|---|---|---|
+| Relais, splitters, tourelles | capability `ars_nouveau:source` (`ISourceCap`) | enregistrée sur nos types, et sur contrôleurs/extensions de FS (`ControllerSourceStorage`) |
+| Apparatus, imbuement, sourcelinks… | `SourceUtil` : `instanceof SourceJarTile` **ou** registre `SourceManager` | chaque tiroir s'inscrit dans `SourceManager` à `onLoad` (`SourceDrawerProvider`) |
+
+`SourceManager.addInterface` est public et nettoyé par Ars lui-même (toutes les 60 ticks, les
+providers dont `isValid()` est faux). Aucun mixin. Le contrôleur, lui, **n'est pas** inscrit dans
+`SourceManager` : ses tiroirs le sont déjà, un consommateur proche des deux compterait la Source deux fois.
+
+Capability recréée par son nom comme pour Mekanism (`CapabilityRegistry` est du setup, pas de l'API) ;
+**[vérifié]** `weSpeakArsOwnCapability`.
+
+### Pièges trouvés en route
+
+- **`ISourceCap` et `ISourceTile` ne peuvent pas être une seule classe** : les deux déclarent
+  `setSource(int)`, l'une en `void`, l'autre en `int`. `BigSourceStorage` implémente la capability,
+  `asTile()` est une vue sur les mêmes nombres.
+- **`canReceive()` → `canAcceptSource(1)` → `receiveSource` → `canReceive()`** : récursion si on
+  n'override pas `canReceive`/`canExtract`. Ars casse la boucle pareil dans `SourceStorage`.
+- **Creative** : `SourceUtil.takeSourceMultiple` compte `avant − après` comme pris. Un creative qui
+  reste « plein » ne fournirait **rien** (Ars ne dispense que son propre `CreativeSourceJarTile`, par
+  `instanceof`). La vue répond à `removeSource(n)` par `MAX − n` sans rien vider.
+  **[vérifié]** `aCreativeDrawerSuppliesArs`.
+- **Le jar publié diffère de `main`** : son `ISourceTile` a des défauts `addSource(int, boolean)` /
+  `removeSource(int, boolean)` qui **ignorent `simulate`** et exécutent. Surchargés pour renvoyer la
+  quantité déplacée en respectant la simulation, comme les machines d'Ars.
+  **[vérifié]** `aSimulatedRemovalLeavesTheSource`. Leçon : lire le bytecode du jar, pas seulement la branche.
+- **`onLoad()` arrive au tick suivant la pose**, pas pendant `setBlock` : un test qui interroge
+  `SourceManager` juste après avoir posé le tiroir le trouve absent. Les tests attendent 2 ticks.
+
+### Capacité
+
+Courbe des fluides (`FLUID_STORAGE_MODIFIER`, base = 32 unités × `SOURCE_PER_UNIT` = 32 000 Source,
+3,2 jarres). 4 Netherite = 2 097 152 000, **sous le plafond int de l'API Source** : les 4 slots servent,
+sans composant à nous ; le Max Storage sature à `Integer.MAX_VALUE`.
+**[vérifié]** `capacityFollowsTheFluidCurveAndFitsAnInt`.
+
+### Design
+
+Carcasse graphite, liseré **violet**. Dans le réservoir, la texture animée de la Source d'Ars
+(`ars_nouveau:block/mana_still`, celle des Source Jars), non teintée, pleine luminosité, surface qui
+respire — `client/TankVolume`, partagé avec le tiroir chimique. Recette : planches autour d'une Source
+Jar (pépites de fer pour le framed), sous `mod_loaded` + `feature_enabled`. Interrupteur
+`SOURCE_DRAWER_ENABLED` (§17).
+
+### Non fait
+
+Pas de provider Jade/TOP (Jade n'affiche pas la quantité de Source) ; item en main sans contenu.

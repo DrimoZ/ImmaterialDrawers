@@ -1,0 +1,36 @@
+{
+  "__comment": "Functional Storage's fluid_1 drawer, part for part, in the graphite family - violet-rimmed for Source. The Source itself is drawn by SourceDrawerRenderer.",
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:composite",
+  "textures": {
+    "particle": "immaterialdrawers:block/drawer_side"
+  },
+  "children": {
+    "side": {
+      "parent": "functionalstorage:block/side_machine",
+      "textures": {
+        "bottom": "immaterialdrawers:block/drawer_top",
+        "side": "immaterialdrawers:block/drawer_side",
+        "top": "immaterialdrawers:block/drawer_top"
+      }
+    },
+    "front": {
+      "parent": "functionalstorage:block/fluid_front_1",
+      "textures": {
+        "particle": "immaterialdrawers:block/source_drawer_front",
+        "front": "immaterialdrawers:block/source_drawer_front"
+      }
+    },
+    "tank": {
+      "parent": "functionalstorage:block/fluid_inner_1",
+      "textures": {
+        "fluid_inner": "immaterialdrawers:block/drawer_inner"
+      }
+    }
+  },
+  "item_render_order": [
+    "tank",
+    "front",
+    "side"
+  ]
+}
