@@ -1,9 +1,8 @@
 package dev.drimoz.immaterialdrawers.storage;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.neoforged.neoforge.common.util.INBTSerializable;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.energy.IEnergyStorage;
 
 /**
  * The energy a drawer holds.
@@ -185,7 +184,7 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
     }
 
     @Override
-    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
+    public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putLong("Energy", energy);
         tag.putLong("Capacity", capacity);
@@ -193,7 +192,7 @@ public class BigEnergyStorage implements IEnergyStorage, INBTSerializable<Compou
     }
 
     @Override
-    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
+    public void deserializeNBT(CompoundTag tag) {
         // getLong reads an int tag just as happily, so drawers saved before the move to long load
         // with their contents intact.
         this.energy = tag.getLong("Energy");

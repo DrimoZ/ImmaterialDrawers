@@ -1,6 +1,6 @@
 package dev.drimoz.immaterialdrawers.compat;
 
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 /**
  * Which optional mods are installed - and the one place allowed to ask.

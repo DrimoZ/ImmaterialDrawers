@@ -4,7 +4,7 @@ import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.minecraftforge.energy.IEnergyStorage;
 
 import java.util.ArrayList;
 import java.util.Collections;

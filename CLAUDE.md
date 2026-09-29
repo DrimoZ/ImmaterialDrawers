@@ -1160,7 +1160,7 @@ de toucher une des deux branches.
 
 | Branche | Cible | État |
 |---|---|---|
-| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | toolchain vert, `compileJava` : 683 erreurs / 53 fichiers |
+| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | **étape 1 faite** : cœur énergie porté (13 fichiers), **6/6 game tests** du spike au vert |
 | `26.1` | NeoForge 26.1.2.112, Java 25, Gradle 9.1, FS 26.1-1.6.1, Titanium 4.0.8 | toolchain vert, `compileJava` : 206 erreurs / 24 fichiers |
 
 **1.20.1 est prioritaire** : seule version où les trois tiroirs existent (Mekanism 10.4, Ars 4.12), et
@@ -1181,5 +1181,9 @@ Ce qui change la donne, à ne pas redécouvrir :
   capability standard (insert/extract restent int). `BigEnergyStorage` devient transactionnel
   (`SnapshotJournal`, comme `BigFluidHandler` chez FS) — c'est la seule classe où une erreur crée ou
   détruit de l'énergie.
+- **Pièges 1.20.1 trouvés à l'étape 1** : sans `pack.mcmeta`, Forge ignore toutes les ressources du mod
+  (structures de test introuvables, sans erreur) ; structures sous `structures/` ; pas
+  d'`assertValueEqual`. Le correctif deadlock du §11 ne peut pas être gardé sur Forge (voir PORTING.md §3).
+  `build.gradle` liste les fichiers portés : un fichier rejoint le build à son étape.
 - **Garder les clés NBT `@Save` identiques** entre branches : c'est ce qui fait survivre un tiroir posé
   à la montée de version d'un monde.

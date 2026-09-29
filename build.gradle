@@ -13,6 +13,25 @@ base { archivesName = mod_id }
 // 1.20.1 runs on Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+// The backport is done step by step (PORTING.md §6), and a file joins the build when its step ports
+// it - the rest of the 1.21.1 tree stays in place, untouched, until then. The list is the progress.
+sourceSets.main.java {
+    // Step 1 - spike: capability, zero-slot tile, controller network.
+    include 'dev/drimoz/immaterialdrawers/ImmaterialDrawers.java'
+    include 'dev/drimoz/immaterialdrawers/IDConfig.java'
+    include 'dev/drimoz/immaterialdrawers/compat/Mods.java'
+    include 'dev/drimoz/immaterialdrawers/registry/IDContent.java'
+    include 'dev/drimoz/immaterialdrawers/block/ImmaterialDrawerBlock.java'
+    include 'dev/drimoz/immaterialdrawers/block/energy/EnergyDrawerBlock.java'
+    include 'dev/drimoz/immaterialdrawers/block/tile/ImmaterialDrawerTile.java'
+    include 'dev/drimoz/immaterialdrawers/block/tile/energy/EnergyDrawerTile.java'
+    include 'dev/drimoz/immaterialdrawers/storage/BigEnergyStorage.java'
+    include 'dev/drimoz/immaterialdrawers/storage/ControllerEnergyStorage.java'
+    include 'dev/drimoz/immaterialdrawers/storage/EnergyScaling.java'
+    include 'dev/drimoz/immaterialdrawers/util/EnergyFormat.java'
+    include 'dev/drimoz/immaterialdrawers/gametest/IDGameTests.java'
+}
+
 legacyForge {
     version = project.forge_version
 
@@ -112,7 +131,9 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 }
 
 sourceSets.main.resources.srcDir generateModMetadata
-sourceSets.main.resources.srcDir 'src/generated/resources'
+// Not yet: the committed output is 1.21.1's (NeoForge conditions, blocks this branch does not
+// register yet). It comes back regenerated when datagen is ported, step 3.
+// sourceSets.main.resources.srcDir 'src/generated/resources'
 processResources { exclude '.cache/**' }
 legacyForge.ideSyncTask generateModMetadata
 

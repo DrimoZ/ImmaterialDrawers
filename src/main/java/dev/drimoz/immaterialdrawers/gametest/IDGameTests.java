@@ -1,91 +1,61 @@
 package dev.drimoz.immaterialdrawers.gametest;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
-import com.buuz135.functionalstorage.block.FramedDrawerBlock;
-import com.buuz135.functionalstorage.block.tile.FramedTile;
+import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
-import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
-import com.buuz135.functionalstorage.recipe.FramedDrawerRecipe;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
-import com.buuz135.functionalstorage.item.FSAttachments;
-import com.buuz135.functionalstorage.item.StorageUpgradeItem;
-import com.buuz135.functionalstorage.item.component.FunctionalUpgradeBehavior;
-import dev.drimoz.immaterialdrawers.augment.ChargeNearbyBehavior;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
-import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.CraftingInput;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.items.IItemHandler;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 /**
- * The blocking spike of CLAUDE.md §12, written as a test rather than as something to check by hand.
+ * The blocking spike of the 1.20.1 backport (PORTING.md §6, step 1), written as tests.
  *
- * <p>Two readings of third-party code hold this mod's architecture up, and neither had been run
- * when they were made:
+ * <p>The 1.21.1 branch rests on two readings of third-party code; on Forge 1.20.1 one of them
+ * changes shape and the other must be re-proved:
  *
  * <ol>
- *   <li>Titanium already registers an {@code EnergyStorage.BLOCK} provider on every block entity
- *       type it creates, and that provider only answers for a {@code PoweredTile} - which we
- *       cannot be, because we must be a {@code ControllableDrawerTile} and Java has single
- *       inheritance. Registering a second provider is only survivable because NeoForge walks a
- *       list of providers until one returns non-null.</li>
- *   <li>Being an {@code ItemControllableDrawerTile} with a zero-slot handler is what keeps the
- *       Storage Controller's per-tick invariant true. If the handler ever stops being empty, or
- *       stops existing, the failure is a rebuilt network every tick on every controller in the
- *       world - a dead server, not a visible bug.</li>
+ *   <li><b>The energy capability.</b> Forge asks the block entity, so the tile answers it itself -
+ *       and for Functional Storage's controller, which is not ours, the answer comes through an
+ *       {@code AttachCapabilitiesEvent} provider that their {@code getCapability} must fall through
+ *       to. If it does not, a cable on the controller sees nothing.</li>
+ *   <li><b>The zero-slot item handler</b> that keeps the Storage Controller's per-tick invariant
+ *       true. The filter and the invariant were read in Functional Storage 1.2.14; this is where
+ *       the reading becomes a fact, on 50 drawers.</li>
  * </ol>
  *
- * <p>Both are cheap to assert and expensive to discover in the wild, and both can be broken by a
- * release of a mod we do not control. That is why these stay after the spike is over.
- *
- * <p>Run headlessly with {@code ./gradlew runGameTestServer}, or {@code /test run immaterialdrawers}
- * in a client.
+ * <p>If any of these fails, the backport stops and the architecture is rethought before anything
+ * else is ported. Run headlessly with {@code ./gradlew runGameTestServer}.
  */
 @GameTestHolder(ImmaterialDrawers.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class IDGameTests {
 
-    /** Matches src/main/resources/data/immaterialdrawers/structure/energy_platform.nbt. */
+    /** Matches src/main/resources/data/immaterialdrawers/structures/energy_platform.nbt. */
     private static final String PLATFORM = "energy_platform";
 
-    /** Matches src/main/resources/data/immaterialdrawers/structure/drawer_wall.nbt — 11 x 5 x 11. */
+    /** Matches src/main/resources/data/immaterialdrawers/structures/drawer_wall.nbt - 11 x 5 x 11. */
     private static final String WALL = "drawer_wall";
 
     private static final int WALL_SIZE = 11;
 
-    /**
-     * Comfortably more than the point at which a per-tick rebuild stops being a rounding error and
-     * starts being the server's frame budget, and well inside the controller's linking range of 8.
-     */
+    /** Well past where a per-tick rebuild stops being a rounding error, inside the linking range. */
     private static final int WALL_DRAWERS = 50;
 
     /** Ticks allowed for the controller to notice the new drawers and build its network once. */
@@ -94,7 +64,6 @@ public final class IDGameTests {
     /** Ticks of doing nothing at all, during which no rebuild is allowed to happen. */
     private static final int IDLE_TICKS = 60;
 
-    /** One block above the platform's floor, in the middle. */
     private static final BlockPos DRAWER = new BlockPos(1, 1, 1);
 
     /** Middle of the wall structure, so every drawer around it is within linking range. */
@@ -103,116 +72,77 @@ public final class IDGameTests {
     private IDGameTests() {
     }
 
-    /**
-     * The spike itself: our provider is reachable even though Titanium got there first.
-     */
+    /** The drawer answers the Forge energy capability, through its own {@code getCapability}. */
     @GameTest(template = PLATFORM)
     public static void energyCapabilityIsPresent(GameTestHelper helper) {
-        IEnergyStorage storage = placeDrawerAndGetCapability(helper, null);
-
-        helper.assertTrue(storage != null,
-                "No EnergyStorage capability on the energy drawer. Titanium's own provider is "
-                        + "registered first and returns null for a non-PoweredTile; if NeoForge "
-                        + "stopped falling through to the next provider, the whole design in "
-                        + "CLAUDE.md §8 is wrong and the block needs to stop going through "
-                        + "Titanium's registerBlockWithTile.");
+        placeDrawer(helper);
+        helper.assertTrue(capability(helper, DRAWER, null) != null,
+                "No energy capability on the energy drawer: EnergyDrawerTile.getCapability is not "
+                        + "being asked, or does not answer ForgeCapabilities.ENERGY");
         helper.succeed();
     }
 
-    /**
-     * The capability is reachable from every side, not only from the one the block faces.
-     * A drawer in a wall is touched from whichever side has room for a cable.
-     */
+    /** From every side: a drawer in a wall is touched from whichever side has room for a cable. */
     @GameTest(template = PLATFORM)
     public static void energyCapabilityIsPresentFromEverySide(GameTestHelper helper) {
+        placeDrawer(helper);
         for (Direction side : Direction.values()) {
-            helper.assertTrue(placeDrawerAndGetCapability(helper, side) != null,
-                    "No EnergyStorage capability from side " + side);
+            helper.assertTrue(capability(helper, DRAWER, side) != null, "No energy capability from side " + side);
         }
         helper.succeed();
     }
 
     /**
-     * The capability that comes back is the drawer's own storage, and it works.
-     *
-     * <p>A provider that returns some other object, or a fresh one per query, would pass the test
-     * above and lose every FE put into it.
+     * The capability is the drawer's own storage, and it works. A provider that handed out a fresh
+     * storage per query would pass the test above and lose every FE put into it.
      */
     @GameTest(template = PLATFORM)
     public static void energyCapabilityStoresWhatItIsGiven(GameTestHelper helper) {
-        IEnergyStorage storage = placeDrawerAndGetCapability(helper, null);
-        helper.assertTrue(storage != null, "No EnergyStorage capability on the energy drawer");
+        placeDrawer(helper);
+        IEnergyStorage storage = capability(helper, DRAWER, null);
+        helper.assertTrue(storage != null, "No energy capability on the energy drawer");
 
-        int accepted = storage.receiveEnergy(1_000, false);
-        helper.assertValueEqual(accepted, 1_000, "energy accepted");
+        assertEquals(helper, storage.receiveEnergy(1_000, false), 1_000, "energy accepted");
 
-        // Queried again, not reused: this is the half that catches a provider handing out a new
-        // storage object on every call.
-        IEnergyStorage requeried = capability(helper, null);
+        IEnergyStorage requeried = capability(helper, DRAWER, null);
         helper.assertTrue(requeried != null, "capability vanished after a write");
-        helper.assertValueEqual(requeried.getEnergyStored(), 1_000, "energy stored");
+        assertEquals(helper, requeried.getEnergyStored(), 1_000, "energy stored");
 
-        int extracted = requeried.extractEnergy(400, false);
-        helper.assertValueEqual(extracted, 400, "energy extracted");
-        helper.assertValueEqual(requeried.getEnergyStored(), 600, "energy left after extraction");
+        assertEquals(helper, requeried.extractEnergy(400, false), 400, "energy extracted");
+        assertEquals(helper, requeried.getEnergyStored(), 600, "energy left after extraction");
 
         helper.succeed();
     }
 
     /**
-     * The zero-slot item handler that keeps the Storage Controller's network arithmetic honest.
-     *
-     * <p>{@code StorageControllerTile.serverTick} rebuilds its whole network whenever the drawer
-     * count stops equalling {@code itemHandlers + fluidHandlers + extensions}. We are counted in
-     * {@code itemHandlers} because we are an {@code ItemControllableDrawerTile}, and we contribute
-     * nothing to the aggregated inventory because {@code getSlots()} is zero. Both halves matter:
-     * lose the first and the drawer is dropped from every network, lose the second and the drawer
-     * starts advertising phantom item slots. See CLAUDE.md §7.
+     * Counted as an item drawer, holding no items: lose the first half and the drawer is dropped
+     * from every network, lose the second and it advertises phantom item slots. CLAUDE.md §7.
      */
     @GameTest(template = PLATFORM)
     public static void drawerCountsAsAnItemDrawerButHoldsNoItems(GameTestHelper helper) {
-        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getBlock());
-        BlockEntity be = helper.getBlockEntity(DRAWER);
+        EnergyDrawerTile tile = placeDrawer(helper);
 
-        helper.assertTrue(be instanceof EnergyDrawerTile,
-                "The energy drawer has no EnergyDrawerTile behind it");
-        EnergyDrawerTile tile = (EnergyDrawerTile) be;
-
-        helper.assertTrue(tile instanceof com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile<?>,
+        helper.assertTrue(tile instanceof ItemControllableDrawerTile<?>,
                 "EnergyDrawerTile no longer extends ItemControllableDrawerTile - Functional "
-                        + "Storage's ConnectedDrawers filter will drop it from every controller "
-                        + "network");
-        helper.assertValueEqual(tile.getStorage().getSlots(), 0, "item slots on an energy drawer");
+                        + "Storage's ConnectedDrawers filter will drop it from every controller network");
+        assertEquals(helper, tile.getStorage().getSlots(), 0, "item slots on an energy drawer");
 
         helper.succeed();
     }
 
     /**
-     * The real shape of the §7 risk: a wall of energy drawers on one Storage Controller, ticking.
+     * The real shape of the §7 risk: 50 energy drawers on one Storage Controller, ticking.
      *
-     * <p>The test above proves the drawer is <em>counted</em>. This one proves the count stays
-     * balanced while the controller is actually running, which is the thing that matters — the
-     * failure it guards against does not look like a bug. If our drawers were in the network
-     * without contributing to {@code itemHandlers}, {@code StorageControllerTile.serverTick} would
-     * find its invariant false on every tick and rebuild the entire network every tick, forever,
-     * on every controller in the world. The drawers would keep working. The server would not.
+     * <p>Detection is by identity: {@code ConnectedDrawers.rebuild()} assigns fresh handler lists, so
+     * a rebuild between two observations shows as a different list object, even if the invariant is
+     * true again by the time we look.
      *
-     * <p>Detection is by identity, not by arithmetic: {@code ConnectedDrawers.rebuild()} assigns
-     * {@code this.itemHandlers = new ArrayList<>()}, so a rebuild between two observations shows up
-     * as a different list object. That catches a rebuild even in the case where the invariant is
-     * restored by the time we look at it.
-     *
-     * <p><b>Why the test idles before it asserts anything.</b> Linking does not build the network.
-     * {@code ConnectedDrawers} is constructed in the tile's constructor, where {@code getLevel()}
-     * is still null, and its {@code rebuild()} is a no-op without a level — so the rebuild that
-     * {@code addConnectedDrawers} triggers leaves the handler lists empty. The controller's own
-     * {@code serverTick} is what calls {@code setLevel} and rebuilds for real. The invariant being
-     * false for a tick or two after linking is therefore normal and is not what this test is
-     * about; being false <em>forever</em> is.
+     * <p>Idles before asserting because linking does not build the network: the controller's own
+     * {@code serverTick} does, a tick or two later. See CLAUDE.md §7.
      */
     @GameTest(template = WALL, timeoutTicks = 300)
     public static void aWallOfDrawersDoesNotRebuildTheControllerEveryTick(GameTestHelper helper) {
-        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getLeft().get());
 
         List<BlockPos> placed = new ArrayList<>();
         for (int y = 1; y <= 3 && placed.size() < WALL_DRAWERS; y++) {
@@ -222,35 +152,31 @@ public final class IDGameTests {
                     if (pos.equals(CONTROLLER)) {
                         continue;
                     }
-                    helper.setBlock(pos, IDContent.ENERGY_DRAWER.getBlock());
+                    helper.setBlock(pos, IDContent.ENERGY_DRAWER.getLeft().get());
                     placed.add(pos);
                 }
             }
         }
-        helper.assertValueEqual(placed.size(), WALL_DRAWERS, "drawers placed");
+        assertEquals(helper, placed.size(), WALL_DRAWERS, "drawers placed");
 
-        BlockEntity be = helper.getBlockEntity(CONTROLLER);
-        helper.assertTrue(be instanceof StorageControllerTile<?>, "no Storage Controller was placed");
-        StorageControllerTile<?> controller = (StorageControllerTile<?>) be;
-
-        // What the Linking Tool calls when a player drags a box over a wall of drawers. Absolute
-        // positions: the controller looks them up in the level, not in the test's frame.
+        StorageControllerTile<?> controller = controllerAt(helper);
+        // What the Linking Tool calls. Absolute positions: the controller looks them up in the level.
         controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
                 placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
 
         ConnectedDrawers network = controller.getConnectedDrawers();
-        helper.assertValueEqual(network.getConnectedDrawers().size(), WALL_DRAWERS,
+        assertEquals(helper, network.getConnectedDrawers().size(), WALL_DRAWERS,
                 "drawers accepted into the controller network");
 
-        // Written to once the network has settled, read again after idling. A one-element array
-        // rather than a field: game tests run concurrently in the same level.
+        // One-element array rather than a field: game tests run concurrently in the same level.
+        @SuppressWarnings("unchecked")
         List<IItemHandler>[] settledHandlers = new List[1];
 
         helper.startSequence()
                 .thenIdle(SETTLE_TICKS)
                 .thenExecute(() -> {
                     assertNetworkInvariantHolds(helper, network, "once the network has settled");
-                    helper.assertValueEqual(network.getItemHandlers().size(), WALL_DRAWERS,
+                    assertEquals(helper, network.getItemHandlers().size(), WALL_DRAWERS,
                             "energy drawers counted as item handlers by the controller");
                     settledHandlers[0] = network.getItemHandlers();
                 })
@@ -258,11 +184,63 @@ public final class IDGameTests {
                 .thenExecute(() -> {
                     assertNetworkInvariantHolds(helper, network, "after idling");
                     helper.assertTrue(network.getItemHandlers() == settledHandlers[0],
-                            "The controller rebuilt its network while nothing happened. Its "
-                                    + "per-tick check is connectedDrawers == itemHandlers + "
-                                    + "fluidHandlers + extensions; an energy drawer that stops "
-                                    + "satisfying it makes every controller in the world rebuild "
-                                    + "on every tick. See CLAUDE.md §7.");
+                            "The controller rebuilt its network while nothing happened: an energy "
+                                    + "drawer no longer satisfies connectedDrawers == itemHandlers + "
+                                    + "fluidHandlers + extensions. See CLAUDE.md §7.");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * A cable on the Storage Controller reaches every energy drawer linked to it - through a
+     * provider we attached to <em>their</em> block entity, which only works if their
+     * {@code getCapability} falls through to attached providers.
+     *
+     * <p>Both directions: insert alone would pass with an aggregate that swallows what it is given.
+     */
+    @GameTest(template = WALL, timeoutTicks = 300)
+    public static void theControllerMovesEnergyForItsWholeNetwork(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getLeft().get());
+
+        List<BlockPos> placed = new ArrayList<>();
+        for (int x = 0; x < 4; x++) {
+            BlockPos pos = new BlockPos(x, 1, 0);
+            helper.setBlock(pos, IDContent.ENERGY_DRAWER.getLeft().get());
+            placed.add(pos);
+        }
+
+        StorageControllerTile<?> controller = controllerAt(helper);
+        controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
+                placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
+
+        int perDrawer = (int) EnergyScaling.baseCapacity();
+
+        helper.startSequence()
+                .thenIdle(SETTLE_TICKS)
+                .thenExecute(() -> {
+                    IEnergyStorage network = capability(helper, CONTROLLER, null);
+                    helper.assertTrue(network != null,
+                            "The Storage Controller has no energy capability: the provider attached "
+                                    + "by AttachCapabilitiesEvent is not reached by their getCapability");
+
+                    assertEquals(helper, network.getMaxEnergyStored(), perDrawer * placed.size(),
+                            "capacity summed over the network");
+
+                    // More than one drawer can take, to prove it spills into the next.
+                    assertEquals(helper, network.receiveEnergy(perDrawer * 3, false), perDrawer * 3,
+                            "energy accepted by the network");
+                    assertEquals(helper, network.getEnergyStored(), perDrawer * 3,
+                            "energy stored across the network");
+
+                    int inDrawers = 0;
+                    for (BlockPos pos : placed) {
+                        inDrawers += ((EnergyDrawerTile) helper.getBlockEntity(pos)).getEnergyStorage().getEnergyStored();
+                    }
+                    assertEquals(helper, inDrawers, perDrawer * 3, "energy actually held by the drawers");
+
+                    assertEquals(helper, network.extractEnergy(perDrawer * 2, false), perDrawer * 2,
+                            "energy extracted from the network");
+                    assertEquals(helper, network.getEnergyStored(), perDrawer, "energy left in the network");
                 })
                 .thenSucceed();
     }
@@ -272,587 +250,32 @@ public final class IDGameTests {
         int counted = network.getItemHandlers().size()
                 + network.getFluidHandlers().size()
                 + network.getExtensions();
-        helper.assertValueEqual(counted, network.getConnectedDrawers().size(),
+        assertEquals(helper, counted, network.getConnectedDrawers().size(),
                 "handlers+extensions counted against drawers in the network, " + when);
     }
 
-    /** An unupgraded drawer is worth having on its own, or the upgrades have nothing to scale. */
-    @GameTest(template = PLATFORM)
-    public static void unupgradedDrawerHoldsTheBaseCapacity(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-
-        helper.assertValueEqual(tile.getEnergyStorage().getCapacityLong(),
-                EnergyScaling.baseCapacity(), "base capacity in FE");
-        helper.succeed();
-    }
-
-    /**
-     * All four upgrade slots do something, and the fourth one still fits in an int.
-     *
-     * <p>This is CLAUDE.md §11 turned into an assertion. {@code IEnergyStorage} is an int API, and
-     * Functional Storage's storage upgrades are multiplicative across four slots — so a base chosen
-     * without doing the arithmetic saturates on the third upgrade and the player's fourth Netherite
-     * upgrade, the most expensive item in the chain, does <em>nothing</em>. Nothing crashes, nothing
-     * logs, and the tooltip reads the same before and after.
-     *
-     * <p>Both halves are asserted deliberately: strictly increasing catches a divisor that is too
-     * small, and staying under the ceiling catches one that is too large.
-     */
-    @GameTest(template = PLATFORM)
-    public static void everyStorageUpgradeSlotChangesTheCapacity(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        Item netherite = upgrade(StorageUpgradeItem.StorageTier.NETHERITE);
-
-        // The long accessor, not the capability one. Past the fourth Netherite upgrade the clamped
-        // int view saturates, and a test written against it would report the ceiling as a bug in
-        // the curve - which is the very thing the ceiling stopped being.
-        long previous = tile.getEnergyStorage().getCapacityLong();
-        for (int slot = 0; slot < tile.getStorageSlotAmount(); slot++) {
-            tile.getStorageUpgrades().insertItem(slot, new ItemStack(netherite), false);
-
-            long now = tile.getEnergyStorage().getCapacityLong();
-            helper.assertTrue(now > previous,
-                    "Storage upgrade " + (slot + 1) + " of " + tile.getStorageSlotAmount()
-                            + " did not change the capacity: still " + now + " FE. The int ceiling "
-                            + "has been hit early — EnergyScaling.ENERGY_DIVISOR is too small for "
-                            + "the base, and the last upgrade slots are decoration.");
-            helper.assertTrue(now > 0,
-                    "Capacity overflowed to " + now + " FE after upgrade " + (slot + 1));
-            previous = now;
-        }
-
-        helper.succeed();
-    }
-
-    /**
-     * The Max Storage upgrade does not wrap the capacity negative.
-     *
-     * <p>It reports a multiplier of {@link Integer#MAX_VALUE}, so the cast to a capacity is where an
-     * energy drawer would go negative and start refusing every FE offered to it. In a long it lands
-     * around 5.4e14 and never reaches the clamp - which is the point of moving to long, and the
-     * reason this asserts the property rather than a number: the arithmetic has to stay positive and
-     * huge, and whether it saturates is a detail of where the curve happens to fall.
-     */
-    @GameTest(template = PLATFORM)
-    public static void maxStorageUpgradeSaturatesWithoutOverflowing(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        tile.getStorageUpgrades().insertItem(0,
-                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.MAX_STORAGE)), false);
-
-        long capacity = tile.getEnergyStorage().getCapacityLong();
-        helper.assertTrue(capacity > 0,
-                "The Max Storage upgrade wrapped the capacity to " + capacity
-                        + ". A drawer with a negative capacity refuses every FE offered to it.");
-        helper.assertTrue(capacity > (long) Integer.MAX_VALUE,
-                "The Max Storage upgrade left the capacity at " + capacity + ", inside an int. "
-                        + "Something is still clamping to int where it should not.");
-        helper.succeed();
-    }
-
-    /**
-     * An upgrade whose removal would not leave room for the stored energy stays in its slot.
-     *
-     * <p>Functional Storage guards the same case with {@code canChangeMultiplier}. Without it,
-     * pulling an upgrade silently deletes the difference, and from the player's side the drawer ate
-     * their power.
-     */
-    @GameTest(template = PLATFORM)
-    public static void anUpgradeCannotBeRemovedIfTheEnergyWouldNotFit(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        tile.getStorageUpgrades().insertItem(0,
-                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.NETHERITE)), false);
-
-        long upgradedCapacity = tile.getEnergyStorage().getCapacityLong();
-        long base = EnergyScaling.baseCapacity();
-        helper.assertTrue(upgradedCapacity > base, "the upgrade did not enlarge the drawer");
-
-        // More than the drawer could hold without the upgrade.
-        // receiveEnergy is an int API, so filling a long-sized drawer takes more than one call.
-        while (tile.getEnergyStorage().getStoredLong() < upgradedCapacity
-                && tile.getEnergyStorage().receiveEnergy(Integer.MAX_VALUE, false) > 0) {
-            // keep going until it stops accepting
-        }
-
-        helper.assertTrue(tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
-                "The storage upgrade came out of a full drawer. Everything above the base capacity "
-                        + "would have been deleted.");
-
-        // Drained back under the base, it comes out.
-        while (tile.getEnergyStorage().getStoredLong() > 0
-                && tile.getEnergyStorage().extractEnergy(Integer.MAX_VALUE, false) > 0) {
-            // and more than one to empty it again
-        }
-        helper.assertTrue(!tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
-                "The storage upgrade is stuck in an empty drawer");
-
-        helper.succeed();
-    }
-
-    /**
-     * A creative drawer is bottomless in both directions, the way a creative fluid drawer is.
-     *
-     * <p>Mirrors {@code BigFluidHandler.CustomFluidTank}: capacity and contents both read
-     * {@link Integer#MAX_VALUE}, and draining hands out whatever was asked for without depleting.
-     * The naive version of this — reporting the configured capacity and extracting
-     * {@code min(stored, asked)} — returns zero forever from a creative drawer nobody filled first.
-     */
-    @GameTest(template = PLATFORM)
-    public static void aCreativeDrawerIsBottomless(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        tile.getStorageUpgrades().insertItem(0, new ItemStack(FunctionalStorage.CREATIVE_UPGRADE.get()), false);
-        helper.assertTrue(tile.isCreative(), "the creative upgrade did not take");
-
-        IEnergyStorage storage = capability(helper, null);
-        helper.assertTrue(storage != null, "no EnergyStorage capability on a creative drawer");
-        helper.assertValueEqual(storage.getMaxEnergyStored(), Integer.MAX_VALUE, "creative capacity");
-        helper.assertValueEqual(storage.getEnergyStored(), Integer.MAX_VALUE, "creative contents");
-
-        // Never filled, and it still pays out - twice.
-        helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "first extraction");
-        helper.assertValueEqual(storage.extractEnergy(1_000_000, false), 1_000_000, "second extraction");
-        helper.assertValueEqual(storage.getEnergyStored(), Integer.MAX_VALUE, "contents after extracting");
-
-        helper.succeed();
-    }
-
-    /**
-     * The framed variant has its own block entity type, so it needs its own capability provider.
-     *
-     * <p>Providers are registered against a {@code BlockEntityType}, and
-     * {@code registerBlockWithTileItem} builds a fresh one per block. Registering only the unframed
-     * drawer leaves the framed one with no energy capability at all — it places, it renders, it
-     * joins a controller network, and every cable in the game ignores it.
-     */
-    @GameTest(template = PLATFORM)
-    public static void framedDrawerHasItsOwnEnergyCapability(GameTestHelper helper) {
-        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
-
-        helper.assertTrue(
-                IDContent.FRAMED_ENERGY_DRAWER.type().get() != IDContent.ENERGY_DRAWER.type().get(),
-                "the two drawers share a block entity type, so this test proves nothing");
-
-        IEnergyStorage storage = capability(helper, null);
-        helper.assertTrue(storage != null,
-                "No EnergyStorage capability on the framed energy drawer. Its block entity type is "
-                        + "not the unframed one's, and a provider registered on that type does not "
-                        + "cover this one.");
-
-        helper.assertValueEqual(storage.receiveEnergy(1_000, false), 1_000, "energy accepted");
-        helper.succeed();
-    }
-
-    /**
-     * Functional Storage's own framing recipe accepts our drawer, with nothing added on our side.
-     *
-     * <p>This is the payoff of {@code FramedBlock} being an empty marker interface that
-     * {@code FramedDrawerRecipe} tests with {@code instanceof}: the recipe generalises to a block
-     * from another mod by accident of how it was written. It is the only extension point in
-     * Functional Storage that does — which is exactly why it is worth a test rather than an
-     * assumption, and why the test should fail loudly if a release ever narrows it to their own
-     * blocks.
-     */
-    @GameTest(template = PLATFORM)
-    public static void framedDrawerIsFramableByFunctionalStorage(GameTestHelper helper) {
-        ItemStack drawer = new ItemStack(IDContent.FRAMED_ENERGY_DRAWER.asItem());
-        CraftingInput grid = CraftingInput.of(2, 2, List.of(
-                new ItemStack(Items.OAK_PLANKS),   // sides and particle
-                new ItemStack(Items.STONE),        // front
-                drawer,
-                new ItemStack(Items.DEEPSLATE)));  // divider
-
-        helper.assertTrue(new FramedDrawerRecipe().matches(grid, helper.getLevel()),
-                "Functional Storage's framing recipe rejected our framed drawer");
-
-        ItemStack framed = FramedDrawerBlock.fill(grid.getItem(0), grid.getItem(1),
-                grid.getItem(2), grid.getItem(3));
-        FramedDrawerModelData design = FramedDrawerBlock.getDrawerModelData(framed);
-
-        helper.assertTrue(design != null, "framing produced a stack with no style on it");
-        helper.assertTrue(design.getDesign().get("front") == Items.STONE,
-                "the front of the framed drawer is not what it was framed with");
-        helper.assertTrue(design.getDesign().get("side") == Items.OAK_PLANKS,
-                "the sides of the framed drawer are not what it was framed with");
-
-        helper.succeed();
-    }
-
-    /**
-     * The placed drawer holds on to its design, and hands it to the renderer.
-     *
-     * <p>Two separate things, both easy to lose: the {@code @Save} field that survives a reload —
-     * Titanium's annotation scan is per class, and the framed tile adds a field the base tile does
-     * not have — and the {@code ModelData} the block model reads the textures out of.
-     */
-    @GameTest(template = PLATFORM)
-    public static void framedDrawerRemembersItsDesign(GameTestHelper helper) {
-        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
-        BlockEntity be = helper.getBlockEntity(DRAWER);
-
-        helper.assertTrue(be instanceof FramedEnergyDrawerTile,
-                "the framed energy drawer has the wrong tile behind it");
-        helper.assertTrue(be instanceof FramedTile,
-                "the framed drawer is not a FramedTile, so none of Functional Storage's framing "
-                        + "code will see it");
-        FramedEnergyDrawerTile tile = (FramedEnergyDrawerTile) be;
-
-        Map<String, Item> design = new HashMap<>();
-        design.put("particle", Items.OAK_PLANKS);
-        design.put("side", Items.OAK_PLANKS);
-        design.put("front", Items.STONE);
-        design.put("front_divider", Items.DEEPSLATE);
-        tile.setFramedDrawerModelData(new FramedDrawerModelData(design));
-
-        helper.assertTrue(tile.getFramedDrawerModelData().getDesign().get("front") == Items.STONE,
-                "the drawer did not keep the design it was given");
-        helper.assertTrue(
-                tile.getModelData().get(FramedDrawerModelData.FRAMED_PROPERTY) != null,
-                "the drawer's ModelData carries no design, so the model has nothing to render with");
-
-        helper.succeed();
-    }
-
-    /**
-     * A cable on the Storage Controller reaches every energy drawer linked to it.
-     *
-     * <p>The controller already stands in for the items and the fluids of its network; it cannot do
-     * the same for energy, because it collects our deliberately empty item handler and has no third
-     * kind of content to look for. So the aggregate is registered from our side, against
-     * <em>their</em> block entity type — NeoForge never asks who owns a type — reading the linked
-     * positions off the public {@code getConnectedDrawers()}. See CLAUDE.md §7.
-     *
-     * <p>Both directions are asserted. Insert alone would pass with an aggregate that reports a
-     * capacity and swallows what it is given.
-     */
-    @GameTest(template = WALL, timeoutTicks = 300)
-    public static void theControllerMovesEnergyForItsWholeNetwork(GameTestHelper helper) {
-        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
-
-        List<BlockPos> placed = new ArrayList<>();
-        for (int x = 0; x < 4; x++) {
-            BlockPos pos = new BlockPos(x, 1, 0);
-            helper.setBlock(pos, IDContent.ENERGY_DRAWER.getBlock());
-            placed.add(pos);
-        }
-
-        StorageControllerTile<?> controller = (StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
-        controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
-                placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
-
-        int perDrawer = (int) EnergyScaling.baseCapacity();
-
-        helper.startSequence()
-                // The controller builds its network on its own tick, not when the link is made.
-                .thenIdle(SETTLE_TICKS)
-                .thenExecute(() -> {
-                    IEnergyStorage network = helper.getLevel().getCapability(
-                            Capabilities.EnergyStorage.BLOCK, helper.absolutePos(CONTROLLER), null);
-                    helper.assertTrue(network != null,
-                            "The Storage Controller has no EnergyStorage capability, so nothing can "
-                                    + "push or pull energy through it");
-
-                    helper.assertValueEqual(network.getMaxEnergyStored(), perDrawer * placed.size(),
-                            "capacity summed over the network");
-
-                    // Insert more than one drawer can take, to prove it spills into the next.
-                    int inserted = network.receiveEnergy(perDrawer * 3, false);
-                    helper.assertValueEqual(inserted, perDrawer * 3, "energy accepted by the network");
-                    helper.assertValueEqual(network.getEnergyStored(), perDrawer * 3, "energy stored across the network");
-
-                    // And that it really landed in the drawers, not in the aggregate.
-                    int inDrawers = 0;
-                    for (BlockPos pos : placed) {
-                        inDrawers += ((EnergyDrawerTile) helper.getBlockEntity(pos)).getEnergyStorage().getEnergyStored();
-                    }
-                    helper.assertValueEqual(inDrawers, perDrawer * 3, "energy actually held by the drawers");
-
-                    int extracted = network.extractEnergy(perDrawer * 2, false);
-                    helper.assertValueEqual(extracted, perDrawer * 2, "energy extracted from the network");
-                    helper.assertValueEqual(network.getEnergyStored(), perDrawer, "energy left in the network");
-                })
-                .thenSucceed();
-    }
-
-    /**
-     * Pushing energy out never creates any.
-     *
-     * <p>A regression test for a real defect, and the shape of it is worth keeping in mind. The
-     * drawer offered a neighbour a budget derived from its <em>capacity</em>, committed the
-     * transfer, then handed over only what it actually held. A drawer with 1 FE in it gave a machine
-     * 2,500 and lost 1 — an infinite generator, firing every four ticks, on any drawer that happened
-     * to be nearly empty rather than on some exotic edge case.
-     *
-     * <p>Nothing else on this branch could have caught it: every other test asks a drawer about
-     * itself, and this only goes wrong once a second block is involved. Hence a real receiver from a
-     * real mod — Powah's energy cell, which is in the dev run for exactly this kind of question
-     * (CLAUDE.md §4).
-     *
-     * <p>The assertion is conservation, not transfer. How much moves is a balance decision that may
-     * change; that the total is unchanged is not.
-     */
-    @GameTest(template = PLATFORM, timeoutTicks = 300)
-    public static void pushingEnergyNeverCreatesIt(GameTestHelper helper) {
-        Block cell = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("powah:energy_cell_starter"));
-        helper.assertTrue(cell != Blocks.AIR,
-                "Powah is not in the run, so this test cannot check what it exists to check. It is "
-                        + "declared runtimeOnly in build.gradle - see CLAUDE.md §4.");
-
-        BlockPos cellPos = DRAWER.east();
-        EnergyDrawerTile tile = placeDrawer(helper);
-        helper.setBlock(cellPos, cell);
-
-        // One FE. The bug needed the drawer to be nearly empty, not full.
-        final int seeded = 1;
-        helper.assertValueEqual(tile.getEnergyStorage().receiveEnergy(seeded, false), seeded, "seeded energy");
-
-        helper.startSequence()
-                // Long enough for several pushes: the interval is four ticks.
-                .thenIdle(40)
-                .thenExecute(() -> {
-                    long inDrawer = tile.getEnergyStorage().getStoredLong();
-
-                    IEnergyStorage cellStorage = helper.getLevel().getCapability(
-                            Capabilities.EnergyStorage.BLOCK, helper.absolutePos(cellPos), null);
-                    helper.assertTrue(cellStorage != null, "the Powah cell has no energy capability");
-                    long inCell = cellStorage.getEnergyStored();
-
-                    helper.assertValueEqual(inDrawer + inCell, (long) seeded,
-                            "total FE across the drawer and its neighbour. More than was put in means "
-                                    + "the push is offering more than the drawer holds while only "
-                                    + "giving up what it has");
-                })
-                .thenSucceed();
-    }
-
-    /**
-     * The augment reaches Functional Storage's registry, and the item carries it.
-     *
-     * <p>This is what CLAUDE.md §12 task 7 asks to prove before building augments on top of it:
-     * {@code FunctionalUpgradeBehavior} is a synchronised registry dispatched by codec, and an
-     * upgrade whose codec never landed in it is an item that silently does nothing. Both halves
-     * matter — the codec being registered, and the item actually carrying the component that makes
-     * the drawer call it.
-     */
-    @GameTest(template = PLATFORM)
-    public static void augmentIsRegisteredWithFunctionalStorage(GameTestHelper helper) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "charge_nearby");
-
-        helper.assertTrue(FunctionalUpgradeBehavior.REGISTRY.containsKey(id),
-                "The augment's codec is not in Functional Storage's functional_upgrade_behavior "
-                        + "registry under " + id + ". Their dispatch is by codec, so an unregistered "
-                        + "behaviour is an upgrade that does nothing and says nothing.");
-        helper.assertTrue(FunctionalUpgradeBehavior.REGISTRY.get(id) == ChargeNearbyBehavior.CODEC,
-                "Something else is registered under " + id);
-
-        ItemStack charger = new ItemStack(IDContent.WIRELESS_CHARGER.get());
-        helper.assertTrue(charger.get(FSAttachments.FUNCTIONAL_BEHAVIOR) instanceof ChargeNearbyBehavior,
-                "The Wireless Charger item does not carry the behaviour component, so the drawer "
-                        + "will never call it");
-
-        helper.succeed();
-    }
-
-    /**
-     * The charger fills what a player is carrying, and conserves energy doing it.
-     *
-     * <p>Two assertions in one test on purpose: that the augment does its job at all — which is also
-     * the proof that Functional Storage really calls {@code work()} on an upgrade in a utility slot
-     * — and that the drawer loses exactly what the battery gains.
-     *
-     * <p>The conservation half is not padding. The identical mistake in the push loop shipped and
-     * had to be found by review: an offer larger than the drawer holds is committed on the receiving
-     * side, and the difference is invented. A charger feeding several items in one sweep is the same
-     * shape, which is why the offer is recomputed per item.
-     */
-    @GameTest(template = PLATFORM, timeoutTicks = 300)
-    public static void wirelessChargerFillsGearWithoutInventingEnergy(GameTestHelper helper) {
-        Item battery = BuiltInRegistries.ITEM.get(ResourceLocation.parse("powah:battery_basic"));
-        helper.assertTrue(battery != Items.AIR,
-                "Powah is not in the run, so there is no chargeable item to test with. It is "
-                        + "declared runtimeOnly in build.gradle - see CLAUDE.md §4.");
-
-        EnergyDrawerTile tile = placeDrawer(helper);
-        tile.getUtilityUpgrades().insertItem(0, new ItemStack(IDContent.WIRELESS_CHARGER.get()), false);
-
-        final int seeded = 50_000;
-        tile.getEnergyStorage().receiveEnergy(seeded, false);
-
-        // A mock player, positioned and then added to the level by hand.
-        //
-        // makeMockPlayer alone builds a Player the level has never heard of, so
-        // getEntitiesOfClass would not see it. makeMockServerPlayerInLevel does add one, but it
-        // goes through the real join path over a fake channel, and Jade throws trying to send its
-        // server ping down it - a failure of the dev run, not of anything being tested.
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-        player.setPos(helper.absoluteVec(new Vec3(DRAWER.getX() + 0.5, DRAWER.getY(), DRAWER.getZ() + 0.5)));
-        helper.getLevel().addFreshEntity(player);
-        ItemStack cell = new ItemStack(battery);
-        player.getInventory().items.set(0, cell);
-
-        helper.startSequence()
-                // The sweep interval is 20 ticks; give it room for a couple.
-                .thenIdle(60)
-                .thenExecute(() -> {
-                    IEnergyStorage carried = cell.getCapability(Capabilities.EnergyStorage.ITEM);
-                    helper.assertTrue(carried != null, "the Powah battery exposes no item energy capability");
-
-                    long inBattery = carried.getEnergyStored();
-                    long inDrawer = tile.getEnergyStorage().getStoredLong();
-
-                    helper.assertTrue(inBattery > 0,
-                            "The charger moved nothing. Either Functional Storage is not calling "
-                                    + "work() for utility upgrades any more, or the augment is not "
-                                    + "finding the player.");
-                    helper.assertValueEqual(inDrawer + inBattery, (long) seeded,
-                            "total FE across the drawer and the battery it charged");
-                })
-                .thenSucceed();
-    }
-
-    /**
-     * Functional Storage's own Redstone Upgrade drives a signal from the charge.
-     *
-     * <p>There is no augment of ours for this, on purpose — the upgrade a player already owns should
-     * work. It nearly does: {@code EmitRedstoneBehavior} connects and ticks for us unchanged, and
-     * only its signal reads the zero-slot item handler and gives up. That half is answered in
-     * {@code EnergyDrawerBlock.getSignal}, and the failure it prevents is silent: an upgrade that
-     * slots in, connects to dust, and never leaves 0.
-     */
-    @GameTest(template = PLATFORM)
-    public static void functionalStorageRedstoneUpgradeReadsTheCharge(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        BlockPos absolute = helper.absolutePos(DRAWER);
-        BlockState state = helper.getBlockState(DRAWER);
-
-        helper.assertValueEqual(state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
-                "a drawer with no Redstone Upgrade emits a signal");
-
-        tile.getUtilityUpgrades().insertItem(0,
-                new ItemStack(FunctionalStorage.REDSTONE_UPGRADE.get()), false);
-
-        helper.assertTrue(state.canRedstoneConnectTo(helper.getLevel(), absolute, Direction.NORTH),
-                "the Redstone Upgrade does not connect - EmitRedstoneBehavior.canConnectRedstone "
-                        + "checks for an ItemControllableDrawerTile, which we are");
-        helper.assertValueEqual(state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
-                "an empty drawer emits a signal");
-
-        // Half full: 1 + 0.5 * 14 = 8, the same number a comparator reads.
-        tile.getEnergyStorage().receiveEnergy(
-                (int) (tile.getEnergyStorage().getCapacityRaw() / 2), false);
-
-        int signal = state.getSignal(helper.getLevel(), absolute, Direction.NORTH);
-        helper.assertValueEqual(signal, 8, "redstone signal at half charge");
-        helper.assertValueEqual(signal,
-                state.getAnalogOutputSignal(helper.getLevel(), absolute),
-                "redstone signal and comparator signal, which must not disagree");
-
-        helper.succeed();
-    }
-
-    /**
-     * Clicking the front of a drawer with something in hand does not throw.
-     *
-     * <p>A regression test for a defect that shipped in 0.1.0. {@code ItemControllableDrawerTile}
-     * handles a click on a drawer front by offering the held stack to {@code getStorage()} at the
-     * slot that was hit — {@code insertItem(0, stack, true)} for a right-click,
-     * {@code extractItem(0, …)} for a left-click. The empty handler was an
-     * {@code ItemStackHandler(0)}, and {@code ItemStackHandler} validates the slot index: slot 0 of
-     * a zero-slot handler is a {@code RuntimeException}. Right-clicking an energy drawer with
-     * anything in hand — a stick, a storage upgrade, the cable you were about to place — threw on the
-     * server.
-     *
-     * <p>No other test could see it: they all talk to the drawer through its capability, and a player
-     * never does.
-     */
-    @GameTest(template = PLATFORM)
-    public static void clickingTheFrontWithAnItemDoesNotThrow(GameTestHelper helper) {
-        EnergyDrawerTile tile = placeDrawer(helper);
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
-
-        tile.onSlotActivated(player, InteractionHand.MAIN_HAND, Direction.NORTH, 0.5, 0.5, 0.5, 0);
-        helper.assertValueEqual(player.getMainHandItem().getCount(), 1,
-                "sticks left in hand - an energy drawer has nowhere to put one");
-
-        tile.onClicked(player, 0);
-        helper.succeed();
-    }
-
-    /**
-     * A pickaxe is the right tool for every drawer of ours, so breaking one gives it back.
-     *
-     * <p>A regression test for a defect that shipped in 0.1.0. The drawers copy the copper block's
-     * properties, which include {@code requiresCorrectToolForDrops}, and a drawer only drops through
-     * {@code getDrops} - which vanilla calls only when {@code player.hasCorrectToolForDrops(state)}.
-     * Which tool is correct is decided by the {@code mineable/*} block tags, and the drawers were in
-     * none of them. No tool was correct, so a broken energy drawer dropped nothing: not the block, not
-     * the energy in it, not its upgrades. Functional Storage lists its own drawers in
-     * {@code mineable/pickaxe}; ours are now generated into it.
-     *
-     * <p>Every block this mod registers is checked, so a drawer added later cannot miss the tag.
-     */
-    @GameTest(template = PLATFORM)
-    public static void aPickaxeIsTheRightToolForEveryDrawer(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
-
-        BuiltInRegistries.BLOCK.stream()
-                .filter(block -> ImmaterialDrawers.MOD_ID.equals(BuiltInRegistries.BLOCK.getKey(block).getNamespace()))
-                .forEach(block -> {
-                    BlockState state = block.defaultBlockState();
-                    helper.assertTrue(player.hasCorrectToolForDrops(state),
-                            BuiltInRegistries.BLOCK.getKey(block) + " drops nothing when mined with a "
-                                    + "pickaxe - it requires the correct tool and is in no mineable tag");
-                });
-        helper.succeed();
-    }
-
-    /**
-     * The config switches reach the recipes: the condition answers the config as it is now, and
-     * with everything on - the default - the recipes are really loaded.
-     *
-     * <p>The creative-tab half is not tested here; it needs a client.
-     */
-    @GameTest(template = PLATFORM)
-    public static void aDisabledFeatureLosesItsRecipe(GameTestHelper helper) {
-        var condition = dev.drimoz.immaterialdrawers.registry.IDFeatures.enabled(
-                dev.drimoz.immaterialdrawers.registry.IDFeatures.Feature.ENERGY_DRAWER);
-        boolean before = dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED;
-        try {
-            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = false;
-            helper.assertTrue(!condition.test(net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY),
-                    "the recipe condition ignores a disabled energy drawer");
-            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = true;
-            helper.assertTrue(condition.test(net.neoforged.neoforge.common.conditions.ICondition.IContext.EMPTY),
-                    "the recipe condition refuses an enabled energy drawer");
-        } finally {
-            dev.drimoz.immaterialdrawers.IDConfig.ENERGY_DRAWER_ENABLED = before;
-        }
-        for (String recipe : List.of("energy_drawer", "framed_energy_drawer", "wireless_charger")) {
-            helper.assertTrue(helper.getLevel().getRecipeManager()
-                            .byKey(ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, recipe)).isPresent(),
-                    "recipe " + recipe + " is missing although its feature is enabled");
-        }
-        helper.succeed();
-    }
-
-    private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
-        return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
+    /** 1.20.1's {@code GameTestHelper} has no {@code assertValueEqual}; this is it. */
+    private static void assertEquals(GameTestHelper helper, Object actual, Object expected, String name) {
+        helper.assertTrue(Objects.equals(actual, expected),
+                "Expected " + name + " to be " + expected + ", but was " + actual);
     }
 
     private static EnergyDrawerTile placeDrawer(GameTestHelper helper) {
-        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getBlock());
+        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getLeft().get());
         BlockEntity be = helper.getBlockEntity(DRAWER);
         helper.assertTrue(be instanceof EnergyDrawerTile, "the energy drawer has no tile behind it");
         return (EnergyDrawerTile) be;
     }
 
-    private static IEnergyStorage placeDrawerAndGetCapability(GameTestHelper helper, Direction side) {
-        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getBlock());
-        return capability(helper, side);
+    private static StorageControllerTile<?> controllerAt(GameTestHelper helper) {
+        BlockEntity be = helper.getBlockEntity(CONTROLLER);
+        helper.assertTrue(be instanceof StorageControllerTile<?>, "no Storage Controller was placed");
+        return (StorageControllerTile<?>) be;
     }
 
-    private static IEnergyStorage capability(GameTestHelper helper, Direction side) {
-        return helper.getLevel().getCapability(
-                Capabilities.EnergyStorage.BLOCK, helper.absolutePos(DRAWER), side);
+    /** Asked of the block entity, the way every Forge 1.20.1 cable asks. */
+    private static IEnergyStorage capability(GameTestHelper helper, BlockPos pos, Direction side) {
+        BlockEntity be = helper.getBlockEntity(pos);
+        return be == null ? null : be.getCapability(ForgeCapabilities.ENERGY, side).orElse(null);
     }
 }

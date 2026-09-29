@@ -111,8 +111,10 @@ which is simpler than today's composite. The framed variants have no FS model to
 
 **The 1.5.7 deadlock.** 1.2.14 has the same `isLoaded` + `getBlockEntity(controllerPos)` in
 `invalidateCaps` **[verified]**. On Forge 1.20.1, `invalidateCaps` runs on removal and unload rather
-than inside the chunk post-load, so I expect no deadlock. Keep our `getChunkNow` override anyway: it
-costs nothing and is right either way.
+than inside the chunk post-load, so I expect no deadlock. **Corrected at step 1:** the override cannot be kept. On 1.21.1 it replaces
+theirs and redoes NeoForge's one-line invalidation by hand; on Forge, skipping their `invalidateCaps`
+means skipping `BlockEntity.invalidateCaps` too, which Java cannot call past them. It is dropped until a
+world actually hangs.
 
 **Rendering, GUI, datagen.** `GuiGraphics` exists since 1.20, `BlockEntityRenderer` has the same shape,
 and the Forge data providers mirror NeoForge's (they were forked from them). Our `feature_enabled` recipe
@@ -254,5 +256,29 @@ Same logic as CLAUDE.md §12: the first task decides whether the rest is worth d
 
 ## 8. What actually happened
 
-*To be written as each port lands: the real error counts, where this estimate was wrong, and what no
+*Written as each step lands: the real error counts, where the estimate above was wrong, and what no
 compiler could have predicted. BeaconPack's version of this section is the reason this one exists.*
+
+### 1.20.1, step 1: the spike (29 September 2026)
+
+**All 6 spike tests pass** on Forge 47.4.23 with Functional Storage 1.2.14: the energy capability from
+the tile and from every side, storing what it is given, the zero-slot tile counted as an item drawer,
+**50 drawers on a controller with no rebuild over 60 ticks**, and FE in and out through their controller
+via `AttachCapabilitiesEvent`. The architecture holds on 1.20.1, as read.
+
+How: the energy core only (13 files) was ported, and `build.gradle` lists the ported files explicitly;
+the rest of the tree stays out of the build until its step. The list is the progress.
+
+What the reading did not predict:
+
+- **Forge 1.20.1 ignores a mod's resources without `pack.mcmeta`.** No error, no warning: the game
+  test structures were simply not there. NeoForge dropped the requirement, so the 1.21.1 tree never
+  had one.
+- **Test structures live in `data/<ns>/structures/`** (plural) on 1.20.1, `structure/` on 1.21.1.
+  The 1.21.1 `.nbt` files (data version 3955) load as they are on 1.20.1.
+- **`GameTestHelper` has no `assertValueEqual`** on 1.20.1; the tests carry a four-line equivalent.
+- **The deadlock override had to go** - see §3.
+- Registration hands back a `Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>>`, not a
+  `BlockWithTile`, and FS 1.20.1's blocks are `RotatableBlock` + a one-method `Drawer` interface, so
+  `ImmaterialDrawerBlock` carries the interaction, drops and unlinking that FS 1.21 keeps in a base
+  class. More code than on 1.21.1, all of it copied from their fluid drawer.

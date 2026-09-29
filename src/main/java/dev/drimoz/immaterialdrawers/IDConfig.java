@@ -2,7 +2,7 @@ package dev.drimoz.immaterialdrawers;
 
 import com.hrznstudio.titanium.annotation.config.ConfigFile;
 import com.hrznstudio.titanium.annotation.config.ConfigVal;
-import net.neoforged.fml.config.ModConfig;
+import net.minecraftforge.fml.config.ModConfig;
 
 /**
  * Every number in this mod a pack author might want to move.
@@ -10,16 +10,16 @@ import net.neoforged.fml.config.ModConfig;
  * <p>Same mechanism as Functional Storage's own {@code FunctionalStorageConfig}: a Titanium
  * {@code @ConfigFile} class, discovered by {@code ModuleController} and injected on config load.
  *
- * <p><b>STARTUP, and the file name is misleading for the same reason theirs is.</b> These values are
- * read while data components are being attached to Functional Storage's upgrade items, which happens
- * during mod loading — a config arriving later would leave the upgrades carrying whatever the
- * defaults were.
+ * <p><b>COMMON on 1.20.1.</b> The 1.21.1 branch needs STARTUP because the values are baked into data
+ * components on Functional Storage's upgrades during mod loading. Forge 1.20.1 has no STARTUP type
+ * and no components: the divisor is read live, by {@code getStorageDiv()}, whenever a drawer
+ * recomputes its multiplier.
  *
  * <p>Deliberately wider than what Functional Storage exposes. Their fluid divisor and base sizes are
  * fixed in code; every equivalent here is editable, including the things that only exist in this
  * mod, because whoever is tuning a pack has better reasons than we do.
  */
-@ConfigFile(value = "immaterialdrawers-common", type = ModConfig.Type.STARTUP)
+@ConfigFile(value = "immaterialdrawers-common", type = ModConfig.Type.COMMON)
 public class IDConfig {
 
     @ConfigVal(comment = "FE held by an unupgraded energy drawer, before the storage upgrades are "
