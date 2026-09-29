@@ -34,7 +34,7 @@ import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.wrapper.EmptyItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -63,9 +63,15 @@ public class EnergyDrawerTile extends ItemControllableDrawerTile<EnergyDrawerTil
 
     /**
      * The whole trick, in one field. Shared and immutable in the ways that matter - an
-     * {@link ItemStackHandler} with no slots has no state to share.
+     * handler with no slots has no state to share.
+     *
+     * <p>{@link EmptyItemHandler}, not {@code new ItemStackHandler(0)}. Functional Storage offers
+     * the held stack to {@code getStorage()} at the slot a player clicked, and
+     * {@code ItemStackHandler} validates slot indices: slot 0 of a zero-slot one throws. That shipped
+     * in 0.1.0 — see {@code clickingTheFrontWithAnItemDoesNotThrow}. {@code EmptyItemHandler} answers
+     * every slot with "nothing here, nothing fits".
      */
-    private static final IItemHandler NO_ITEMS = new ItemStackHandler(0);
+    private static final IItemHandler NO_ITEMS = EmptyItemHandler.INSTANCE;
 
     @Save
     public BigEnergyStorage energyStorage;

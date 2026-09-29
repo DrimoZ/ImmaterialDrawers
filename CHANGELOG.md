@@ -2,6 +2,14 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## Unreleased
+
+### Fixed
+- Right-clicking or left-clicking the front of an Energy Drawer with anything in hand threw on the
+  server (`Slot 0 not in valid range - [0,0)`). Functional Storage offers the held stack to the
+  drawer's item handler at the slot that was clicked, and the empty handler validated that index.
+  It is now NeoForge's `EmptyItemHandler`, which has no slots and does not mind being asked.
+
 ## 0.1.0+1.21.1 — 2026-09-28
 
 The first release: the Energy Drawer, its framed variant, and the Wireless Charger.

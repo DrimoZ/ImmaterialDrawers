@@ -22,6 +22,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -744,6 +745,35 @@ public final class IDGameTests {
                 state.getAnalogOutputSignal(helper.getLevel(), absolute),
                 "redstone signal and comparator signal, which must not disagree");
 
+        helper.succeed();
+    }
+
+    /**
+     * Clicking the front of a drawer with something in hand does not throw.
+     *
+     * <p>A regression test for a defect that shipped in 0.1.0. {@code ItemControllableDrawerTile}
+     * handles a click on a drawer front by offering the held stack to {@code getStorage()} at the
+     * slot that was hit — {@code insertItem(0, stack, true)} for a right-click,
+     * {@code extractItem(0, …)} for a left-click. The empty handler was an
+     * {@code ItemStackHandler(0)}, and {@code ItemStackHandler} validates the slot index: slot 0 of
+     * a zero-slot handler is a {@code RuntimeException}. Right-clicking an energy drawer with
+     * anything in hand — a stick, a storage upgrade, the cable you were about to place — threw on the
+     * server.
+     *
+     * <p>No other test could see it: they all talk to the drawer through its capability, and a player
+     * never does.
+     */
+    @GameTest(template = PLATFORM)
+    public static void clickingTheFrontWithAnItemDoesNotThrow(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+
+        tile.onSlotActivated(player, InteractionHand.MAIN_HAND, Direction.NORTH, 0.5, 0.5, 0.5, 0);
+        helper.assertValueEqual(player.getMainHandItem().getCount(), 1,
+                "sticks left in hand - an energy drawer has nowhere to put one");
+
+        tile.onClicked(player, 0);
         helper.succeed();
     }
 
