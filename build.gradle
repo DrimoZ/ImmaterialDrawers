@@ -1,20 +1,20 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    // ModDevGradle 2.x. Pinned to the version Functional Storage itself builds with, so a problem
-    // that shows up here can be compared against a known-good build of the mod we extend.
-    id 'net.neoforged.moddev' version '2.0.75'
+    // ModDevGradle's legacy-Forge plugin rather than the ForgeGradle 5 that Functional Storage 1.20.1
+    // builds with: same DSL as the 1.21.1 build, so the two branches' build files stay comparable.
+    id 'net.neoforged.moddev.legacyforge' version '2.0.148'
 }
 
 version = "${mod_version}+${minecraft_version}"
 group = mod_group_id
 base { archivesName = mod_id }
 
-// 1.21.1 runs on Java 21.
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// 1.20.1 runs on Java 17.
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-neoForge {
-    version = project.neo_version
+legacyForge {
+    version = project.forge_version
 
     parchment {
         minecraftVersion = project.parchment_minecraft_version
@@ -25,30 +25,20 @@ neoForge {
         client {
             client()
             gameDirectory = project.file('run')
-            // `-PquickPlay="World Name"` opens straight into a saved world - for staging and
-            // screenshotting a scene without clicking through the menus.
-            if (project.hasProperty('quickPlay')) {
-                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlay').toString()
-            }
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
         server {
             server()
             gameDirectory = project.file('run')
             programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
-        // Runs every @GameTest headlessly and exits non-zero if any fails. This is the acceptance
-        // criterion for the capability spike (CLAUDE.md §12 task 1), not an optional extra: the
-        // whole point of writing the spike as a test is that it stays as a regression check
-        // against future Functional Storage and Titanium releases.
+        // Same acceptance run as on 1.21.1: every game test, headless, non-zero exit on failure.
         gameTestServer {
             type = 'gameTestServer'
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
-            // Its own directory. Runs that share run/ share run/mods and each other's saves.
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
             gameDirectory = project.file('run-gametest')
         }
-        // 1.21.1 still has a single datagen run - the client/server split arrives in 1.21.4.
         data {
             data()
             gameDirectory = project.file('run-data')
@@ -58,8 +48,6 @@ neoForge {
                     '--existing', file('src/main/resources/').absolutePath
         }
         configureEach {
-            // gameDirectory is set per run, not here: configureEach would overwrite the game test
-            // run's own directory depending on when each run is realised.
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
@@ -78,90 +66,37 @@ repositories {
         url = 'https://maven.blamejared.com'
     }
     maven {
-        // Functional Storage publishes to no public maven at all - its own `publishing` block
-        // points at file('repo'). Modrinth's maven serves the released jar by version number,
-        // which beats CurseMaven here because it needs no opaque fileId to be looked up by hand
-        // every time the dependency moves.
-        name = 'Modrinth (Functional Storage)'
+        // Functional Storage publishes to no public maven - see the 1.21.1 build.
+        name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
         content { includeGroup 'maven.modrinth' }
     }
-    maven {
-        // For Jade and The One Probe later (CLAUDE.md §11).
-        name = 'CurseMaven'
-        url = 'https://cursemaven.com'
-        content { includeGroup 'curse.maven' }
-    }
 }
 
+// On legacy Forge every mod jar is SRG-named and has to be remapped to the dev names: the `mod*`
+// configurations do that. A plain `implementation` of a mod jar compiles against the wrong names.
 dependencies {
-    // Dev environment only. Neither is required to play, neither is compiled against, and a
-    // mistake here cannot reach a player - see gradle.properties for why these two.
-    //
-    // runtimeOnly is enough: FML discovers mods on the dev runtime classpath, which is how JEI
-    // is already in the run without being declared anywhere (it arrives through Titanium's pom).
-    runtimeOnly "maven.modrinth:powah:${powah_version}"
-    runtimeOnly "maven.modrinth:guideme:${guideme_version}"
-    runtimeOnly "maven.modrinth:cloth-config:${cloth_config_version}"
-    runtimeOnly "maven.modrinth:jade:${jade_version}"
+    // Hard dependencies, never bundled (Titanium is LGPLv3; Functional Storage is what we extend).
+    modImplementation "com.hrznstudio:titanium:${titanium_version}"
+    modImplementation "maven.modrinth:functional-storage:${functionalstorage_version}"
 
-    // Jade is also compiled against, for the plugin in compat/jade - but compileOnly, so it stays a
-    // soft dependency. The plugin class is only ever loaded by Jade's own annotation scan, which
-    // does not happen when Jade is absent.
-    compileOnly "maven.modrinth:jade:${jade_version}"
+    // Optional mods: compiled against, loaded only behind compat/Mods (CLAUDE.md §16).
+    modCompileOnly "maven.modrinth:jade:${jade_version}"
+    modCompileOnly "maven.modrinth:the-one-probe:${top_version}"
+    modCompileOnly "maven.modrinth:mekanism:${mekanism_version}"
+    modCompileOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
+    modCompileOnly "maven.modrinth:botania:${botania_version}"
 
-    // Same arrangement for The One Probe. Titanium's @FeaturePlugin gates the class on the mod
-    // being present, so it is never loaded when TOP is absent.
-    compileOnly "maven.modrinth:the-one-probe:${top_version}"
-    runtimeOnly "maven.modrinth:the-one-probe:${top_version}"
-
-    // Mekanism is an optional dependency: the Chemical Drawers exist only when it is installed.
-    // compileOnly, never implementation and never bundled - its API is compiled against, and every
-    // class that touches it sits behind Mods.mekanism() (CLAUDE.md §16).
-    //
-    // runtimeOnly as well, so the game tests and datagen see the chemical drawers. `-PnoMekanism`
-    // drops it from the run, which is how the "Mekanism absent" path gets exercised: the mod must
-    // load, register nothing chemical, and pass every energy test.
-    compileOnly "maven.modrinth:mekanism:${mekanism_version}"
-    if (!project.hasProperty('noMekanism')) {
-        runtimeOnly "maven.modrinth:mekanism:${mekanism_version}"
-    }
-
-    // Ars Nouveau, same arrangement: the Source Drawer is behind Mods.arsNouveau(). `-PnoArs` drops it
-    // (and the two mods it needs) from the run, to exercise the "absent" path.
-    compileOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
-    // GeckoLib at compile time only because the tests name Ars's RelayTile, which extends one of its
-    // types. Nothing of ours touches it at runtime.
-    compileOnly "maven.modrinth:geckolib:${geckolib_version}"
-    if (!project.hasProperty('noArs')) {
-        runtimeOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
-        runtimeOnly "maven.modrinth:curios:${curios_version}"
-        runtimeOnly "maven.modrinth:geckolib:${geckolib_version}"
-    }
-
-    // Scenery for store screenshots, and only when asked for: `runClient -Pshowcase`. Behind a
-    // flag because these are heavy, Sodium and Iris are client-only, and the game test server
-    // and the everyday client should not pay for either.
-    if (project.hasProperty('showcase')) {
-        runtimeOnly "maven.modrinth:mekanism-generators:${mekanism_version}"
-        runtimeOnly "maven.modrinth:sodium:${sodium_version}"
-        runtimeOnly "maven.modrinth:iris:${iris_version}"
-    }
-
-    // Both are hard dependencies, required at compile time and at runtime, and neither is
-    // bundled: Titanium is LGPLv3 and must stay a separate jar, and Functional Storage is the
-    // mod we extend - shipping a copy of it would be absurd.
-    implementation "com.hrznstudio:titanium:${titanium_version}"
-    implementation "maven.modrinth:functional-storage:${functionalstorage_version}"
+    // Dev runs: added back mod by mod as each compat layer is ported, not all at once - a launch
+    // that fails on a missing transitive dependency says nothing about our code.
 }
 
-// Expand gradle.properties into neoforge.mods.toml so versions live in one place.
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
+            forge_version          : forge_version,
+            forge_version_range    : forge_version_range,
             loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
@@ -177,16 +112,10 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 }
 
 sourceSets.main.resources.srcDir generateModMetadata
-// Generated resources are committed, so a clone builds without running datagen first.
 sourceSets.main.resources.srcDir 'src/generated/resources'
-// Datagen's hash cache sits in that folder too. It is bookkeeping for the next datagen run, not a
-// resource, and without this it ships inside the jar.
 processResources { exclude '.cache/**' }
-neoForge.ideSyncTask generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
 
-// Both licences travel with the jar. A distributed artifact that does not carry its own terms
-// leaves anyone who only has the file with no way to know them. NOTICE carries the Functional
-// Storage copyright line that MIT requires us to preserve (CLAUDE.md §4).
 tasks.named('jar', Jar) {
     from(file('LICENSE')) { into 'META-INF' }
     from(file('LICENSE-ASSETS')) { into 'META-INF' }
@@ -195,15 +124,7 @@ tasks.named('jar', Jar) {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 21
-    options.compilerArgs << '-Xlint:deprecation'
-}
-
-publishing {
-    publications.register('mavenJava', MavenPublication) {
-        from components.java
-    }
-    repositories {
-        maven { url = "file://${project.projectDir}/repo" }
-    }
+    options.release = 17
+    // The port is measured by its error count (PORTING.md); javac's default stops at 100.
+    options.compilerArgs << '-Xmaxerrs' << '100000'
 }

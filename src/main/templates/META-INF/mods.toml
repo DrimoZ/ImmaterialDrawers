@@ -14,15 +14,15 @@ logoBlur = false
 description = '''${mod_description}'''
 
 [[dependencies.${mod_id}]]
-modId = "neoforge"
-type = "required"
-versionRange = "${neo_version_range}"
+modId = "forge"
+mandatory = true
+versionRange = "${forge_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
-type = "required"
+mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
@@ -32,8 +32,8 @@ side = "BOTH"
 # its drawer types and its registries must exist first.
 [[dependencies.${mod_id}]]
 modId = "functionalstorage"
-type = "required"
-versionRange = "[1.5.7,)"
+mandatory = true
+versionRange = "[1.2.14,)"
 ordering = "AFTER"
 side = "BOTH"
 
@@ -42,31 +42,28 @@ side = "BOTH"
 # loader message and not a NoClassDefFoundError.
 [[dependencies.${mod_id}]]
 modId = "titanium"
-type = "required"
-versionRange = "[4.0.34,)"
+mandatory = true
+versionRange = "[3.8.35,)"
 ordering = "AFTER"
 side = "BOTH"
 
 # Mekanism is optional: with it, the Chemical Drawers exist; without it, they are never registered
 # and no class that touches its API is ever loaded (CLAUDE.md §16). Declared anyway, for two reasons.
-# A version below the floor becomes a loader message instead of a NoSuchMethodError - 10.7 is where
-# gases, infusion types, pigments and slurries became one Chemical API, which is what we compile
-# against. And AFTER, so Mekanism's chemical registry exists before our blocks are built.
-# No upper bound, deliberately: on an optional dependency an upper bound refuses to launch the whole
-# pack the day Mekanism ships a 10.8, and every 1.21.1 release so far has kept the 10.7 API.
+# 10.4 is the last Mekanism line for 1.20.1: four chemical handlers (gas, infusion, pigment, slurry),
+# not the unified Chemical API of 10.7. Bounded above because the 1.20.1 line is closed - there is no
+# 10.5 to refuse. AFTER, so its chemical registries exist before our blocks are built.
 [[dependencies.${mod_id}]]
 modId = "mekanism"
-type = "optional"
-versionRange = "[10.7,)"
+mandatory = false
+versionRange = "[10.4,10.5)"
 ordering = "AFTER"
 side = "BOTH"
 
-# Ars Nouveau is optional, for the Source Drawer - same reasoning as Mekanism above. 5.13 is the
-# release the Source API was read from (ISourceCap, SourceManager); no upper bound, for the same
-# reason as Mekanism's.
+# Ars Nouveau is optional, for the Source Drawer - same reasoning as Mekanism above. 4.12 is the
+# 1.20.1 line: ISourceTile and SourceManager, and no ISourceCap - that capability arrived in 5.x.
 [[dependencies.${mod_id}]]
 modId = "ars_nouveau"
-type = "optional"
-versionRange = "[5.13,)"
+mandatory = false
+versionRange = "[4.12,4.13)"
 ordering = "AFTER"
 side = "BOTH"
