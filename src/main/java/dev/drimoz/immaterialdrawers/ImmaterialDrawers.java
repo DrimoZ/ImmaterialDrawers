@@ -17,6 +17,8 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDComponents;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.resources.ResourceLocation;
@@ -63,6 +65,12 @@ public class ImmaterialDrawers extends ModuleController {
 
         IDComponents.DR.register(modBus);
 
+        // The chemical drawers exist only with Mekanism, and nothing that touches its classes may
+        // run without it - see compat.Mods. The registration half is in initModules.
+        if (Mods.mekanism()) {
+            IDChemicalContent.init(modBus);
+        }
+
         modBus.addListener(this::registerCapabilities);
         modBus.addListener(this::addEnergyScalingToStorageUpgrades);
     }
@@ -70,6 +78,9 @@ public class ImmaterialDrawers extends ModuleController {
     @Override
     protected void initModules() {
         IDContent.register(getRegistries());
+        if (Mods.mekanism()) {
+            IDChemicalContent.register(getRegistries());
+        }
 
         // The augment's codec, in Functional Storage's registry. This is their one supported
         // extension point (CLAUDE.md §9) and it is a plain registry entry - no mixin, no hook.

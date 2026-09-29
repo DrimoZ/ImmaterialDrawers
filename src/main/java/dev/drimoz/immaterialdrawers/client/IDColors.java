@@ -2,6 +2,7 @@ package dev.drimoz.immaterialdrawers.client;
 
 import com.buuz135.functionalstorage.client.FramedColors;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -39,10 +40,16 @@ public final class IDColors {
     @SubscribeEvent
     public static void registerBlockColors(RegisterColorHandlersEvent.Block event) {
         event.register(HANDLER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+        if (Mods.mekanism()) {
+            ChemicalClient.registerBlockColors(event, HANDLER);
+        }
     }
 
     @SubscribeEvent
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
         event.register(HANDLER, IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+        if (Mods.mekanism()) {
+            ChemicalClient.registerItemColors(event, HANDLER);
+        }
     }
 }

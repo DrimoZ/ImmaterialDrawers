@@ -1,0 +1,35 @@
+{
+  "__comment": "Functional Storage's framed_fluid_2, part for part. Their framedblock loader retextures side and front with what the player framed it with; the tank is not in the design, so it keeps our inner walls.",
+  "parent": "minecraft:block/block",
+  "loader": "functionalstorage:framedblock",
+  "textures": {
+    "particle": "functionalstorage:block/framed_side"
+  },
+  "children": {
+    "side": {
+      "parent": "functionalstorage:block/side",
+      "textures": {
+        "side": "functionalstorage:block/framed_side"
+      }
+    },
+    "front": {
+      "parent": "functionalstorage:block/fluid_front_2",
+      "textures": {
+        "front": "functionalstorage:block/framed_front_2"
+      }
+    },
+    "tank": {
+      "parent": "functionalstorage:block/fluid_inner_2",
+      "textures": {
+        "fluid_inner": "immaterialdrawers:block/drawer_inner"
+      }
+    },
+    "front_divider": {
+      "parent": "functionalstorage:block/divider_2",
+      "textures": {
+        "front_divider": "functionalstorage:block/framed_side"
+      }
+    }
+  },
+  "item_render_order": ["tank", "front", "front_divider", "side"]
+}

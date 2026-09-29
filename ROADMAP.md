@@ -37,6 +37,10 @@ Storage really calls `work()` on an upgrade of ours - and leaves something behin
 The three that were listed after it are settled rather than built - see **Then**. What is left before
 a release is a published file: the CurseForge page (logo, gallery, description) is filled in from STORE.md.
 
+**Chemical Drawers (Mekanism, optional).** Six blocks mirroring Functional Storage's fluid drawers,
+registered only when Mekanism is installed. Tested with Mekanism (35 game tests) and without it
+(20). Still to look at: a probe provider for Jade/TOP, and the in-hand item showing its contents.
+
 ## Then
 
 **7 — Augments.** The Wireless Charger is in. The other three the plan listed are not coming, and

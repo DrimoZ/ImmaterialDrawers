@@ -622,9 +622,11 @@ grand gâche le haut de la courbe — et les deux échouent en silence, sans cra
   Les trois modèles existent dans le jar 1.5.7 (vérifié). S'ils sont renommés un jour, le symptôme est
   un tiroir en damier rose — rien ne le teste, c'est le prix de ne pas les dupliquer.
 
-  Nos textures (`energy_drawer_side/top/front/inner`) sont les leurs recolorées : même dessin, pierre
-  → graphite, verre de la fenêtre → cuivre. Un tiroir d'énergie se reconnaît d'un tiroir de fluide au
-  premier coup d'œil, et se pose dans le même mur sans détonner.
+  Nos textures sont les leurs recolorées : même dessin, pierre → graphite, verre de la fenêtre →
+  cuivre. Un tiroir d'énergie se reconnaît d'un tiroir de fluide au premier coup d'œil, et se pose dans
+  le même mur sans détonner. **La carcasse graphite est commune à tous nos tiroirs**
+  (`drawer_side/top/inner`, `drawer_divider`) ; seule la façade porte l'identité du contenu, par la
+  couleur du liseré vitré (`energy_drawer_front` cuivre, `chemical_drawer_front*` sarcelle).
 
   **Pourquoi un objet et pas un niveau.** Un fluide a une surface, donc le Fluid Drawer montre son
   remplissage par la hauteur du fluide. L'énergie n'a ni texture ni surface, et une barre sur une
@@ -946,3 +948,85 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 
 - **Les APIs NeoForge sensibles à la version** — vérifier sur `https://docs.neoforged.net/`
   avant d'écrire du code de registre ou de capability.
+
+---
+
+## 16. Chemical Drawers — Mekanism, dépendance optionnelle
+
+**Ajouté le 29 septembre 2026.** Six blocs, présents **seulement si Mekanism est installé** :
+`chemical_drawer_1`, `_2`, `_4` et leurs `framed_`. Noms de registre permanents, comme le modid.
+Calqués sur les Fluid Drawers de FS : mêmes trois dispositions (1x1, 1x2, 2x2), même taille de base
+(`type.getSlotAmount()` × `CHEMICAL_MB_PER_UNIT`, 1000 par défaut → 32 000 mB en 1x1), **même composant
+d'upgrade** (`FSAttachments.FLUID_STORAGE_MODIFIER` : l'option 1 du §10, qui convient ici parce que
+l'API chemical est en `long` et qu'il n'y a pas de plafond int à calibrer), même ordre de remplissage,
+même verrou, void, creative, comparateur et Redstone Upgrade.
+
+### La règle de garde — à ne jamais casser
+
+Le JVM résout une classe quand une méthode qui l'utilise est liée. Une classe Mekanism absente à ce
+moment, c'est un `NoClassDefFoundError` qui fait tomber le jeu **dans un pack qui n'a rien demandé**.
+
+- `compat/Mods` est **le seul** endroit qui demande si Mekanism est là, et il n'importe rien d'optionnel.
+- Tout ce qui touche Mekanism vit dans des classes marquées « Mekanism only » : `block/chemical`,
+  `block/tile/chemical`, `storage/chemical`, `client/ChemicalClient`, `client/ChemicalDrawerRenderer`,
+  `client/gui/ChemicalDrawerInfoGuiAddon`, `gametest/IDChemicalGameTests`, `registry/IDChemicalContent`.
+- Le code toujours chargé n'appelle ces classes que derrière `if (Mods.mekanism())`, et via des
+  signatures sans type Mekanism (`ImmaterialDrawers`, `IDClientSetup`, `IDColors`, `IDLangProvider`).
+- **Pas de `@GameTestHolder`** sur les tests chimiques : NeoForge fait `Class.forName(…, true, …)` sur
+  chaque holder en dev, Mekanism ou pas. Ils passent par `RegisterGameTestsEvent`, avec
+  `templateNamespace` sur chaque `@GameTest`.
+- Les données générées doivent survivre à l'absence de Mekanism : recettes sous `mod_loaded`
+  (+ `item_exists`, ajouté par Titanium), **entrées du tag `mineable/pickaxe` en `required: false`** —
+  une seule entrée requise inconnue fait échouer le tag entier, donc la pioche sur tous les blocs du jeu.
+
+`./gradlew runGameTestServer -PnoMekanism` retire Mekanism du run : c'est le test du chemin « absent ».
+**[vérifié]** 20/20 sans Mekanism, 35/35 avec. Déclaré `optional`, `[10.7,)`, `AFTER` dans
+`neoforge.mods.toml` ; `compileOnly` + `runtimeOnly` en dev, jamais bundlé.
+
+### Capability : celle de Mekanism, par son nom
+
+La capability vit dans `mekanism.common.capabilities.Capabilities` — l'implémentation, pas l'API.
+`ChemicalCapabilities` la recrée par son nom (`mekanism:chemical_handler`, typée `IChemicalHandler`) :
+NeoForge interne les capabilities par nom et rend **la même instance**. **[vérifié]**
+`weSpeakMekanismsOwnCapability`. Enregistrée sur les six tiroirs, et sur les contrôleurs et
+extensions de FS (`ControllerChemicalHandler`), comme l'énergie.
+
+`ControllerChemicalHandler` met sa liste de réservoirs en cache **pour le tick en cours**, invalidé par
+l'identité de `getItemHandlers()` (qu'un rebuild remplace) : un tube interroge réservoir par réservoir,
+et un parcours du mur par appel ferait ~10 000 lookups par tick et par tube sur 50 tiroirs.
+
+### Pièges trouvés en route
+
+- **Les items-réservoirs de Mekanism sont limités en débit** (1 000 mB par opération pour le basic).
+  Un clic ne transférait qu'une tranche ; l'interaction à la main boucle jusqu'à ce que rien ne passe,
+  bornée par `MAX_ROUNDS`.
+- **`ItemStackHandler(0)` lève une exception sur l'index 0** — bug de la 0.1.0, voir CHANGELOG. La
+  base commune utilise `EmptyItemHandler`.
+- **Aucun tag `mineable`** — autre bug de la 0.1.0 : aucun outil n'était « correct », casser un tiroir ne
+  rendait rien. `aPickaxeIsTheRightToolForEveryDrawer` vérifie tous nos blocs.
+
+### Design
+
+La carcasse et les façades sont celles du Fluid Drawer de FS (modèles hérités, 1/2/4, diviseurs
+compris), dans la famille graphite de l'énergie ; le liseré vitré est **sarcelle** là où l'énergie est
+cuivre. Le rendu reprend les coordonnées de `FluidDrawerRenderer` (repère décalé de `1 − 1/32` en z
+depuis `BaseDrawerRenderer`). Ce qui vient de l'énergie : **les gaz luisent** (pleine luminosité,
+translucides, comme le noyau du cube) et **leur surface respire** (¼ px, déphasée par tiroir). Les
+chimiques lourds (slurries, pigments, infusions) restent opaques et éclairés comme un fluide.
+
+### Base commune
+
+`block/ImmaterialDrawerBlock` et `block/tile/ImmaterialDrawerTile` portent ce qui ne dépend pas du
+contenu : handler vide, slots d'upgrade et leurs gardes, correctif du deadlock 1.5.7, géométrie par
+`DrawerType`, cadre du tooltip. Un troisième type de tiroir n'implémente que `storageModifier`,
+`onStorageMultiplierChanged`, `canChangeMultiplier` et `hasContents`.
+
+**[vérifié en client, 29 septembre 2026]** les six blocs chargent sans avertissement de modèle ni de
+texture ; façades, niveaux, textures et teintes des chimiques, nombres, cadenas et framed s'affichent,
+à côté d'Energy Drawers et d'un Fluid Drawer de FS. L'écran (GUI) n'a pas été ouvert en jeu.
+
+### Non fait
+
+Pas de provider Jade/TOP dédié (l'API chemical est déjà en `long`, ce que Jade affiche via ses propres
+intégrations Mekanism n'a pas été vérifié) ; item en main rendu comme le bloc, sans contenu (même dette
+que l'énergie) ; pas de gestion de la radioactivité à la casse.

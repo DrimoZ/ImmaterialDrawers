@@ -1,0 +1,31 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mekanism"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "immaterialdrawers:chemical_drawer_2"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "T": {
+      "item": "mekanism:basic_pressurized_tube"
+    }
+  },
+  "pattern": [
+    "PTP",
+    "PPP",
+    "PTP"
+  ],
+  "result": {
+    "count": 2,
+    "id": "immaterialdrawers:chemical_drawer_2"
+  }
+}

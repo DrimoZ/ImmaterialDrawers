@@ -115,11 +115,22 @@ dependencies {
     compileOnly "maven.modrinth:the-one-probe:${top_version}"
     runtimeOnly "maven.modrinth:the-one-probe:${top_version}"
 
+    // Mekanism is an optional dependency: the Chemical Drawers exist only when it is installed.
+    // compileOnly, never implementation and never bundled - its API is compiled against, and every
+    // class that touches it sits behind Mods.mekanism() (CLAUDE.md §16).
+    //
+    // runtimeOnly as well, so the game tests and datagen see the chemical drawers. `-PnoMekanism`
+    // drops it from the run, which is how the "Mekanism absent" path gets exercised: the mod must
+    // load, register nothing chemical, and pass every energy test.
+    compileOnly "maven.modrinth:mekanism:${mekanism_version}"
+    if (!project.hasProperty('noMekanism')) {
+        runtimeOnly "maven.modrinth:mekanism:${mekanism_version}"
+    }
+
     // Scenery for store screenshots, and only when asked for: `runClient -Pshowcase`. Behind a
     // flag because these are heavy, Sodium and Iris are client-only, and the game test server
     // and the everyday client should not pay for either.
     if (project.hasProperty('showcase')) {
-        runtimeOnly "maven.modrinth:mekanism:${mekanism_version}"
         runtimeOnly "maven.modrinth:mekanism-generators:${mekanism_version}"
         runtimeOnly "maven.modrinth:sodium:${sodium_version}"
         runtimeOnly "maven.modrinth:iris:${iris_version}"

@@ -72,4 +72,11 @@ public class IDConfig {
             + "proportionally more to tick.")
     @ConfigVal.InRangeInt(min = 1)
     public static int ENERGY_PUSH_INTERVAL_TICKS = 4;
+
+    @ConfigVal(comment = "mB of chemical per unit of a chemical drawer's base size, the same role 1000 "
+            + "mB plays for Functional Storage's fluid drawers - which is also the default, so an "
+            + "unupgraded 1x1 chemical drawer holds 32,000 mB like a fluid drawer. Storage upgrades scale "
+            + "it with the fluid multipliers. Only read when Mekanism is installed.")
+    @ConfigVal.InRangeInt(min = 1)
+    public static int CHEMICAL_MB_PER_UNIT = 1000;
 }

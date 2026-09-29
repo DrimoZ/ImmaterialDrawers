@@ -1,6 +1,8 @@
 package dev.drimoz.immaterialdrawers.datagen;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.compat.Mods;
+import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
@@ -30,5 +32,17 @@ public class IDLangProvider extends LanguageProvider {
         add("augment.immaterialdrawers.wireless_charger.energy_only", "Only does anything in an Energy Drawer");
         addBlock(() -> IDContent.ENERGY_DRAWER.getBlock(), "Energy Drawer");
         addBlock(() -> IDContent.FRAMED_ENERGY_DRAWER.getBlock(), "Framed Energy Drawer");
+
+        // Named like Functional Storage's fluid drawers - "Fluid Drawer (1x2)" - so the two families
+        // sort and read side by side. The keys exist only if the blocks do, and datagen runs with
+        // Mekanism, so they are always generated; a pack without it simply never asks for them.
+        add("gui.immaterialdrawers.chemical", "Chemical: ");
+        if (Mods.mekanism()) {
+            IDChemicalContent.TYPES.forEach(type -> {
+                String layout = " (" + type.getDisplayName() + ")";
+                addBlock(() -> IDChemicalContent.drawer(type, false).getBlock(), "Chemical Drawer" + layout);
+                addBlock(() -> IDChemicalContent.drawer(type, true).getBlock(), "Framed Chemical Drawer" + layout);
+            });
+        }
     }
 }

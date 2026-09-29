@@ -1,6 +1,36 @@
 {
   "values": [
-    "immaterialdrawers:energy_drawer",
-    "immaterialdrawers:framed_energy_drawer"
+    {
+      "id": "immaterialdrawers:energy_drawer",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_energy_drawer",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_1",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_2",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_4",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_1",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_2",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_4",
+      "required": false
+    }
   ]
 }

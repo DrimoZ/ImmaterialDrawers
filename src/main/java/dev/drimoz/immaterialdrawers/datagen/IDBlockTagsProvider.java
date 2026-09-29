@@ -2,6 +2,7 @@ package dev.drimoz.immaterialdrawers.datagen;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
@@ -32,9 +33,16 @@ public class IDBlockTagsProvider extends BlockTagsProvider {
         this.blocks = blocks;
     }
 
+    /**
+     * Every entry optional, and that matters more than it looks. This file is {@code mineable/pickaxe}
+     * itself, merged with vanilla's and everyone else's - and a tag with one required entry that does
+     * not exist fails to load <em>as a whole</em>. The chemical drawers exist only with Mekanism, so a
+     * required entry for them would break the pickaxe on every block in the game, in every pack
+     * without it. {@code "required": false} costs nothing when the block is there.
+     */
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         var pickaxe = tag(BlockTags.MINEABLE_WITH_PICKAXE);
-        blocks.forEach(pickaxe::add);
+        blocks.forEach(block -> pickaxe.addOptional(BuiltInRegistries.BLOCK.getKey(block)));
     }
 }

@@ -72,7 +72,7 @@ public abstract class ImmaterialDrawerBlock<T extends ImmaterialDrawerTile<T>> e
      * Writes the "Contents:" lines for a drawer in hand, from the tile NBT that
      * {@code Drawer.copyTo} put on the stack. Nothing to write when the drawer is empty.
      */
-    protected abstract void appendContents(CompoundTag tile, List<Component> tooltip);
+    protected abstract void appendContents(CompoundTag tile, Item.TooltipContext context, List<Component> tooltip);
 
     /**
      * Says what the drawer in your hand is holding.
@@ -93,7 +93,7 @@ public abstract class ImmaterialDrawerBlock<T extends ImmaterialDrawerTile<T>> e
             CompoundTag tile = stack.get(FSAttachments.TILE);
 
             tooltip.add(Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY));
-            appendContents(tile, tooltip);
+            appendContents(tile, context, tooltip);
 
             tooltip.add(Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY));
             boolean anyUpgrade = false;

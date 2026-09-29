@@ -17,6 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -131,7 +132,7 @@ public class EnergyDrawerBlock extends ImmaterialDrawerBlock<EnergyDrawerTile> {
      * gave the storage.
      */
     @Override
-    protected void appendContents(CompoundTag tile, List<Component> tooltip) {
+    protected void appendContents(CompoundTag tile, Item.TooltipContext context, List<Component> tooltip) {
         CompoundTag energy = tile.getCompound("energyStorage");
         tooltip.add(Component.literal(" - ")
                 .append(Component.literal(EnergyFormat.format(energy.getLong("Energy")))

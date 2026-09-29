@@ -1,6 +1,7 @@
 package dev.drimoz.immaterialdrawers.client;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -31,6 +32,9 @@ public final class IDClientSetup {
             event.registerBlockEntityRenderer(
                     (BlockEntityType<? extends EnergyDrawerTile>) drawer.type().get(),
                     context -> new EnergyDrawerRenderer());
+        }
+        if (Mods.mekanism()) {
+            ChemicalClient.registerRenderers(event);
         }
     }
 

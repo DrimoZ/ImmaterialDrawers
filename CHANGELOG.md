@@ -4,6 +4,19 @@ Newest first. Versions are `{mod}+{minecraft}`.
 
 ## Unreleased
 
+### Added
+- Chemical Drawers, when Mekanism is installed: gases, infuse types, pigments and slurries, in the
+  three layouts Functional Storage gives its fluid drawers (1x1, 1x2, 2x2), each with a framed twin.
+  Same capacities as the fluid drawer beside them, scaled by the same storage upgrades; same fill
+  order, locking, void and creative. Pressurized tubes connect from any side, and a Storage
+  Controller or extension exposes every chemical tank on its network. Right-click a slot with a
+  chemical tank to empty it in, left-click to fill it back.
+- They look like the fluid drawer, in the graphite family of the energy drawer, with a teal window
+  where energy has copper. Gases glow and their surface slowly breathes; heavier chemicals sit still
+  like a fluid.
+- Without Mekanism nothing changes: the blocks are not registered, no Mekanism class is loaded, and
+  the recipes are conditioned on it.
+
 ### Fixed
 - Right-clicking or left-clicking the front of an Energy Drawer with anything in hand threw on the
   server (`Slot 0 not in valid range - [0,0)`). Functional Storage offers the held stack to the
