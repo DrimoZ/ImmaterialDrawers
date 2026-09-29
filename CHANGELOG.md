@@ -9,6 +9,10 @@ Newest first. Versions are `{mod}+{minecraft}`.
   server (`Slot 0 not in valid range - [0,0)`). Functional Storage offers the held stack to the
   drawer's item handler at the slot that was clicked, and the empty handler validated that index.
   It is now NeoForge's `EmptyItemHandler`, which has no slots and does not mind being asked.
+- Breaking an Energy Drawer dropped nothing - not the block, not the energy in it, not its upgrades.
+  The drawers need the correct tool to drop, and were in no `mineable` tag, so no tool was correct.
+  Every block of the mod is now generated into `minecraft:mineable/pickaxe`, like Functional
+  Storage's own drawers.
 
 ## 0.1.0+1.21.1 — 2026-09-28
 

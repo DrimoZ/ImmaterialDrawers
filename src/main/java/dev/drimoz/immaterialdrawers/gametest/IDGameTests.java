@@ -777,6 +777,35 @@ public final class IDGameTests {
         helper.succeed();
     }
 
+    /**
+     * A pickaxe is the right tool for every drawer of ours, so breaking one gives it back.
+     *
+     * <p>A regression test for a defect that shipped in 0.1.0. The drawers copy the copper block's
+     * properties, which include {@code requiresCorrectToolForDrops}, and a drawer only drops through
+     * {@code getDrops} - which vanilla calls only when {@code player.hasCorrectToolForDrops(state)}.
+     * Which tool is correct is decided by the {@code mineable/*} block tags, and the drawers were in
+     * none of them. No tool was correct, so a broken energy drawer dropped nothing: not the block, not
+     * the energy in it, not its upgrades. Functional Storage lists its own drawers in
+     * {@code mineable/pickaxe}; ours are now generated into it.
+     *
+     * <p>Every block this mod registers is checked, so a drawer added later cannot miss the tag.
+     */
+    @GameTest(template = PLATFORM)
+    public static void aPickaxeIsTheRightToolForEveryDrawer(GameTestHelper helper) {
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
+
+        BuiltInRegistries.BLOCK.stream()
+                .filter(block -> ImmaterialDrawers.MOD_ID.equals(BuiltInRegistries.BLOCK.getKey(block).getNamespace()))
+                .forEach(block -> {
+                    BlockState state = block.defaultBlockState();
+                    helper.assertTrue(player.hasCorrectToolForDrops(state),
+                            BuiltInRegistries.BLOCK.getKey(block) + " drops nothing when mined with a "
+                                    + "pickaxe - it requires the correct tool and is in no mineable tag");
+                });
+        helper.succeed();
+    }
+
     private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
         return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
     }

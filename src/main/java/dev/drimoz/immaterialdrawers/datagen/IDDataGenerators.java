@@ -50,5 +50,9 @@ public final class IDDataGenerators {
                 new TitaniumLootTableProvider(generator, () -> blocks, event.getLookupProvider()));
         generator.addProvider(event.includeServer(),
                 new IDRecipeProvider(generator.getPackOutput(), event.getLookupProvider(), blocks));
+        // Which tool breaks them - without it, nothing does, and a broken drawer drops nothing.
+        generator.addProvider(event.includeServer(),
+                new IDBlockTagsProvider(generator.getPackOutput(), event.getLookupProvider(),
+                        event.getExistingFileHelper(), blocks));
     }
 }
