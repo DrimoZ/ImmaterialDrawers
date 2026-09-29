@@ -130,6 +130,9 @@ dependencies {
     // Ars Nouveau, same arrangement: the Source Drawer is behind Mods.arsNouveau(). `-PnoArs` drops it
     // (and the two mods it needs) from the run, to exercise the "absent" path.
     compileOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
+    // GeckoLib at compile time only because the tests name Ars's RelayTile, which extends one of its
+    // types. Nothing of ours touches it at runtime.
+    compileOnly "maven.modrinth:geckolib:${geckolib_version}"
     if (!project.hasProperty('noArs')) {
         runtimeOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
         runtimeOnly "maven.modrinth:curios:${curios_version}"

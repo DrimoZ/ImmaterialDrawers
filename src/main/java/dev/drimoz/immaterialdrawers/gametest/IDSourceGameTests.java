@@ -252,6 +252,44 @@ public final class IDSourceGameTests {
                 .thenSucceed();
     }
 
+    /**
+     * A real Ars relay, linked the way a player links it with the Dominion Wand: take from one drawer,
+     * send to the other. Ars moves the Source on its own tick, every 20, through the capability both
+     * ways - and nothing may be created on the way.
+     */
+    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 300)
+    public static void anArsRelayMovesSourceBetweenDrawers(GameTestHelper helper) {
+        BlockPos left = new BlockPos(0, 1, 1);
+        BlockPos middle = new BlockPos(1, 1, 1);
+        BlockPos right = new BlockPos(2, 1, 1);
+        helper.setBlock(left, IDSourceContent.SOURCE_DRAWER.getBlock());
+        helper.setBlock(right, IDSourceContent.SOURCE_DRAWER.getBlock());
+        helper.setBlock(middle, net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ars_nouveau", "relay")));
+        SourceDrawerTile from = (SourceDrawerTile) helper.getBlockEntity(left);
+        SourceDrawerTile to = (SourceDrawerTile) helper.getBlockEntity(right);
+        from.getSourceStorage().receiveSource(10_000, false);
+
+        helper.startSequence()
+                .thenIdle(LOAD_TICKS)
+                .thenExecute(() -> {
+                    var relay = (com.hollingsworth.arsnouveau.common.block.tile.RelayTile) helper.getBlockEntity(middle);
+                    helper.assertTrue(relay.setTakeFrom(helper.absolutePos(left)), "the relay refused to take from a drawer");
+                    helper.assertTrue(relay.setSendTo(helper.absolutePos(right)), "the relay refused to send to a drawer");
+                })
+                .thenIdle(100)
+                .thenExecute(() -> {
+                    int a = from.getSourceStorage().getStoredRaw();
+                    int b = to.getSourceStorage().getStoredRaw();
+                    int inRelay = ((com.hollingsworth.arsnouveau.common.block.tile.RelayTile) helper.getBlockEntity(middle)).getSource();
+                    helper.assertTrue(b > 0, "the relay delivered no Source to the second drawer");
+                    helper.assertTrue(a < 10_000, "the relay took no Source from the first drawer");
+                    helper.assertTrue(a + b + inRelay <= 10_000,
+                            "Source was created on the way: " + a + " + " + b + " + " + inRelay + " > 10000");
+                })
+                .thenSucceed();
+    }
+
     private static SourceDrawerTile place(GameTestHelper helper) {
         helper.setBlock(DRAWER, IDSourceContent.SOURCE_DRAWER.getBlock());
         BlockEntity be = helper.getBlockEntity(DRAWER);

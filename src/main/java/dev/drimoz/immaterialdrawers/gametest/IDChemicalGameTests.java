@@ -381,6 +381,78 @@ public final class IDChemicalGameTests {
                 .thenSucceed();
     }
 
+    // ---- Real blocks from Mekanism, not calls on our handlers ------------------------------------
+    //
+    // Everything above talks to the drawer through its capability. These put Mekanism's own
+    // transmitters between two drawers and let Mekanism move things: a tube network or a cable network
+    // that never sees the drawer would pass every test above and still be a bug a player hits in the
+    // first minute.
+
+    private static final BlockPos LEFT = new BlockPos(0, 1, 1);
+    private static final BlockPos MIDDLE = new BlockPos(1, 1, 1);
+    private static final BlockPos RIGHT = new BlockPos(2, 1, 1);
+    private static final int TRANSFER_TICKS = 80;
+
+    private static net.minecraft.world.level.block.Block mekanismBlock(String path) {
+        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(
+                ResourceLocation.fromNamespaceAndPath(MekanismAPI.MEKANISM_MODID, path));
+    }
+
+    /**
+     * A pressurized tube set to pull from one drawer carries the chemical into the drawer at its other
+     * end - out through our capability, across Mekanism's network, in through our capability again.
+     */
+    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 300)
+    public static void aPressurizedTubeMovesChemicalsBetweenDrawers(GameTestHelper helper) {
+        helper.setBlock(LEFT, IDChemicalContent.drawer(FunctionalStorage.DrawerType.X_1, false).getBlock());
+        helper.setBlock(RIGHT, IDChemicalContent.drawer(FunctionalStorage.DrawerType.X_1, false).getBlock());
+        helper.setBlock(MIDDLE, mekanismBlock("basic_pressurized_tube"));
+        ChemicalDrawerTile from = (ChemicalDrawerTile) helper.getBlockEntity(LEFT);
+        ChemicalDrawerTile to = (ChemicalDrawerTile) helper.getBlockEntity(RIGHT);
+        from.getChemicalHandler().insertChemical(0, hydrogen(10_000), Action.EXECUTE);
+
+        helper.startSequence()
+                .thenIdle(2)
+                .thenExecute(() -> ((mekanism.common.tile.transmitter.TileEntityTransmitter) helper.getBlockEntity(MIDDLE))
+                        .getTransmitter().setConnectionTypeRaw(Direction.WEST, mekanism.common.lib.transmitter.ConnectionType.PULL))
+                .thenIdle(TRANSFER_TICKS)
+                .thenExecute(() -> {
+                    long left = from.getChemicalHandler().getStoredRaw(0);
+                    long right = to.getChemicalHandler().getStoredRaw(0);
+                    helper.assertTrue(right > 0, "the tube moved nothing into the second drawer");
+                    helper.assertTrue(left < 10_000, "the tube pulled nothing out of the first drawer");
+                    helper.assertTrue(left + right <= 10_000,
+                            "hydrogen was created on the way: " + left + " + " + right + " > 10000");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * An energy drawer pushes through a Mekanism universal cable into another. Mekanism counts in
+     * Joules and converts at the boundary, so this is also the check that nothing is gained in the
+     * round trip.
+     */
+    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 300)
+    public static void aUniversalCableCarriesEnergyBetweenDrawers(GameTestHelper helper) {
+        helper.setBlock(LEFT, dev.drimoz.immaterialdrawers.registry.IDContent.ENERGY_DRAWER.getBlock());
+        helper.setBlock(RIGHT, dev.drimoz.immaterialdrawers.registry.IDContent.ENERGY_DRAWER.getBlock());
+        helper.setBlock(MIDDLE, mekanismBlock("basic_universal_cable"));
+        var from = (dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile) helper.getBlockEntity(LEFT);
+        var to = (dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile) helper.getBlockEntity(RIGHT);
+        from.getEnergyStorage().receiveEnergy(200_000, false);
+
+        helper.startSequence()
+                .thenIdle(TRANSFER_TICKS)
+                .thenExecute(() -> {
+                    long left = from.getEnergyStorage().getStoredLong();
+                    long right = to.getEnergyStorage().getStoredLong();
+                    helper.assertTrue(right > 0, "no energy reached the second drawer through the cable");
+                    helper.assertTrue(left + right <= 200_000,
+                            "energy was created on the way: " + left + " + " + right + " > 200000");
+                })
+                .thenSucceed();
+    }
+
     private static ChemicalDrawerTile place(GameTestHelper helper, FunctionalStorage.DrawerType type, boolean framed) {
         helper.setBlock(DRAWER, IDChemicalContent.drawer(type, framed).getBlock());
         BlockEntity be = helper.getBlockEntity(DRAWER);
