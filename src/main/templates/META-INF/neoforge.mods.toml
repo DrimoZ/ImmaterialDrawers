@@ -47,26 +47,5 @@ versionRange = "[4.0.34,)"
 ordering = "AFTER"
 side = "BOTH"
 
-# Mekanism is optional: with it, the Chemical Drawers exist; without it, they are never registered
-# and no class that touches its API is ever loaded (CLAUDE.md §16). Declared anyway, for two reasons.
-# A version below the floor becomes a loader message instead of a NoSuchMethodError - 10.7 is where
-# gases, infusion types, pigments and slurries became one Chemical API, which is what we compile
-# against. And AFTER, so Mekanism's chemical registry exists before our blocks are built.
-# No upper bound, deliberately: on an optional dependency an upper bound refuses to launch the whole
-# pack the day Mekanism ships a 10.8, and every 1.21.1 release so far has kept the 10.7 API.
-[[dependencies.${mod_id}]]
-modId = "mekanism"
-type = "optional"
-versionRange = "[10.7,)"
-ordering = "AFTER"
-side = "BOTH"
-
-# Ars Nouveau is optional, for the Source Drawer - same reasoning as Mekanism above. 5.13 is the
-# release the Source API was read from (ISourceCap, SourceManager); no upper bound, for the same
-# reason as Mekanism's.
-[[dependencies.${mod_id}]]
-modId = "ars_nouveau"
-type = "optional"
-versionRange = "[5.13,)"
-ordering = "AFTER"
-side = "BOTH"
+# Mekanism and Ars Nouveau are not declared: neither has a 26.x build, and their drawers are out of
+# this build (PORTING.md). Listing them would read as "supported" to a pack author.
