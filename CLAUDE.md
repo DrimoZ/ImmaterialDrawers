@@ -877,7 +877,7 @@ ouverture, y compris ce qu'il n'est pas.**
 | `SPIKE.md` | en | Le spike bloquant : analyse, puis ce qui s'est réellement passé | ✅ |
 | `NOTICE` | en | Attribution MIT que FS impose de préserver | ✅ |
 | `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | ✅ publiée sur la page CurseForge (0.2.0, 29 sept. 2026) |
-| `PORTING.md` | en | Seulement quand un port est envisagé | — |
+| `PORTING.md` | en | Backport 1.20.1 et port 26.1 : analyse avant le code, puis ce qui s'est passé | ✅ analyse (29 sept. 2026) |
 | `LICENSE` / `LICENSE-ASSETS` | — | Code MIT / assets ARR | ✅ |
 
 **Frontière de langue : interne vs public**, pas doc vs code. `DESIGN.md` est le seul en français.
@@ -1150,3 +1150,36 @@ sans drop). Le jar ne contient aucune classe Mekanism, Ars ou GeckoLib.
 **Botania : reporté.** Aucune release 1.21.1 (dernière : 1.20.1-456, le portage est une branche). Voir
 ROADMAP. **Images de la page CurseForge :** régénérées et téléversées ; description, résumé, logo et galerie à jour (29 sept.).
 La galerie CurseForge refuse les fichiers de plus de 2 Mo : JPG pleine résolution. **Wiki :** poussé.
+
+---
+
+## 20. Ports — 1.20.1 d'abord, 26.1 ensuite
+
+**Ajouté le 29 septembre 2026.** Analyse complète dans `PORTING.md` ; ici, ce qu'il faut savoir avant
+de toucher une des deux branches.
+
+| Branche | Cible | État |
+|---|---|---|
+| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | toolchain vert, `compileJava` : 683 erreurs / 53 fichiers |
+| `26.1` | NeoForge 26.1.2.112, Java 25, Gradle 9.1, FS 26.1-1.6.1, Titanium 4.0.8 | toolchain vert, `compileJava` : 206 erreurs / 24 fichiers |
+
+**1.20.1 est prioritaire** : seule version où les trois tiroirs existent (Mekanism 10.4, Ars 4.12), et
+**seule version avec Botania** — le Mana Drawer ne peut être construit que là. **26.1 est un port
+Energy Drawer seul** : ni Mekanism ni Ars n'y existent ; leurs classes sont exclues du source set (pas
+supprimées) et absentes du `neoforge.mods.toml`.
+
+Ce qui change la donne, à ne pas redécouvrir :
+- **1.20.1 est Forge, pas NeoForge** — FS 1.20.1 n'est publié que pour Forge. Capabilities par
+  `getCapability` / `LazyOptional` sur notre tile (le §8 disparaît), et `AttachCapabilitiesEvent` sur
+  leur contrôleur, qui retombe sur `super.getCapability`. Pas de `FunctionalUpgradeBehavior` : le
+  Wireless Charger est un `UpgradeItem` `UTILITY` que **notre** `serverTick` lit. Pas de composants :
+  `getStorageDiv()` remplace `energy_storage_modifier`. La recette framed de FS teste
+  `instanceof FramedDrawerBlock` : il nous faut la nôtre.
+- **Mekanism 10.4 a quatre handlers** (gaz, infusion, pigment, slurry) ; le modèle est leur
+  `MergedChemicalTank`. **Ars 4.12 n'a pas `ISourceCap`** : le tile implémente `ISourceTile` directement.
+- **Sur 26.1, `EnergyHandler` expose `getAmountAsLong()`** : le plafond int du §11bis disparaît côté
+  capability standard (insert/extract restent int). `BigEnergyStorage` devient transactionnel
+  (`SnapshotJournal`, comme `BigFluidHandler` chez FS) — c'est la seule classe où une erreur crée ou
+  détruit de l'énergie.
+- **Garder les clés NBT `@Save` identiques** entre branches : c'est ce qui fait survivre un tiroir posé
+  à la montée de version d'un monde.
