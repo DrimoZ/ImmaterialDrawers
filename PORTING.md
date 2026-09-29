@@ -282,3 +282,22 @@ What the reading did not predict:
   `BlockWithTile`, and FS 1.20.1's blocks are `RotatableBlock` + a one-method `Drawer` interface, so
   `ImmaterialDrawerBlock` carries the interaction, drops and unlinking that FS 1.21 keeps in a base
   class. More code than on 1.21.1, all of it copied from their fluid drawer.
+
+### 1.20.1, step 2: storage upgrades (29 September 2026)
+
+**12/12.** The five scaling tests carry over unchanged in substance: base capacity, all four Netherite
+slots strictly increasing, Max Storage positive and past the int ceiling, the removal guard, the
+bottomless creative drawer. Plus conservation on push, against Powah's starter cell.
+
+No tile code changed for it: `getStorageDiv()` returning `ENERGY_DIVISOR` and the removal guard were
+written at step 1. The estimate held - one override replaces the whole component of 1.21.1.
+
+Worth knowing:
+
+- **Functional Storage folds the multiplier into an int** (`mult *= calculated`). Java's compound
+  assignment saturates rather than wraps, so Max Storage lands at `Integer.MAX_VALUE / 4` and our long
+  capacity goes on from there. The guard reuses exactly that arithmetic, truncation included, so the
+  two can never disagree about what fits.
+- **The Iron downgrade is refused**, where 1.21.1 treats it as a reset to base size. On 1.20.1 it only
+  flags an item drawer as downgraded; Functional Storage's own fluid drawer refuses it too.
+- **Powah 5.0.11 needs Architectury and Cloth Config** in the dev run, as `modRuntimeOnly`.

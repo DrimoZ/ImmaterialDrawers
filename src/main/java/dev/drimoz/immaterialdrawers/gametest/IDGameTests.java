@@ -4,6 +4,7 @@ import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
+import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
@@ -13,12 +14,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -243,6 +250,150 @@ public final class IDGameTests {
                     assertEquals(helper, network.getEnergyStored(), perDrawer, "energy left in the network");
                 })
                 .thenSucceed();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Step 2 - storage upgrades. On 1.20.1 there is no size component: an upgrade's effect is
+    // getStorageMultiplier() / getStorageDiv(), and the energy drawer's divisor is ENERGY_DIVISOR.
+    // ---------------------------------------------------------------------------------------------
+
+    /** An unupgraded drawer is worth having on its own, or the upgrades have nothing to scale. */
+    @GameTest(template = PLATFORM)
+    public static void unupgradedDrawerHoldsTheBaseCapacity(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        assertEquals(helper, tile.getEnergyStorage().getCapacityLong(), EnergyScaling.baseCapacity(),
+                "base capacity in FE");
+        helper.succeed();
+    }
+
+    /**
+     * All four upgrade slots do something (CLAUDE.md §11). Strictly increasing catches a divisor
+     * that saturates early; staying positive catches an overflow. Both fail silently in game.
+     */
+    @GameTest(template = PLATFORM)
+    public static void everyStorageUpgradeSlotChangesTheCapacity(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        Item netherite = upgrade(StorageUpgradeItem.StorageTier.NETHERITE);
+
+        long previous = tile.getEnergyStorage().getCapacityLong();
+        for (int slot = 0; slot < tile.getStorageSlotAmount(); slot++) {
+            tile.getStorageUpgrades().insertItem(slot, new ItemStack(netherite), false);
+
+            long now = tile.getEnergyStorage().getCapacityLong();
+            helper.assertTrue(now > previous,
+                    "Storage upgrade " + (slot + 1) + " of " + tile.getStorageSlotAmount()
+                            + " did not change the capacity: still " + now + " FE. Is getStorageDiv() "
+                            + "still ENERGY_DIVISOR, and does the slot accept Functional Storage's upgrades?");
+            helper.assertTrue(now > 0, "Capacity overflowed to " + now + " FE after upgrade " + (slot + 1));
+            previous = now;
+        }
+        helper.succeed();
+    }
+
+    /**
+     * The Max Storage upgrade reports a multiplier of {@link Integer#MAX_VALUE}. On 1.20.1 Functional
+     * Storage folds it into an int ({@code mult *= calculated}, which saturates rather than wraps),
+     * and our long arithmetic takes it from there: positive, and past the int ceiling.
+     */
+    @GameTest(template = PLATFORM)
+    public static void maxStorageUpgradeSaturatesWithoutOverflowing(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0,
+                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.MAX_STORAGE)), false);
+
+        long capacity = tile.getEnergyStorage().getCapacityLong();
+        helper.assertTrue(capacity > 0, "The Max Storage upgrade wrapped the capacity to " + capacity);
+        helper.assertTrue(capacity > (long) Integer.MAX_VALUE,
+                "The Max Storage upgrade left the capacity at " + capacity + ", inside an int.");
+        helper.succeed();
+    }
+
+    /**
+     * An upgrade whose removal would not leave room for the stored energy stays in its slot, or
+     * pulling it deletes the difference.
+     */
+    @GameTest(template = PLATFORM)
+    public static void anUpgradeCannotBeRemovedIfTheEnergyWouldNotFit(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0,
+                new ItemStack(upgrade(StorageUpgradeItem.StorageTier.NETHERITE)), false);
+
+        long upgradedCapacity = tile.getEnergyStorage().getCapacityLong();
+        helper.assertTrue(upgradedCapacity > EnergyScaling.baseCapacity(), "the upgrade did not enlarge the drawer");
+
+        // receiveEnergy is an int API, so filling a long-sized drawer takes more than one call.
+        while (tile.getEnergyStorage().getStoredLong() < upgradedCapacity
+                && tile.getEnergyStorage().receiveEnergy(Integer.MAX_VALUE, false) > 0) {
+            // keep going until it stops accepting
+        }
+        helper.assertTrue(tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
+                "The storage upgrade came out of a full drawer. Everything above the base capacity "
+                        + "would have been deleted.");
+
+        while (tile.getEnergyStorage().getStoredLong() > 0
+                && tile.getEnergyStorage().extractEnergy(Integer.MAX_VALUE, false) > 0) {
+            // and more than one to empty it again
+        }
+        helper.assertTrue(!tile.getStorageUpgrades().extractItem(0, 1, false).isEmpty(),
+                "The storage upgrade is stuck in an empty drawer");
+        helper.succeed();
+    }
+
+    /** Bottomless both ways, like a creative fluid drawer - and paying out without being filled. */
+    @GameTest(template = PLATFORM)
+    public static void aCreativeDrawerIsBottomless(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        tile.getStorageUpgrades().insertItem(0, new ItemStack(FunctionalStorage.CREATIVE_UPGRADE.get()), false);
+        helper.assertTrue(tile.isCreative(), "the creative upgrade did not take");
+
+        IEnergyStorage storage = capability(helper, DRAWER, null);
+        helper.assertTrue(storage != null, "no energy capability on a creative drawer");
+        assertEquals(helper, storage.getMaxEnergyStored(), Integer.MAX_VALUE, "creative capacity");
+        assertEquals(helper, storage.getEnergyStored(), Integer.MAX_VALUE, "creative contents");
+
+        assertEquals(helper, storage.extractEnergy(1_000_000, false), 1_000_000, "first extraction");
+        assertEquals(helper, storage.extractEnergy(1_000_000, false), 1_000_000, "second extraction");
+        assertEquals(helper, storage.getEnergyStored(), Integer.MAX_VALUE, "contents after extracting");
+        helper.succeed();
+    }
+
+    /**
+     * Pushing energy out never creates any: a drawer holding 1 FE once handed a neighbour 2,500 and
+     * lost 1. Checked against a real receiver from a real mod - Powah's starter cell, in the dev run
+     * for exactly this (CLAUDE.md §4). The assertion is conservation, not how much moves.
+     */
+    @GameTest(template = PLATFORM, timeoutTicks = 300)
+    public static void pushingEnergyNeverCreatesIt(GameTestHelper helper) {
+        Block cell = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("powah", "energy_cell_starter"));
+        helper.assertTrue(cell != null && cell != Blocks.AIR,
+                "Powah is not in the run, so this test cannot check what it exists to check. It is "
+                        + "declared modRuntimeOnly in build.gradle.");
+
+        BlockPos cellPos = DRAWER.east();
+        EnergyDrawerTile tile = placeDrawer(helper);
+        helper.setBlock(cellPos, cell);
+
+        final int seeded = 1;
+        assertEquals(helper, tile.getEnergyStorage().receiveEnergy(seeded, false), seeded, "seeded energy");
+
+        helper.startSequence()
+                // Several pushes: the interval is four ticks.
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    long inDrawer = tile.getEnergyStorage().getStoredLong();
+                    IEnergyStorage cellStorage = capability(helper, cellPos, null);
+                    helper.assertTrue(cellStorage != null, "the Powah cell has no energy capability");
+                    long inCell = cellStorage.getEnergyStored();
+
+                    assertEquals(helper, inDrawer + inCell, (long) seeded,
+                            "total FE across the drawer and its neighbour. More than was put in means "
+                                    + "the push offers more than the drawer holds");
+                })
+                .thenSucceed();
+    }
+
+    private static Item upgrade(StorageUpgradeItem.StorageTier tier) {
+        return FunctionalStorage.STORAGE_UPGRADES.get(tier).get();
     }
 
     /** The exact expression {@code StorageControllerTile.serverTick} tests before rebuilding. */

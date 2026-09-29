@@ -1160,7 +1160,7 @@ de toucher une des deux branches.
 
 | Branche | Cible | État |
 |---|---|---|
-| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | **étape 1 faite** : cœur énergie porté (13 fichiers), **6/6 game tests** du spike au vert |
+| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | **étapes 1-2 faites** : cœur énergie porté (13 fichiers), spike + upgrades de stockage, **12/12 game tests** |
 | `26.1` | NeoForge 26.1.2.112, Java 25, Gradle 9.1, FS 26.1-1.6.1, Titanium 4.0.8 | toolchain vert, `compileJava` : 206 erreurs / 24 fichiers |
 
 **1.20.1 est prioritaire** : seule version où les trois tiroirs existent (Mekanism 10.4, Ars 4.12), et

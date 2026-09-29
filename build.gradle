@@ -106,8 +106,13 @@ dependencies {
     modCompileOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
     modCompileOnly "maven.modrinth:botania:${botania_version}"
 
-    // Dev runs: added back mod by mod as each compat layer is ported, not all at once - a launch
-    // that fails on a missing transitive dependency says nothing about our code.
+    // Dev runs: added back mod by mod as each step needs them, not all at once - a launch that fails
+    // on a missing transitive dependency says nothing about our code.
+    //
+    // Powah (step 2): a real receiver from a real mod, for pushingEnergyNeverCreatesIt.
+    modRuntimeOnly "maven.modrinth:powah:${powah_version}"
+    modRuntimeOnly "maven.modrinth:architectury-api:${architectury_version}"
+    modRuntimeOnly "maven.modrinth:cloth-config:${cloth_config_version}"
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
