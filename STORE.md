@@ -8,7 +8,6 @@ Images are referenced by the URL CurseForge gave them on upload, through the des
 committed: `run/store-screenshots/` for the in-game shots, the banner and headers from the showcase
 run (CLAUDE.md §4).
 
-**`UPLOAD:<file>` marks an image not uploaded yet.** Upload `<file>` (850 px wide, from the scratchpad `store850/`) through the description editor, then replace the marker with the URL CurseForge gives it.
 
 ## Summary
 
@@ -24,7 +23,7 @@ Main: **Addons** (it is one, of Functional Storage). Additional: Storage, Energy
 
 <!-- Everything below this line is pasted into CurseForge's Markdown editor as-is. -->
 
-![Immaterial Drawers](UPLOAD:banner.jpg)
+![Immaterial Drawers](https://media.forgecdn.net/attachments/description/1663641/description_5462394b-d19a-4074-8170-3fecd5ad8bf3.jpg)
 
 ### Functional Storage stores items and fluids. Immaterial Drawers stores everything else.
 
@@ -33,7 +32,7 @@ Source, and whatever else your mods pipe around. Every one of them sits in your 
 already craft, and joins the Storage Controller like any other drawer. No new storage system to
 learn: if you know Functional Storage, you already know how to use this.
 
-![The family is growing](UPLOAD:header_more.jpg)
+![The family is growing](https://media.forgecdn.net/attachments/description/1663641/description_223ee9da-350a-423b-9b4d-307fca0e6461.jpg)
 
 The foundations are built once, for every kind of drawer: the Storage Controller link, the
 upgrades, the framed variants, the probe support, the numbers past two billion. Each kind of
@@ -74,7 +73,7 @@ really holds.
 
 ![A Mekanism power room built around one Storage Controller](https://media.forgecdn.net/attachments/description/1663641/description_b43dcca6-0a37-4d1f-81c7-aa4153a5a2f8.jpg)
 
-![Drawer #2: Chemicals](UPLOAD:header_chemical.jpg)
+![Drawer #2: Chemicals](https://media.forgecdn.net/attachments/description/1663641/description_96c9bc93-f329-4c89-8301-9505ea9e7897.jpg)
 
 With **Mekanism** installed, **Chemical Drawers** join the family. They are Functional Storage's fluid
 drawers for chemicals: the same 1x1, 1x2 and 2x2 layouts, the same capacities, the same upgrades.
@@ -87,14 +86,22 @@ drawers for chemicals: the same 1x1, 1x2 and 2x2 layouts, the same capacities, t
 - **Gases glow**, and their surface slowly breathes. Slurries and pigments sit still like a liquid.
 - **Lock, Void and Creative** behave as they do on a fluid drawer.
 
-![Drawer #3: Source](UPLOAD:header_source.jpg)
+![A Mekanism chemical plant feeding a wall of Chemical Drawers](https://media.forgecdn.net/attachments/description/1663641/description_a50e5644-cfe6-4b02-98ef-08b51643e21d.jpg)
+
+![Gases, slurries and pigments, up close](https://media.forgecdn.net/attachments/description/1663641/description_989a6674-cdcc-4945-a306-a0886f6d63b7.jpg)
+
+![Drawer #3: Source](https://media.forgecdn.net/attachments/description/1663641/description_bd8d0229-0bca-46d5-bab6-9b4e676c74f7.jpg)
 
 With **Ars Nouveau** installed, the **Source Drawer** appears, and Ars treats it like a Source Jar:
 sourcelinks fill it, the Enchanting Apparatus and Imbuement Chamber draw from it, and relays link
 to it with the Dominion Wand. 32,000 Source unupgraded, over two billion with four Netherite
 upgrades, glowing with Ars's own Source behind a violet window.
 
-![Chemical and Source drawers next to an Energy Drawer](UPLOAD:family_shot.jpg)
+![An Ars Nouveau sanctum around a wall of Source Drawers](https://media.forgecdn.net/attachments/description/1663641/description_9023f336-af1e-48cd-9e78-30a80a260354.jpg)
+
+![Source Drawers, up close](https://media.forgecdn.net/attachments/description/1663641/description_a0ecf3a6-8811-4f99-b0eb-3e3598baa27d.jpg)
+
+![The whole family in one wall: energy, chemicals, Source, framed](https://media.forgecdn.net/attachments/description/1663641/description_36c98dd7-9f40-4df4-94b9-6bcfcb7fd069.jpg)
 
 **Without Mekanism or Ars Nouveau, their drawers simply do not exist** and nothing else changes:
 both are optional.

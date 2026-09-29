@@ -876,7 +876,7 @@ ouverture, y compris ce qu'il n'est pas.**
 | `CHANGELOG.md` | en | Newest first, `Added`/`Changed`/`Fixed`/`Notes`, versions `{mod}+{minecraft}` | ✅ |
 | `SPIKE.md` | en | Le spike bloquant : analyse, puis ce qui s'est réellement passé | ✅ |
 | `NOTICE` | en | Attribution MIT que FS impose de préserver | ✅ |
-| `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | ✅ publiée sur la page CurseForge (28 sept. 2026) |
+| `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | ✅ publiée sur la page CurseForge (0.2.0, 29 sept. 2026) |
 | `PORTING.md` | en | Seulement quand un port est envisagé | — |
 | `LICENSE` / `LICENSE-ASSETS` | — | Code MIT / assets ARR | ✅ |
 
