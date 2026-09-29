@@ -61,9 +61,11 @@ each for its own reason:
 
 ## Still open
 
-- **Mana (Botania).** Asked for, and deferred: Botania has no release for 1.21.1 (the latest is
-  1.20.1-456; the port is an unreleased branch). Build it when Botania ships, the way the Source
-  Drawer was built: capability or public registry, never a mixin.
+- **Mana (Botania).** Botania has no release for 1.21.1 (the latest is 1.20.1-456; its port is an
+  unreleased branch), so the Mana Drawer belongs to the **1.20.1 backport**, where Botania exists.
+  Built the way the Source Drawer was: capability plus its own network event, never a mixin.
+- **Ports.** Back to 1.20.1 first (every drawer exists there, plus mana), then 26.1 (Energy Drawer
+  only: no Mekanism or Ars for 26.x yet). Both branches have their toolchain; see PORTING.md.
 - **Probes for chemicals and Source.** Jade and The One Probe show energy only.
 
 - The CurseForge project is created as `immaterial-drawers`, its page is filled in (logo, 14 screenshots,
