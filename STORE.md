@@ -41,7 +41,7 @@ drawer is built on top of them, and three are here:
 - ✅ **Energy Drawer**, Forge Energy. Works with every FE mod.
 - ✅ **Chemical Drawers**, for Mekanism gases, slurries, pigments and infuse types. *With Mekanism.*
 - ✅ **Source Drawer**, for Ars Nouveau Source. *With Ars Nouveau.*
-- 🔜 **Mana**, for Botania, as soon as Botania is released for 1.21.1.
+- 🔜 **Mana**, for Botania: planned.
 - 💡 More after that. Tell us what you want to store in the [issues](https://github.com/DrimoZ/ImmaterialDrawers/issues).
 
 ![Drawer #1: Energy](https://media.forgecdn.net/attachments/description/1663641/description_3e24b98f-0bd2-4f37-bc1d-fc16cee86356.jpg)
@@ -93,8 +93,8 @@ drawers for chemicals: the same 1x1, 1x2 and 2x2 layouts, the same capacities, t
 ![Drawer #3: Source](https://media.forgecdn.net/attachments/description/1663641/description_bd8d0229-0bca-46d5-bab6-9b4e676c74f7.jpg)
 
 With **Ars Nouveau** installed, the **Source Drawer** appears, and Ars treats it like a Source Jar:
-sourcelinks fill it, the Enchanting Apparatus and Imbuement Chamber draw from it, and relays link
-to it with the Dominion Wand. 32,000 Source unupgraded, over two billion with four Netherite
+sourcelinks fill it, the Enchanting Apparatus and Imbuement Chamber draw from it, and on 1.21.1
+relays link to it with the Dominion Wand. 32,000 Source unupgraded, over two billion with four Netherite
 upgrades, glowing with Ars's own Source behind a violet window.
 
 ![An Ars Nouveau sanctum around a wall of Source Drawers](https://media.forgecdn.net/attachments/description/1663641/description_9023f336-af1e-48cd-9e78-30a80a260354.jpg)
@@ -134,14 +134,13 @@ in the config.
 
 ### Requirements
 
-| | |
-|---|---|
-| Minecraft | 1.21.1 |
-| Loader | NeoForge 21.1+ |
-| [Functional Storage](https://www.curseforge.com/minecraft/mc-mods/functional-storage) | 1.5.7+ |
-| [Titanium](https://www.curseforge.com/minecraft/mc-mods/titanium) | required by Functional Storage too |
-| [Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism) *(optional)* | 10.7+, for the Chemical Drawers |
-| [Ars Nouveau](https://www.curseforge.com/minecraft/mc-mods/ars-nouveau) *(optional)* | 5.13+, for the Source Drawer |
+| | 1.21.1 | 1.20.1 |
+|---|---|---|
+| Loader | NeoForge 21.1+ | Forge 47.2+ |
+| [Functional Storage](https://www.curseforge.com/minecraft/mc-mods/functional-storage) | 1.5.7+ | 1.2.14+ |
+| [Titanium](https://www.curseforge.com/minecraft/mc-mods/titanium) | required by Functional Storage too | required by Functional Storage too |
+| [Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism) *(optional)* | 10.7+, for the Chemical Drawers | 10.4, for the Chemical Drawers |
+| [Ars Nouveau](https://www.curseforge.com/minecraft/mc-mods/ars-nouveau) *(optional)* | 5.13+, for the Source Drawer | 4.12, for the Source Drawer |
 
 ### FAQ
 
@@ -151,7 +150,9 @@ Drawer; without them, those drawers are simply not there.
 
 **Can I put it in my modpack?** Yes, as long as you ship the published jar unmodified.
 
-**Fabric?** No. Functional Storage is NeoForge on 1.21.1, and so is this.
+**Fabric? Other versions?** No Fabric: Functional Storage is NeoForge on 1.21.1 and Forge on 1.20.1,
+and so is this. Both versions have the same drawers; on 1.20.1, Ars Nouveau relays do not connect
+to the Source Drawer (Ars 4.12 only lets them feed its own machines).
 
 **Is every number configurable?** Yes: capacities, how upgrades scale them, whether and how fast
 a drawer pushes power, everything about the Wireless Charger, and a switch to turn off any drawer
