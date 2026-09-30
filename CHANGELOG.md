@@ -2,7 +2,7 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## 0.2.0+1.20.1 — unreleased
+## 0.2.0+1.20.1 — 2026-09-30
 
 The same drawers as 0.2.0 for 1.21.1, on Forge 1.20.1 with Functional Storage 1.2.14. What
 differs comes from the older mods it runs beside.
