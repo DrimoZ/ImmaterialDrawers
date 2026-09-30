@@ -3,11 +3,16 @@ package dev.drimoz.immaterialdrawers.registry;
 import com.hrznstudio.titanium.module.DeferredRegistryHelper;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.energy.EnergyDrawerBlock;
+import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
+import dev.drimoz.immaterialdrawers.recipe.FramedEnergyDrawerRecipe;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -22,8 +27,8 @@ import org.apache.commons.lang3.tuple.Pair;
  * <p>The statics are assigned from {@code initModules}, which Titanium's {@code ModuleController}
  * calls from its own constructor.
  *
- * <p><b>1.20.1 backport, step 1</b> (PORTING.md §6): the energy drawer only. The framed variant and
- * the Wireless Charger come back with their own steps, under the same registry names.
+ * <p><b>1.20.1 backport</b> (PORTING.md): the energy drawers so far. The Wireless Charger and the
+ * optional-mod drawers come back with their own steps, under the same registry names.
  */
 public final class IDContent {
 
@@ -39,6 +44,11 @@ public final class IDContent {
 
     public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> ENERGY_DRAWER;
 
+    public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> FRAMED_ENERGY_DRAWER;
+
+    /** Ours, because Functional Storage 1.20.1's framing recipe only accepts its own blocks. */
+    public static RegistryObject<RecipeSerializer<?>> FRAMED_RECIPE;
+
     private IDContent() {
     }
 
@@ -51,5 +61,19 @@ public final class IDContent {
                 block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
                         (EnergyDrawerBlock) block.get(), new Item.Properties()),
                 ImmaterialDrawers.TAB);
+
+        // The framed variant blends into an existing wall: the player gives it the textures of the
+        // drawers around it. Not occluding, like Functional Storage's framed drawers - the design
+        // can be glass.
+        FRAMED_ENERGY_DRAWER = registries.registerBlockWithTileItem(
+                FRAMED_ENERGY_DRAWER_NAME,
+                () -> new FramedEnergyDrawerBlock(BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK)
+                        .noOcclusion().isViewBlocking((state, level, pos) -> false)),
+                block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
+                        (EnergyDrawerBlock) block.get(), new Item.Properties()),
+                ImmaterialDrawers.TAB);
+
+        FRAMED_RECIPE = registries.registerGeneric(ForgeRegistries.RECIPE_SERIALIZERS.getRegistryKey(), "framed_recipe",
+                () -> new SimpleCraftingRecipeSerializer<>(FramedEnergyDrawerRecipe::new));
     }
 }

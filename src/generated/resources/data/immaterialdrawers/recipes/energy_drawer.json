@@ -1,0 +1,43 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:and",
+          "values": [
+            {
+              "type": "forge:item_exists",
+              "item": "immaterialdrawers:energy_drawer"
+            }
+          ]
+        },
+        {
+          "type": "immaterialdrawers:feature_enabled",
+          "feature": "energy_drawer"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "category": "misc",
+        "key": {
+          "P": {
+            "tag": "minecraft:planks"
+          },
+          "R": {
+            "item": "minecraft:redstone_block"
+          }
+        },
+        "pattern": [
+          "PPP",
+          "PRP",
+          "PPP"
+        ],
+        "result": {
+          "item": "immaterialdrawers:energy_drawer"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

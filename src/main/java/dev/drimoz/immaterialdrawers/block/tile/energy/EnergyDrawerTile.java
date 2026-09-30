@@ -3,16 +3,21 @@ package dev.drimoz.immaterialdrawers.block.tile.energy;
 import com.hrznstudio.titanium.annotation.Save;
 import com.hrznstudio.titanium.block.BasicTileBlock;
 import dev.drimoz.immaterialdrawers.IDConfig;
+import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.ImmaterialDrawerTile;
+import dev.drimoz.immaterialdrawers.client.gui.EnergyDrawerInfoGuiAddon;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -74,6 +79,19 @@ public class EnergyDrawerTile extends ImmaterialDrawerTile<EnergyDrawerTile> {
 
     private static long capacityFor(int storageMultiplier) {
         return EnergyScaling.capacityFor((double) EnergyScaling.baseUnits() * storageMultiplier);
+    }
+
+    /**
+     * The drawer's screen: a tile of the drawer front with the charge, where a fluid drawer's screen
+     * shows its tank. Not Titanium's energy bar - that looks like a machine in a wall of drawers.
+     */
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void initClient() {
+        super.initClient();
+        addGuiAddonFactory(() -> new EnergyDrawerInfoGuiAddon(64, 16,
+                new ResourceLocation(ImmaterialDrawers.MOD_ID, "textures/block/energy_drawer_front.png"),
+                this::getEnergyStorage));
     }
 
     /**

@@ -301,3 +301,31 @@ Worth knowing:
 - **The Iron downgrade is refused**, where 1.21.1 treats it as a reset to base size. On 1.20.1 it only
   flags an item drawer as downgraded; Functional Storage's own fluid drawer refuses it too.
 - **Powah 5.0.11 needs Architectury and Cloth Config** in the dev run, as `modRuntimeOnly`.
+
+### 1.20.1, step 3: framed, client, data (30 September 2026)
+
+**18/18**, and the client loads with **0 errors and 0 missing textures**. Not yet looked at in game: the
+first visual check is still to do.
+
+Where the estimate was right and where it was not:
+
+- **Framing cost more than on 1.21.1, as predicted.** No `FramedBlock` / `FramedTile` interfaces, so the
+  style handling (place, drop, pick-block), the tint handler and **our own framing recipe**
+  (`FramedEnergyDrawerRecipe`, serializer `immaterialdrawers:framed_recipe`) are ours. Their static
+  `FramedDrawerBlock.fill` / `getDrawerModelData` and the `Style` tag are reused, and their
+  `framedblock` loader takes our model unchanged - it reads the `ModelData`, not the tile class.
+- **The models did not "just swap parents".** Our textures are recolours of FS 1.21's *machine*
+  casing, drawn for 1.21 geometry; FS 1.20.1's `fluid_1.json` is a different casing. Four FS 1.21
+  geometries (`side_machine`, `side`, `fluid_front_1`, `fluid_inner_1`) are copied into
+  `models/block/fs/` (NOTICE updated), so the block looks the same on both branches. Their default
+  textures pointed at FS 1.21-only files (`machine_*`, `placeholder`) - the client log said so, and they
+  now point at ours and at `framed_side`.
+- **Datagen ported cleanly**: Forge's providers mirror NeoForge's. Blockstates are simpler (four
+  horizontal facings). The config condition became an `ICondition` + JSON serializer, and Titanium's
+  conditional recipe builder takes it as an extra condition.
+- **The 1.21.1 `src/generated` output was deleted and regenerated** on this branch: NeoForge conditions
+  and blocks this branch does not have yet.
+- **`run/` is shared across branches.** The 1.20.1 client and server now use `run-1.20.1/`: a 1.21.1 save
+  opened in 1.20.1 is a downgrade.
+- The not-yet-ported chemical and Source models are excluded from the jar until their steps: Forge logs
+  NeoForge's composite loader as a failed model load.

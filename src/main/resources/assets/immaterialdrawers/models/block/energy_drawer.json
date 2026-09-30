@@ -1,13 +1,13 @@
 {
-  "__comment": "Functional Storage's fluid drawer, empty: their frame, their recessed front, their tank walls, with our textures. The energy cube inside is not part of this model - EnergyDrawerRenderer draws it, because it turns.",
+  "__comment": "Functional Storage 1.21 fluid drawer geometry, empty - copied under block/fs/ because FS 1.20.1 has none of these three models (MIT, see NOTICE). Our textures. The energy cube inside is not part of this model - EnergyDrawerRenderer draws it, because it turns.",
   "parent": "minecraft:block/block",
-  "loader": "neoforge:composite",
+  "loader": "forge:composite",
   "textures": {
     "particle": "immaterialdrawers:block/drawer_side"
   },
   "children": {
     "side": {
-      "parent": "functionalstorage:block/side_machine",
+      "parent": "immaterialdrawers:block/fs/side_machine",
       "textures": {
         "bottom": "immaterialdrawers:block/drawer_top",
         "side": "immaterialdrawers:block/drawer_side",
@@ -15,14 +15,14 @@
       }
     },
     "front": {
-      "parent": "functionalstorage:block/fluid_front_1",
+      "parent": "immaterialdrawers:block/fs/fluid_front_1",
       "textures": {
         "particle": "immaterialdrawers:block/energy_drawer_front",
         "front": "immaterialdrawers:block/energy_drawer_front"
       }
     },
     "tank": {
-      "parent": "functionalstorage:block/fluid_inner_1",
+      "parent": "immaterialdrawers:block/fs/fluid_inner_1",
       "textures": {
         "fluid_inner": "immaterialdrawers:block/drawer_inner"
       }

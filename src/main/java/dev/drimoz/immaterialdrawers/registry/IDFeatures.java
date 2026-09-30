@@ -1,49 +1,39 @@
 package dev.drimoz.immaterialdrawers.registry;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
+import com.google.gson.JsonObject;
 import dev.drimoz.immaterialdrawers.IDConfig;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
-import dev.drimoz.immaterialdrawers.compat.Mods;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.conditions.ICondition;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.minecraftforge.common.crafting.conditions.IConditionSerializer;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 /**
- * The parts of this mod a pack author can switch off, and what switching one off means.
+ * The config switches (CLAUDE.md §17): "off" means unobtainable - no recipe, not in the creative
+ * tab - never unregistered, so drawers already placed keep working.
  *
- * <p><b>Off means unobtainable, not unregistered.</b> A disabled feature loses its recipes - through
- * the {@link FeatureEnabledCondition} this class registers - and disappears from the creative tab.
- * Its blocks and items stay registered, and the ones already in the world keep working.
- *
- * <p>Unregistering was the obvious alternative and it is wrong twice over. It deletes every placed
- * drawer, and its contents, from any world that already has one. And registries have to match
- * between a server and its clients: a pack whose server disables a drawer and whose client does not
- * would refuse every connection. Titanium also registers content before it loads any config, so the
- * switch could not gate registration even if that were wanted. See CLAUDE.md §17.
+ * <p>On 1.20.1 a recipe condition is an {@link ICondition} with a JSON serializer registered through
+ * {@link CraftingHelper#register}, where 1.21.1 registers a codec. Same JSON on disk:
+ * {@code {"type": "immaterialdrawers:feature_enabled", "feature": "energy_drawer"}}.
  */
 public final class IDFeatures {
 
-    public enum Feature implements StringRepresentable {
+    public enum Feature {
         ENERGY_DRAWER("energy_drawer", () -> IDConfig.ENERGY_DRAWER_ENABLED),
         CHEMICAL_DRAWERS("chemical_drawers", () -> IDConfig.CHEMICAL_DRAWERS_ENABLED),
         SOURCE_DRAWER("source_drawer", () -> IDConfig.SOURCE_DRAWER_ENABLED),
         WIRELESS_CHARGER("wireless_charger", () -> IDConfig.WIRELESS_CHARGER_ENABLED);
-
-        public static final Codec<Feature> CODEC = StringRepresentable.fromEnum(Feature::values);
 
         private final String id;
         private final BooleanSupplier enabled;
@@ -53,97 +43,84 @@ public final class IDFeatures {
             this.enabled = enabled;
         }
 
-        /** Read from the config on every call: nothing about a feature's state may be cached. */
         public boolean isEnabled() {
             return enabled.getAsBoolean();
         }
 
-        @Override
-        public String getSerializedName() {
+        public String id() {
             return id;
         }
 
-        /**
-         * What this feature puts in the creative tab. The chemical drawers are only asked for behind
-         * the Mekanism guard - see {@code compat.Mods}.
-         */
+        static Feature byId(String id) {
+            for (Feature feature : values()) {
+                if (feature.id.equals(id)) {
+                    return feature;
+                }
+            }
+            throw new IllegalArgumentException("Unknown Immaterial Drawers feature: " + id);
+        }
+
+        /** What this switch hides from the creative tab. Grows as each step ports its content. */
         public List<ItemLike> items() {
             List<ItemLike> items = new ArrayList<>();
-            switch (this) {
-                case ENERGY_DRAWER -> {
-                    items.add(IDContent.ENERGY_DRAWER.getBlock());
-                    items.add(IDContent.FRAMED_ENERGY_DRAWER.getBlock());
-                }
-                case CHEMICAL_DRAWERS -> {
-                    if (Mods.mekanism()) {
-                        IDChemicalContent.all().forEach(drawer -> items.add(drawer.getBlock()));
-                    }
-                }
-                case SOURCE_DRAWER -> {
-                    if (Mods.arsNouveau()) {
-                        IDSourceContent.all().forEach(drawer -> items.add(drawer.getBlock()));
-                    }
-                }
-                case WIRELESS_CHARGER -> items.add(IDContent.WIRELESS_CHARGER.get());
+            if (this == ENERGY_DRAWER) {
+                items.add(IDContent.ENERGY_DRAWER.getLeft().get());
+                items.add(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
             }
             return items;
         }
     }
 
-    /**
-     * {@code {"type": "immaterialdrawers:feature_enabled", "feature": "energy_drawer"}} - true while
-     * the feature is switched on. Evaluated when data packs load, so a change to the config takes
-     * effect at the next world load or {@code /reload}.
-     */
     public record FeatureEnabledCondition(Feature feature) implements ICondition {
 
-        public static final MapCodec<FeatureEnabledCondition> CODEC =
-                Feature.CODEC.fieldOf("feature").xmap(FeatureEnabledCondition::new, FeatureEnabledCondition::feature);
+        public static final ResourceLocation ID = new ResourceLocation(ImmaterialDrawers.MOD_ID, "feature_enabled");
+
+        @Override
+        public ResourceLocation getID() {
+            return ID;
+        }
 
         @Override
         public boolean test(IContext context) {
             return feature.isEnabled();
         }
+    }
+
+    private static final IConditionSerializer<FeatureEnabledCondition> SERIALIZER = new IConditionSerializer<>() {
+        @Override
+        public void write(JsonObject json, FeatureEnabledCondition condition) {
+            json.addProperty("feature", condition.feature().id());
+        }
 
         @Override
-        public MapCodec<? extends ICondition> codec() {
-            return CODEC;
+        public FeatureEnabledCondition read(JsonObject json) {
+            return new FeatureEnabledCondition(Feature.byId(json.get("feature").getAsString()));
         }
-    }
 
-    private static final DeferredRegister<MapCodec<? extends ICondition>> CONDITIONS =
-            DeferredRegister.create(NeoForgeRegistries.Keys.CONDITION_CODECS, ImmaterialDrawers.MOD_ID);
+        @Override
+        public ResourceLocation getID() {
+            return FeatureEnabledCondition.ID;
+        }
+    };
 
-    static {
-        CONDITIONS.register("feature_enabled", () -> FeatureEnabledCondition.CODEC);
-    }
-
-    private static final ResourceLocation TAB = ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "main");
+    private static final ResourceLocation TAB = new ResourceLocation(ImmaterialDrawers.MOD_ID, "main");
 
     private IDFeatures() {
     }
 
     public static void init(IEventBus modBus) {
-        CONDITIONS.register(modBus);
-        // LOWEST: Titanium fills our tab from its own listener, and this has to run after it to have
-        // anything to take out.
+        // During registration, which is where Forge wants condition serializers registered.
+        modBus.addListener((RegisterEvent event) -> {
+            if (event.getRegistryKey().equals(ForgeRegistries.Keys.RECIPE_SERIALIZERS)) {
+                CraftingHelper.register(SERIALIZER);
+            }
+        });
+        // LOWEST: Titanium fills our tab from its own listener, and this has to run after it.
         modBus.addListener(EventPriority.LOWEST, IDFeatures::hideDisabled);
     }
 
     public static ICondition enabled(Feature feature) {
         return new FeatureEnabledCondition(feature);
-    }
-
-    /** The first enabled drawer, for the tab icon - an icon of something the player cannot get reads as a bug. */
-    public static Supplier<ItemStack> tabIcon() {
-        return () -> {
-            for (Feature feature : Feature.values()) {
-                if (feature.isEnabled() && !feature.items().isEmpty()) {
-                    return new ItemStack(feature.items().getFirst());
-                }
-            }
-            return new ItemStack(IDContent.ENERGY_DRAWER.getBlock());
-        };
     }
 
     private static void hideDisabled(BuildCreativeModeTabContentsEvent event) {
@@ -153,7 +130,7 @@ public final class IDFeatures {
         for (Feature feature : Feature.values()) {
             if (!feature.isEnabled()) {
                 for (ItemLike item : feature.items()) {
-                    event.remove(new ItemStack(item), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+                    event.getEntries().remove(new ItemStack(item));
                 }
             }
         }

@@ -1,26 +1,36 @@
 package dev.drimoz.immaterialdrawers.gametest;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
+import com.buuz135.functionalstorage.block.FramedDrawerBlock;
+import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
 import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
+import dev.drimoz.immaterialdrawers.IDConfig;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.recipe.FramedEnergyDrawerRecipe;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -28,7 +38,9 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -390,6 +402,122 @@ public final class IDGameTests {
                                     + "the push offers more than the drawer holds");
                 })
                 .thenSucceed();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Step 3 - the framed variant, the data, and the player-facing regressions of 0.1.0.
+    // ---------------------------------------------------------------------------------------------
+
+    /** Its own block entity type, and still answering every cable. */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerHasItsOwnEnergyCapability(GameTestHelper helper) {
+        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
+        helper.assertTrue(IDContent.FRAMED_ENERGY_DRAWER.getRight().get() != IDContent.ENERGY_DRAWER.getRight().get(),
+                "the two drawers share a block entity type, so this test proves nothing");
+
+        IEnergyStorage storage = capability(helper, DRAWER, null);
+        helper.assertTrue(storage != null, "No energy capability on the framed energy drawer");
+        assertEquals(helper, storage.receiveEnergy(1_000, false), 1_000, "energy accepted");
+        helper.succeed();
+    }
+
+    /**
+     * Our framing recipe takes our framed drawer, and the stack it builds carries the design the way
+     * Functional Storage's does - their {@code fill}, their {@code Style} tag. Theirs cannot take our
+     * block on 1.20.1: it tests their classes.
+     */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerIsFramableByOurRecipe(GameTestHelper helper) {
+        ItemStack drawer = new ItemStack(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
+        ItemStack side = new ItemStack(Items.OAK_PLANKS);
+        ItemStack front = new ItemStack(Items.STONE);
+
+        helper.assertTrue(FramedEnergyDrawerRecipe.matches(side, front, drawer), "our framing recipe rejected our framed drawer");
+        helper.assertTrue(!FramedEnergyDrawerRecipe.matches(side, front, new ItemStack(IDContent.ENERGY_DRAWER.getLeft().get())),
+                "our framing recipe accepted the unframed drawer");
+
+        ItemStack framed = FramedDrawerBlock.fill(side, front, drawer, new ItemStack(Items.DEEPSLATE));
+        FramedDrawerModelData design = FramedDrawerBlock.getDrawerModelData(framed);
+        helper.assertTrue(design != null, "framing produced a stack with no style on it");
+        helper.assertTrue(design.getDesign().get("front") == Items.STONE, "the front is not what it was framed with");
+        helper.assertTrue(design.getDesign().get("side") == Items.OAK_PLANKS, "the sides are not what they were framed with");
+
+        helper.assertTrue(helper.getLevel().getRecipeManager()
+                        .byKey(new ResourceLocation(ImmaterialDrawers.MOD_ID, "framed")).isPresent(),
+                "the framing recipe is not loaded, so no crafting grid will ever frame a drawer");
+        helper.succeed();
+    }
+
+    /** The placed drawer keeps its design through a save, and hands it to the model. */
+    @GameTest(template = PLATFORM)
+    public static void framedDrawerRemembersItsDesign(GameTestHelper helper) {
+        helper.setBlock(DRAWER, IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
+        helper.assertTrue(helper.getBlockEntity(DRAWER) instanceof FramedEnergyDrawerTile,
+                "the framed energy drawer has the wrong tile behind it");
+        FramedEnergyDrawerTile tile = (FramedEnergyDrawerTile) helper.getBlockEntity(DRAWER);
+
+        Map<String, Item> design = new HashMap<>();
+        design.put("particle", Items.OAK_PLANKS);
+        design.put("side", Items.OAK_PLANKS);
+        design.put("front", Items.STONE);
+        design.put("front_divider", Items.DEEPSLATE);
+        tile.setFramedDrawerModelData(new FramedDrawerModelData(design));
+
+        // Through NBT and back, the way a reload does - the @Save field is only there if the tile
+        // class was scanned.
+        FramedEnergyDrawerTile reloaded = (FramedEnergyDrawerTile) BlockEntity.loadStatic(
+                tile.getBlockPos(), tile.getBlockState(), tile.saveWithFullMetadata());
+        helper.assertTrue(reloaded != null && reloaded.getFramedDrawerModelData().getDesign().get("front") == Items.STONE,
+                "the design did not survive a save - is FramedEnergyDrawerTile scanned by NBTManager?");
+        helper.assertTrue(tile.getModelData().get(FramedDrawerModelData.FRAMED_PROPERTY) != null,
+                "the drawer's ModelData carries no design, so the model has nothing to render with");
+        helper.succeed();
+    }
+
+    /** 0.1.0 shipped with no mineable tag: no tool was correct, and a broken drawer dropped nothing. */
+    @GameTest(template = PLATFORM)
+    public static void aPickaxeIsTheRightToolForEveryDrawer(GameTestHelper helper) {
+        Player player = helper.makeMockPlayer();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
+        ForgeRegistries.BLOCKS.getValues().stream()
+                .filter(block -> ImmaterialDrawers.MOD_ID.equals(ForgeRegistries.BLOCKS.getKey(block).getNamespace()))
+                .forEach(block -> helper.assertTrue(player.hasCorrectToolForDrops(block.defaultBlockState()),
+                        ForgeRegistries.BLOCKS.getKey(block) + " drops nothing when mined with a pickaxe"));
+        helper.succeed();
+    }
+
+    /** 0.1.0 threw on the server when the front was clicked with anything in hand. */
+    @GameTest(template = PLATFORM)
+    public static void clickingTheFrontWithAnItemDoesNotThrow(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        Player player = helper.makeMockPlayer();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+
+        tile.onSlotActivated(player, InteractionHand.MAIN_HAND, Direction.NORTH, 0.5, 0.5, 0.5, 0);
+        assertEquals(helper, player.getMainHandItem().getCount(), 1, "sticks left in hand");
+        tile.onClicked(player, 0);
+        helper.succeed();
+    }
+
+    /** The config switch reaches the recipe condition, and with everything on the recipes are loaded. */
+    @GameTest(template = PLATFORM)
+    public static void aDisabledFeatureLosesItsRecipe(GameTestHelper helper) {
+        ICondition condition = IDFeatures.enabled(IDFeatures.Feature.ENERGY_DRAWER);
+        boolean before = IDConfig.ENERGY_DRAWER_ENABLED;
+        try {
+            IDConfig.ENERGY_DRAWER_ENABLED = false;
+            helper.assertTrue(!condition.test(ICondition.IContext.EMPTY), "the recipe condition ignores a disabled energy drawer");
+            IDConfig.ENERGY_DRAWER_ENABLED = true;
+            helper.assertTrue(condition.test(ICondition.IContext.EMPTY), "the recipe condition refuses an enabled energy drawer");
+        } finally {
+            IDConfig.ENERGY_DRAWER_ENABLED = before;
+        }
+        for (String recipe : List.of("energy_drawer", "framed_energy_drawer")) {
+            helper.assertTrue(helper.getLevel().getRecipeManager()
+                            .byKey(new ResourceLocation(ImmaterialDrawers.MOD_ID, recipe)).isPresent(),
+                    "recipe " + recipe + " is missing although its feature is enabled");
+        }
+        helper.succeed();
     }
 
     private static Item upgrade(StorageUpgradeItem.StorageTier tier) {

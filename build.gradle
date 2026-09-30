@@ -30,6 +30,16 @@ sourceSets.main.java {
     include 'dev/drimoz/immaterialdrawers/storage/EnergyScaling.java'
     include 'dev/drimoz/immaterialdrawers/util/EnergyFormat.java'
     include 'dev/drimoz/immaterialdrawers/gametest/IDGameTests.java'
+    // Step 3 - framed, recipes, config switches, client, datagen.
+    include 'dev/drimoz/immaterialdrawers/block/energy/FramedEnergyDrawerBlock.java'
+    include 'dev/drimoz/immaterialdrawers/block/tile/energy/FramedEnergyDrawerTile.java'
+    include 'dev/drimoz/immaterialdrawers/recipe/FramedEnergyDrawerRecipe.java'
+    include 'dev/drimoz/immaterialdrawers/registry/IDFeatures.java'
+    include 'dev/drimoz/immaterialdrawers/client/IDClientSetup.java'
+    include 'dev/drimoz/immaterialdrawers/client/IDColors.java'
+    include 'dev/drimoz/immaterialdrawers/client/EnergyDrawerRenderer.java'
+    include 'dev/drimoz/immaterialdrawers/client/gui/EnergyDrawerInfoGuiAddon.java'
+    include 'dev/drimoz/immaterialdrawers/datagen/*.java'
 }
 
 legacyForge {
@@ -43,12 +53,12 @@ legacyForge {
     runs {
         client {
             client()
-            gameDirectory = project.file('run')
+            gameDirectory = project.file('run-1.20.1')
             systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
         server {
             server()
-            gameDirectory = project.file('run')
+            gameDirectory = project.file('run-1.20.1')
             programArgument '--nogui'
             systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
@@ -136,10 +146,14 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 }
 
 sourceSets.main.resources.srcDir generateModMetadata
-// Not yet: the committed output is 1.21.1's (NeoForge conditions, blocks this branch does not
-// register yet). It comes back regenerated when datagen is ported, step 3.
-// sourceSets.main.resources.srcDir 'src/generated/resources'
-processResources { exclude '.cache/**' }
+// Generated resources are committed, so a clone builds without running datagen first.
+sourceSets.main.resources.srcDir 'src/generated/resources'
+processResources {
+    exclude '.cache/**'
+    // Not ported yet (steps 6-7): 1.21.1 models on NeoForge's composite loader, which Forge 1.20.1
+    // logs as a failed model load. They come back with their drawers.
+    exclude 'assets/immaterialdrawers/models/block/*chemical_drawer*', 'assets/immaterialdrawers/models/block/*source_drawer*'
+}
 legacyForge.ideSyncTask generateModMetadata
 
 tasks.named('jar', Jar) {

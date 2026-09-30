@@ -15,7 +15,9 @@ attribution header naming the file they came from; this notice covers the work a
 The drawers' block textures (drawer_side, drawer_top, drawer_inner, drawer_divider,
 energy_drawer_front, chemical_drawer_front, chemical_drawer_front_2, chemical_drawer_front_4, source_drawer_front) are
 recolours of Functional Storage's fluid drawer textures, and their block models inherit Functional
-Storage's fluid drawer models as parents.
+Storage's fluid drawer models as parents. On the 1.20.1 branch, where Functional Storage ships none
+of those models, four of them (side_machine, side, fluid_front_1, fluid_inner_1) are copied from
+Functional Storage 1.21 into assets/immaterialdrawers/models/block/fs/.
 
 This product depends on, but does not include or modify, Titanium.
 

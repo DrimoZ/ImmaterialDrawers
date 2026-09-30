@@ -1,23 +1,29 @@
 package dev.drimoz.immaterialdrawers.block.energy;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
+import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The Energy Drawer block.
@@ -77,6 +83,20 @@ public class EnergyDrawerBlock extends ImmaterialDrawerBlock<EnergyDrawerTile> {
         long capacity = storage.getCapacityLong();
         long stored = storage.getStoredLong();
         return comparatorSignal(capacity <= 0 ? 0 : stored / (double) capacity, capacity > 0 && stored > 0);
+    }
+
+    /**
+     * Planks around a redstone block, the shape Functional Storage gives its fluid drawer (planks
+     * around a bucket): the centre ingredient is what the drawer is for.
+     */
+    @Override
+    public void registerRecipe(Consumer<FinishedRecipe> consumer) {
+        TitaniumShapedRecipeBuilder builder = TitaniumShapedRecipeBuilder.shapedRecipe(this);
+        builder.getConditional().addCondition(IDFeatures.enabled(IDFeatures.Feature.ENERGY_DRAWER));
+        builder.pattern("PPP").pattern("PRP").pattern("PPP")
+                .define('P', ItemTags.PLANKS)
+                .define('R', Blocks.REDSTONE_BLOCK);
+        builder.save(consumer);
     }
 
     /** The charge, from the field name Titanium's {@code @Save} gave the storage. */

@@ -42,7 +42,7 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
     /** The core's colour in the drawer, so the screen and the block agree on what charge looks like. */
     private static final int FILL = 0xFFEE6A2C;
 
-    private static final ResourceLocation INNER = ResourceLocation.fromNamespaceAndPath(
+    private static final ResourceLocation INNER = new ResourceLocation(
             ImmaterialDrawers.MOD_ID, "textures/block/drawer_inner.png");
 
     private final ResourceLocation front;

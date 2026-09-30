@@ -2,282 +2,9 @@
   "multipart": [
     {
       "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "down",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "down",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "up",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "up",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90
-      },
-      "when": {
-        "facing": "north",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90
-      },
-      "when": {
-        "facing": "north",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90,
-        "y": 180
-      },
-      "when": {
-        "facing": "south",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90,
-        "y": 180
-      },
-      "when": {
-        "facing": "south",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "west",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90,
-        "y": 270
-      },
-      "when": {
-        "facing": "west",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 90,
-        "y": 90
-      },
-      "when": {
-        "facing": "east",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 90,
-        "y": 90
-      },
-      "when": {
-        "facing": "east",
-        "locked": "true",
-        "subfacing": "down"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "down",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "down",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "up",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "up",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270,
-        "y": 180
-      },
-      "when": {
-        "facing": "north",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270,
-        "y": 180
-      },
-      "when": {
-        "facing": "north",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270
-      },
-      "when": {
-        "facing": "south",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270
-      },
-      "when": {
-        "facing": "south",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270,
-        "y": 90
-      },
-      "when": {
-        "facing": "west",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270,
-        "y": 90
-      },
-      "when": {
-        "facing": "west",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/energy_drawer",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "east",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
-        "model": "immaterialdrawers:block/lock",
-        "x": 270,
-        "y": 270
-      },
-      "when": {
-        "facing": "east",
-        "locked": "true",
-        "subfacing": "up"
-      }
-    },
-    {
-      "apply": {
         "model": "immaterialdrawers:block/energy_drawer"
       },
       "when": {
-        "facing": "down",
         "subfacing": "north"
       }
     },
@@ -286,7 +13,6 @@
         "model": "immaterialdrawers:block/lock"
       },
       "when": {
-        "facing": "down",
         "locked": "true",
         "subfacing": "north"
       }
@@ -297,7 +23,6 @@
         "y": 180
       },
       "when": {
-        "facing": "down",
         "subfacing": "south"
       }
     },
@@ -307,7 +32,6 @@
         "y": 180
       },
       "when": {
-        "facing": "down",
         "locked": "true",
         "subfacing": "south"
       }
@@ -318,7 +42,6 @@
         "y": 270
       },
       "when": {
-        "facing": "down",
         "subfacing": "west"
       }
     },
@@ -328,7 +51,6 @@
         "y": 270
       },
       "when": {
-        "facing": "down",
         "locked": "true",
         "subfacing": "west"
       }
@@ -339,7 +61,6 @@
         "y": 90
       },
       "when": {
-        "facing": "down",
         "subfacing": "east"
       }
     },
@@ -349,7 +70,6 @@
         "y": 90
       },
       "when": {
-        "facing": "down",
         "locked": "true",
         "subfacing": "east"
       }

@@ -1,0 +1,43 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:and",
+          "values": [
+            {
+              "type": "forge:item_exists",
+              "item": "immaterialdrawers:framed_energy_drawer"
+            }
+          ]
+        },
+        {
+          "type": "immaterialdrawers:feature_enabled",
+          "feature": "energy_drawer"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "category": "misc",
+        "key": {
+          "N": {
+            "item": "minecraft:iron_nugget"
+          },
+          "R": {
+            "item": "minecraft:redstone_block"
+          }
+        },
+        "pattern": [
+          "NNN",
+          "NRN",
+          "NNN"
+        ],
+        "result": {
+          "item": "immaterialdrawers:framed_energy_drawer"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

@@ -5,7 +5,10 @@ import com.hrznstudio.titanium.module.ModuleController;
 import com.hrznstudio.titanium.nbthandler.NBTManager;
 import com.hrznstudio.titanium.tab.TitaniumTab;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -16,9 +19,11 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,8 +53,18 @@ public class ImmaterialDrawers extends ModuleController {
         // Titanium's @Save is reflective and opt-in per class. Without this scan the drawer's
         // energy is not written to disk at all, and the failure is silent.
         NBTManager.getInstance().scanTileClassForAnnotations(EnergyDrawerTile.class);
+        // Per class: the framed tile adds a @Save field of its own. Miss it and the drawer keeps its
+        // energy but forgets its design on reload.
+        NBTManager.getInstance().scanTileClassForAnnotations(FramedEnergyDrawerTile.class);
 
+        IDFeatures.init(FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.addGenericListener(BlockEntity.class, ImmaterialDrawers::attachControllerEnergy);
+    }
+
+    /** Datagen entry point. Titanium's ModuleController subscribes this to GatherDataEvent for us. */
+    @Override
+    public void addDataProvider(GatherDataEvent event) {
+        IDDataGenerators.gather(event);
     }
 
     @Override

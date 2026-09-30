@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "immaterialdrawers:energy_drawer",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_energy_drawer",
+      "required": false
+    }
+  ]
+}
