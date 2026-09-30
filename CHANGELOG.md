@@ -26,6 +26,13 @@ differs comes from the older mods it runs beside.
   fluid drawer on 1.20.1.
 - Registry names and saved data match 1.21.1, so drawers placed on 1.20.1 are still there after the
   world moves to 1.21.1.
+- A framed drawer dressed in leaves (or any block whose texture is mostly holes) shows through its
+  sides - Functional Storage's own framed drawers do the same on 1.20.1.
+
+### Fixed
+- The amount on the drawer screens sat off-centre, to the left of the drawer front: its width was
+  counted at full scale for text drawn at half scale. Energy, Source, and the 1x1 and 1x2 chemical
+  drawers; the 2x2 was already placed right.
 
 ## 0.2.0+1.21.1 — 2026-09-29
 
