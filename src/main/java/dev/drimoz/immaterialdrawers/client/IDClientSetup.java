@@ -35,6 +35,9 @@ public final class IDClientSetup {
         if (Mods.arsNouveau()) {
             SourceClient.registerRenderers(event);
         }
+        if (Mods.mekanism()) {
+            ChemicalClient.registerRenderers(event);
+        }
     }
 
     /**
@@ -57,6 +60,9 @@ public final class IDClientSetup {
         ItemBlockRenderTypes.setRenderLayer(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get(), RenderType.cutout());
         if (Mods.arsNouveau()) {
             SourceClient.setRenderLayers();
+        }
+        if (Mods.mekanism()) {
+            ChemicalClient.setRenderLayers();
         }
     }
 }

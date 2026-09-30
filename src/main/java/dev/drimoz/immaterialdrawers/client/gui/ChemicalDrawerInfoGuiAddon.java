@@ -41,7 +41,7 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
     /** 16px of front, doubled, plus its border - the size their tile is blitted at. */
     private static final int TILE = 48;
 
-    private static final ResourceLocation INNER = ResourceLocation.fromNamespaceAndPath(
+    private static final ResourceLocation INNER = new ResourceLocation(
             ImmaterialDrawers.MOD_ID, "textures/block/drawer_inner.png");
 
     private final ResourceLocation front;
@@ -99,8 +99,8 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
     }
 
     /** What a slot shows: its contents, or the chemical a locked slot is pinned to. */
-    private static ChemicalStack shown(BigChemicalHandler chemicals, int slot) {
-        ChemicalStack stack = chemicals.getChemicalInTank(slot);
+    private static ChemicalStack<?> shown(BigChemicalHandler chemicals, int slot) {
+        ChemicalStack<?> stack = chemicals.stored(slot);
         return stack.isEmpty() && chemicals.isDrawerLocked() ? chemicals.getFilter(slot) : stack;
     }
 
@@ -114,7 +114,7 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
 
         graphics.blit(INNER, x + 2, y + 2, TILE - 4, TILE - 4, 3f, 3f, 10, 10, 16, 16);
         for (int slot = 0; slot < slots; slot++) {
-            ChemicalStack stack = shown(chemicals, slot);
+            ChemicalStack<?> stack = shown(chemicals, slot);
             if (!stack.isEmpty()) {
                 renderChemical(graphics, x, y, stack, contentRect(slot, slots));
             }
@@ -123,14 +123,14 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
         graphics.blit(front, x, y, 0, 0, TILE, TILE, TILE, TILE);
 
         for (int slot = 0; slot < slots; slot++) {
-            ChemicalStack stack = chemicals.getChemicalInTank(slot);
+            ChemicalStack<?> stack = chemicals.stored(slot);
             if (stack.isEmpty()) {
                 continue;
             }
             int textX = x + type.getSlotPosition().apply(slot).getLeft();
             int textY = y + type.getSlotPosition().apply(slot).getRight();
             String amount = ChemicalFormat.format(stack.getAmount()) + "/"
-                    + ChemicalFormat.format(chemicals.getChemicalTankCapacity(slot));
+                    + ChemicalFormat.format(chemicals.capacity(slot));
             float scale = 0.5f;
             graphics.pose().translate(0, 0, 200);
             graphics.pose().scale(scale, scale, scale);
@@ -161,15 +161,15 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
             graphics.pose().translate(0, 0, -200);
 
             var lines = new ArrayList<Component>();
-            ChemicalStack over = shown(chemicals, slot);
+            ChemicalStack<?> over = shown(chemicals, slot);
             if (over.isEmpty()) {
                 lines.add(Component.translatable("gui.immaterialdrawers.chemical").withStyle(ChatFormatting.GOLD)
                         .append(Component.translatable("gui.functionalstorage.empty").withStyle(ChatFormatting.WHITE)));
             } else {
                 lines.add(Component.translatable("gui.immaterialdrawers.chemical").withStyle(ChatFormatting.GOLD)
                         .append(over.getTextComponent().copy().withStyle(ChatFormatting.WHITE)));
-                String amount = chemicals.getChemicalInTank(slot).getAmount() + " mB / "
-                        + chemicals.getChemicalTankCapacity(slot) + " mB";
+                String amount = chemicals.stored(slot).getAmount() + " mB / "
+                        + chemicals.capacity(slot) + " mB";
                 lines.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD)
                         .append(Component.literal(amount).withStyle(ChatFormatting.WHITE)));
             }
@@ -183,9 +183,9 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
      * The chemical's own texture, tinted with its own colour, tiled over the slot - the way their
      * addon draws a fluid, and the way Mekanism draws a chemical in its own gauges.
      */
-    private void renderChemical(GuiGraphics graphics, int x, int y, ChemicalStack stack, Rect2i rect) {
+    private void renderChemical(GuiGraphics graphics, int x, int y, ChemicalStack<?> stack, Rect2i rect) {
         TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
-                .apply(stack.getChemical().getIcon());
+                .apply(stack.getType().getIcon());
         int tint = stack.getChemicalTint();
         RenderSystem.setShaderColor((tint >> 16 & 0xFF) / 255f, (tint >> 8 & 0xFF) / 255f, (tint & 0xFF) / 255f, 1f);
         RenderSystem.enableBlend();

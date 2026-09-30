@@ -54,6 +54,13 @@ sourceSets.main.java {
     include 'dev/drimoz/immaterialdrawers/client/TankVolume.java'
     include 'dev/drimoz/immaterialdrawers/client/gui/SourceDrawerInfoGuiAddon.java'
     include 'dev/drimoz/immaterialdrawers/gametest/IDSourceGameTests.java'
+    // Step 7 - chemical drawers (Mekanism 10.4, optional): one drawer for the four chemical types.
+    include 'dev/drimoz/immaterialdrawers/**/chemical/*.java'
+    include 'dev/drimoz/immaterialdrawers/registry/IDChemicalContent.java'
+    include 'dev/drimoz/immaterialdrawers/client/Chemical*.java'
+    include 'dev/drimoz/immaterialdrawers/client/gui/ChemicalDrawerInfoGuiAddon.java'
+    include 'dev/drimoz/immaterialdrawers/util/ChemicalFormat.java'
+    include 'dev/drimoz/immaterialdrawers/gametest/IDChemicalGameTests.java'
 }
 
 legacyForge {
@@ -142,6 +149,10 @@ dependencies {
     modRuntimeOnly "maven.modrinth:the-one-probe:${top_version}"
     // Ars Nouveau (step 6) and its two hard dependencies. `-PnoArs` drops them, to exercise the
     // "absent" path: the mod must load and register nothing Source.
+    // Mekanism (step 7). `-PnoMekanism` drops it: the mod must load and register nothing chemical.
+    if (!project.hasProperty('noMekanism')) {
+        modRuntimeOnly "maven.modrinth:mekanism:${mekanism_version}"
+    }
     if (!project.hasProperty('noArs')) {
         modRuntimeOnly "maven.modrinth:ars-nouveau:${ars_nouveau_version}"
         modRuntimeOnly "maven.modrinth:curios:${curios_version}"
@@ -172,12 +183,7 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 // Generated resources are committed, so a clone builds without running datagen first.
 sourceSets.main.resources.srcDir 'src/generated/resources'
-processResources {
-    exclude '.cache/**'
-    // Not ported yet (step 7): 1.21.1 models on NeoForge's composite loader, which Forge 1.20.1
-    // logs as a failed model load. They come back with their drawers.
-    exclude 'assets/immaterialdrawers/models/block/*chemical_drawer*'
-}
+processResources { exclude '.cache/**' }
 legacyForge.ideSyncTask generateModMetadata
 
 tasks.named('jar', Jar) {

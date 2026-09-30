@@ -1,0 +1,47 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:and",
+          "values": [
+            {
+              "type": "forge:item_exists",
+              "item": "immaterialdrawers:chemical_drawer_1"
+            }
+          ]
+        },
+        {
+          "type": "forge:mod_loaded",
+          "modid": "mekanism"
+        },
+        {
+          "type": "immaterialdrawers:feature_enabled",
+          "feature": "chemical_drawers"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "category": "misc",
+        "key": {
+          "P": {
+            "tag": "minecraft:planks"
+          },
+          "T": {
+            "item": "mekanism:basic_pressurized_tube"
+          }
+        },
+        "pattern": [
+          "PPP",
+          "PTP",
+          "PPP"
+        ],
+        "result": {
+          "item": "immaterialdrawers:chemical_drawer_1"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

@@ -15,6 +15,30 @@
     {
       "id": "immaterialdrawers:framed_source_drawer",
       "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_1",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_2",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:chemical_drawer_4",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_1",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_2",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_chemical_drawer_4",
+      "required": false
     }
   ]
 }

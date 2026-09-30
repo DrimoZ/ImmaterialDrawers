@@ -369,3 +369,24 @@ Ars loaded; not looked at by eye.
   player a packet and casts to `ServerPlayer`: `makeMockPlayer` + `addFreshEntity` crashes the server,
   and `makeMockServerPlayerInLevel` throws on a null channel. Forge's `FakePlayer` works - a
   `ServerPlayer` whose network handler swallows packets.
+
+### 1.20.1, step 7: the chemical drawers (30 September 2026)
+
+**42/42 with Mekanism 10.4 and Ars, 29/29 without Mekanism, 20/20 without either** - no class-loading
+error on any path. Client log clean with the six blocks; not looked at by eye.
+
+- **One drawer for the four types, as decided.** A tank holds a chemical of whichever type came first;
+  `ChemicalTanks` exposes four typed views (`IGasHandler`, `IInfusionHandler`, `IPigmentHandler`,
+  `ISlurryHandler`), each seeing only its own type - a tank taken by another type is capacity 0 to it,
+  so a pipe moves on. The views are written once and serve both a drawer (`BigChemicalHandler`) and a
+  controller's network (`ControllerChemicalHandler`). `BoxedChemicalStack` writes the type with the
+  stack (tested: an infusion reloads as an infusion).
+- **The estimate was right that this was the biggest piece**, wrong about its shape: not a rewrite of
+  the logic - `IChemicalHandler<C, S>` in 10.4 has the same methods as 10.7's unified one - but a
+  generics exercise. The tank logic itself carried over.
+- Capabilities are asked of Forge by type (`CapabilityManager.get`), the same instances Mekanism
+  registered, without depending on its implementation class. Controllers get them through
+  `AttachCapabilitiesEvent`, like energy.
+- Gaseous in 10.4 means exactly `ChemicalType.GAS` (no `isGaseous()`); the renderer glows gases only.
+- Not ported: the chemical denylist tag (1.21.1 has one; no 10.4 test needed it). No test through a
+  real Mekanism pipe yet on this branch.

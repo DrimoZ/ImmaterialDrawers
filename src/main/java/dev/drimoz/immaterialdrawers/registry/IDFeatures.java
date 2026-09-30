@@ -71,6 +71,8 @@ public final class IDFeatures {
                 items.add(IDContent.WIRELESS_CHARGER.get());
             } else if (this == SOURCE_DRAWER && Mods.arsNouveau()) {
                 IDSourceContent.all().forEach(drawer -> items.add(drawer.getLeft().get()));
+            } else if (this == CHEMICAL_DRAWERS && Mods.mekanism()) {
+                IDChemicalContent.all().forEach(drawer -> items.add(drawer.getLeft().get()));
             }
             return items;
         }

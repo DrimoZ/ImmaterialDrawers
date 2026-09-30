@@ -44,6 +44,9 @@ public final class IDColors {
         if (Mods.arsNouveau()) {
             blocks.add(SourceClient.framedBlock());
         }
+        if (Mods.mekanism()) {
+            blocks.addAll(ChemicalClient.framedBlocks());
+        }
         return blocks.toArray(Block[]::new);
     }
 

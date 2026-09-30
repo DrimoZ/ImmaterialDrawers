@@ -10,6 +10,7 @@ import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
+import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import net.minecraft.core.Direction;
@@ -65,6 +66,9 @@ public class ImmaterialDrawers extends ModuleController {
         if (Mods.arsNouveau()) {
             IDSourceContent.init(FMLJavaModLoadingContext.get().getModEventBus());
         }
+        if (Mods.mekanism()) {
+            IDChemicalContent.init(FMLJavaModLoadingContext.get().getModEventBus());
+        }
         MinecraftForge.EVENT_BUS.addGenericListener(BlockEntity.class, ImmaterialDrawers::attachControllerEnergy);
     }
 
@@ -79,6 +83,9 @@ public class ImmaterialDrawers extends ModuleController {
         IDContent.register(getRegistries());
         if (Mods.arsNouveau()) {
             IDSourceContent.register(getRegistries());
+        }
+        if (Mods.mekanism()) {
+            IDChemicalContent.register(getRegistries());
         }
         addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getLeft().get()), MOD_ID, TAB);
     }

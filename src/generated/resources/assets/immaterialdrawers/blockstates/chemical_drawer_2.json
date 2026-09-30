@@ -1,0 +1,78 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/chemical_drawer_2"
+      },
+      "when": {
+        "subfacing": "north"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/lock"
+      },
+      "when": {
+        "locked": "true",
+        "subfacing": "north"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/chemical_drawer_2",
+        "y": 180
+      },
+      "when": {
+        "subfacing": "south"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/lock",
+        "y": 180
+      },
+      "when": {
+        "locked": "true",
+        "subfacing": "south"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/chemical_drawer_2",
+        "y": 270
+      },
+      "when": {
+        "subfacing": "west"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/lock",
+        "y": 270
+      },
+      "when": {
+        "locked": "true",
+        "subfacing": "west"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/chemical_drawer_2",
+        "y": 90
+      },
+      "when": {
+        "subfacing": "east"
+      }
+    },
+    {
+      "apply": {
+        "model": "immaterialdrawers:block/lock",
+        "y": 90
+      },
+      "when": {
+        "locked": "true",
+        "subfacing": "east"
+      }
+    }
+  ]
+}

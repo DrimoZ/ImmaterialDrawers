@@ -1160,7 +1160,7 @@ de toucher une des deux branches.
 
 | Branche | Cible | État |
 |---|---|---|
-| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | **étapes 1-6 faites** : Energy Drawer + framed, client, datagen, Wireless Charger, Redstone Upgrade, Jade + TOP, Source Drawer (Ars 4.12), **29/29** avec Ars, **20/20** sans, client sans erreur (pas encore regardé en jeu) |
+| `1.20.1` | **Forge** 47.4.23, Java 17, MDG `legacyforge` 2.0.148, FS 1.20.1-1.2.14, Titanium 3.8.35 | **étapes 1-7 faites** : Energy Drawer + framed, Wireless Charger, Jade + TOP, Source Drawer (Ars 4.12), Chemical Drawers (Mekanism 10.4, un tiroir pour les 4 types), **42/42** avec les deux, 29 sans Mekanism, 20 sans aucun ; client sans erreur (pas encore regardé en jeu). Reste : Botania |
 | `26.1` | NeoForge 26.1.2.112, Java 25, Gradle 9.1, FS 26.1-1.6.1, Titanium 4.0.8 | toolchain vert, `compileJava` : 206 erreurs / 24 fichiers |
 
 **1.20.1 est prioritaire** : seule version où les trois tiroirs existent (Mekanism 10.4, Ars 4.12), et

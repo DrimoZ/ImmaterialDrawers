@@ -1,13 +1,13 @@
 {
   "__comment": "Functional Storage's fluid_4 drawer, part for part, in the graphite family's textures - the same shell as the energy drawer, with the teal-rimmed front that says chemicals. The chemical itself is drawn by ChemicalDrawerRenderer.",
   "parent": "minecraft:block/block",
-  "loader": "neoforge:composite",
+  "loader": "forge:composite",
   "textures": {
     "particle": "immaterialdrawers:block/drawer_side"
   },
   "children": {
     "side": {
-      "parent": "functionalstorage:block/side_machine",
+      "parent": "immaterialdrawers:block/fs/side_machine",
       "textures": {
         "bottom": "immaterialdrawers:block/drawer_top",
         "side": "immaterialdrawers:block/drawer_side",
@@ -15,14 +15,14 @@
       }
     },
     "front": {
-      "parent": "functionalstorage:block/fluid_front_4",
+      "parent": "immaterialdrawers:block/fs/fluid_front_4",
       "textures": {
         "particle": "immaterialdrawers:block/chemical_drawer_front_4",
         "front": "immaterialdrawers:block/chemical_drawer_front_4"
       }
     },
     "tank": {
-      "parent": "functionalstorage:block/fluid_inner_4",
+      "parent": "immaterialdrawers:block/fs/fluid_inner_4",
       "textures": {
         "fluid_inner": "immaterialdrawers:block/drawer_inner"
       }
