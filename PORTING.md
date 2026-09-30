@@ -338,3 +338,12 @@ same charging loop as 1.21.1's behaviour (conservation test against a Powah batt
 from Functional Storage's creative tab to ours. One surprise: Titanium's `appendHoverText` is `final`,
 so the tooltip goes through `addTooltipDetails`. Their Redstone Upgrade needed nothing beyond step 1's
 `getSignal`, now tested.
+
+### 1.20.1, step 5: Jade and TOP (30 September 2026)
+
+Both plugins port with a signature change and renames. Jade 11 has the same `registerEnergyStorage`
+hook and `EnergyView.of(long, long)` as Jade 15, but its server provider is
+`IServerExtensionProvider<BlockEntity, CompoundTag>` and gets the block entity directly, not an
+`Accessor`. TOP's API and Titanium's `@FeaturePlugin` gate are unchanged. Both mods are in the dev run;
+the game test server loads them with 20/20, and the log shows `IDTopPlugin` constructed and executed.
+The bars themselves have not been looked at in a client.

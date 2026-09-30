@@ -62,7 +62,7 @@ public class EnergyProbeProvider implements IProbeInfoProvider, IProbeConfigProv
 
     @Override
     public ResourceLocation getID() {
-        return ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "energy");
+        return new ResourceLocation(ImmaterialDrawers.MOD_ID, "energy");
     }
 
     @Override

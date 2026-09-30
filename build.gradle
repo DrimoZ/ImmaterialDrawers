@@ -42,6 +42,9 @@ sourceSets.main.java {
     include 'dev/drimoz/immaterialdrawers/datagen/*.java'
     // Step 4 - Wireless Charger.
     include 'dev/drimoz/immaterialdrawers/augment/WirelessChargerItem.java'
+    // Step 5 - probes.
+    include 'dev/drimoz/immaterialdrawers/compat/jade/*.java'
+    include 'dev/drimoz/immaterialdrawers/compat/top/*.java'
 }
 
 legacyForge {
@@ -125,6 +128,9 @@ dependencies {
     modRuntimeOnly "maven.modrinth:powah:${powah_version}"
     modRuntimeOnly "maven.modrinth:architectury-api:${architectury_version}"
     modRuntimeOnly "maven.modrinth:cloth-config:${cloth_config_version}"
+    // Jade and TOP (step 5): the plugins are only real once the mods load them.
+    modRuntimeOnly "maven.modrinth:jade:${jade_version}"
+    modRuntimeOnly "maven.modrinth:the-one-probe:${top_version}"
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {

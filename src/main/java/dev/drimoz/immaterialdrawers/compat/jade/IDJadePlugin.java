@@ -6,9 +6,10 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import snownee.jade.api.Accessor;
-import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
 import snownee.jade.api.IWailaPlugin;
@@ -50,7 +51,7 @@ public class IDJadePlugin implements IWailaPlugin {
 
     /** Jade keys providers by this, and lets a player switch them off individually. Keep it stable. */
     public static final ResourceLocation ENERGY =
-            ResourceLocation.fromNamespaceAndPath(ImmaterialDrawers.MOD_ID, "energy");
+            new ResourceLocation(ImmaterialDrawers.MOD_ID, "energy");
 
     @Override
     public void register(IWailaCommonRegistration registration) {
@@ -69,18 +70,16 @@ public class IDJadePlugin implements IWailaPlugin {
      * two sides have to be one object with one {@link #getUid()}.
      */
     public enum EnergyExtension
-            implements IServerExtensionProvider<CompoundTag>, IClientExtensionProvider<CompoundTag, EnergyView> {
+            implements IServerExtensionProvider<BlockEntity, CompoundTag>, IClientExtensionProvider<CompoundTag, EnergyView> {
         INSTANCE;
 
         /** Shown after the numbers in the bar. */
         private static final String UNIT = "FE";
 
         @Override
-        public List<ViewGroup<CompoundTag>> getGroups(Accessor<?> accessor) {
-            if (!(accessor instanceof BlockAccessor block)) {
-                return List.of();
-            }
-            BlockEntity be = block.getBlockEntity();
+        public List<ViewGroup<CompoundTag>> getGroups(ServerPlayer player, ServerLevel level, BlockEntity be,
+                                                      boolean showDetails) {
+            // Jade 11 (1.20.1) hands the block entity directly; Jade 15 (1.21.1) hands an Accessor.
 
             long stored;
             long capacity;

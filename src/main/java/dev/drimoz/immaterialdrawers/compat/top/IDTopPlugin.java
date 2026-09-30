@@ -4,8 +4,8 @@ import com.hrznstudio.titanium.annotation.plugin.FeaturePlugin;
 import com.hrznstudio.titanium.event.handler.EventManager;
 import com.hrznstudio.titanium.plugin.FeaturePluginInstance;
 import com.hrznstudio.titanium.plugin.PluginPhase;
-import net.neoforged.fml.InterModComms;
-import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 
 /**
  * Hands our probe provider to The One Probe, if it is installed.
