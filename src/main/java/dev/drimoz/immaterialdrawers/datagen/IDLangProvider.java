@@ -19,5 +19,8 @@ public class IDLangProvider extends LanguageProvider {
         add("gui.immaterialdrawers.capacity", "Capacity: ");
         addBlock(IDContent.ENERGY_DRAWER.getLeft(), "Energy Drawer");
         addBlock(IDContent.FRAMED_ENERGY_DRAWER.getLeft(), "Framed Energy Drawer");
+        addItem(IDContent.WIRELESS_CHARGER, "Wireless Charger");
+        add("augment.immaterialdrawers.wireless_charger.desc", "Charges what nearby players carry, within %s blocks");
+        add("augment.immaterialdrawers.wireless_charger.energy_only", "Only does anything in an Energy Drawer");
     }
 }

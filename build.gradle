@@ -40,6 +40,8 @@ sourceSets.main.java {
     include 'dev/drimoz/immaterialdrawers/client/EnergyDrawerRenderer.java'
     include 'dev/drimoz/immaterialdrawers/client/gui/EnergyDrawerInfoGuiAddon.java'
     include 'dev/drimoz/immaterialdrawers/datagen/*.java'
+    // Step 4 - Wireless Charger.
+    include 'dev/drimoz/immaterialdrawers/augment/WirelessChargerItem.java'
 }
 
 legacyForge {

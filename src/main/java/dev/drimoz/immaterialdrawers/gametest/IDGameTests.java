@@ -29,6 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.energy.IEnergyStorage;
@@ -512,11 +513,85 @@ public final class IDGameTests {
         } finally {
             IDConfig.ENERGY_DRAWER_ENABLED = before;
         }
-        for (String recipe : List.of("energy_drawer", "framed_energy_drawer")) {
+        for (String recipe : List.of("energy_drawer", "framed_energy_drawer", "wireless_charger")) {
             helper.assertTrue(helper.getLevel().getRecipeManager()
                             .byKey(new ResourceLocation(ImmaterialDrawers.MOD_ID, recipe)).isPresent(),
                     "recipe " + recipe + " is missing although its feature is enabled");
         }
+        helper.succeed();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Step 4 - the Wireless Charger, and Functional Storage's Redstone Upgrade.
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * The charger goes into a utility slot and fills what a nearby player carries, conserving
+     * energy. On 1.20.1 this also proves our tick finds it: Functional Storage never calls it.
+     *
+     * <p>{@code makeMockPlayer} builds a Player the level does not know, so it is positioned and added
+     * by hand, or {@code getEntitiesOfClass} never sees it.
+     */
+    @GameTest(template = PLATFORM, timeoutTicks = 300)
+    public static void wirelessChargerFillsGearWithoutInventingEnergy(GameTestHelper helper) {
+        Item battery = ForgeRegistries.ITEMS.getValue(new ResourceLocation("powah", "battery_basic"));
+        helper.assertTrue(battery != null && battery != Items.AIR,
+                "Powah is not in the run, so there is no chargeable item to test with");
+
+        EnergyDrawerTile tile = placeDrawer(helper);
+        ItemStack left = tile.getUtilityUpgrades().insertItem(0, new ItemStack(IDContent.WIRELESS_CHARGER.get()), false);
+        helper.assertTrue(left.isEmpty(), "the drawer's utility slot refused the Wireless Charger");
+
+        final int seeded = 50_000;
+        tile.getEnergyStorage().receiveEnergy(seeded, false);
+
+        Player player = helper.makeMockPlayer();
+        player.setPos(helper.absoluteVec(new Vec3(DRAWER.getX() + 0.5, DRAWER.getY(), DRAWER.getZ() + 0.5)));
+        helper.getLevel().addFreshEntity(player);
+        ItemStack cell = new ItemStack(battery);
+        player.getInventory().items.set(0, cell);
+
+        helper.startSequence()
+                .thenIdle(60)
+                .thenExecute(() -> {
+                    IEnergyStorage carried = cell.getCapability(ForgeCapabilities.ENERGY).orElse(null);
+                    helper.assertTrue(carried != null, "the Powah battery exposes no energy capability");
+                    long inBattery = carried.getEnergyStored();
+                    long inDrawer = tile.getEnergyStorage().getStoredLong();
+
+                    helper.assertTrue(inBattery > 0,
+                            "The charger moved nothing: EnergyDrawerTile.serverTick does not find it in the "
+                                    + "utility slots, or it does not find the player");
+                    assertEquals(helper, inDrawer + inBattery, (long) seeded,
+                            "total FE across the drawer and the battery it charged");
+                })
+                .thenSucceed();
+    }
+
+    /**
+     * Functional Storage's own Redstone Upgrade drives a signal from the charge - the same number the
+     * comparator reads. Their tick updates the neighbours for it; the signal is ours, because theirs
+     * reads the empty item handler.
+     */
+    @GameTest(template = PLATFORM)
+    public static void functionalStorageRedstoneUpgradeReadsTheCharge(GameTestHelper helper) {
+        EnergyDrawerTile tile = placeDrawer(helper);
+        BlockPos absolute = helper.absolutePos(DRAWER);
+        var state = helper.getBlockState(DRAWER);
+
+        assertEquals(helper, state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
+                "signal with no Redstone Upgrade");
+
+        tile.getUtilityUpgrades().insertItem(0, new ItemStack(FunctionalStorage.REDSTONE_UPGRADE.get()), false);
+        assertEquals(helper, state.getSignal(helper.getLevel(), absolute, Direction.NORTH), 0,
+                "signal from an empty drawer");
+
+        // Half full: 1 + 0.5 * 14 = 8.
+        tile.getEnergyStorage().receiveEnergy((int) (tile.getEnergyStorage().getCapacityRaw() / 2), false);
+        int signal = state.getSignal(helper.getLevel(), absolute, Direction.NORTH);
+        assertEquals(helper, signal, 8, "redstone signal at half charge");
+        assertEquals(helper, signal, state.getAnalogOutputSignal(helper.getLevel(), absolute),
+                "redstone signal against comparator signal");
         helper.succeed();
     }
 

@@ -4,6 +4,7 @@ import com.hrznstudio.titanium.annotation.Save;
 import com.hrznstudio.titanium.block.BasicTileBlock;
 import dev.drimoz.immaterialdrawers.IDConfig;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.augment.WirelessChargerItem;
 import dev.drimoz.immaterialdrawers.block.tile.ImmaterialDrawerTile;
 import dev.drimoz.immaterialdrawers.client.gui.EnergyDrawerInfoGuiAddon;
 import dev.drimoz.immaterialdrawers.storage.BigEnergyStorage;
@@ -132,6 +133,13 @@ public class EnergyDrawerTile extends ImmaterialDrawerTile<EnergyDrawerTile> {
     @Override
     public void serverTick(Level level, BlockPos pos, BlockState state, EnergyDrawerTile tile) {
         super.serverTick(level, pos, state, tile);
+
+        // Functional Storage 1.20.1 only acts on its own upgrades; the Wireless Charger is ours to run.
+        for (int slot = 0; slot < getUtilityUpgrades().getSlots(); slot++) {
+            if (getUtilityUpgrades().getStackInSlot(slot).getItem() instanceof WirelessChargerItem) {
+                WirelessChargerItem.work(level, pos, this);
+            }
+        }
 
         if (!EnergyScaling.pushesToNeighbours()) {
             return;

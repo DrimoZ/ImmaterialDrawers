@@ -329,3 +329,12 @@ Where the estimate was right and where it was not:
   opened in 1.20.1 is a downgrade.
 - The not-yet-ported chemical and Source models are excluded from the jar until their steps: Forge logs
   NeoForge's composite loader as a failed model load.
+
+### 1.20.1, step 4: Wireless Charger, Redstone Upgrade (30 September 2026)
+
+**20/20**, as estimated. The charger is a `WirelessChargerItem extends UpgradeItem` of `Type.UTILITY`:
+Functional Storage's utility slot takes it, and our `EnergyDrawerTile.serverTick` finds it and runs the
+same charging loop as 1.21.1's behaviour (conservation test against a Powah battery). It moves itself
+from Functional Storage's creative tab to ours. One surprise: Titanium's `appendHoverText` is `final`,
+so the tooltip goes through `addTooltipDetails`. Their Redstone Upgrade needed nothing beyond step 1's
+`getSignal`, now tested.

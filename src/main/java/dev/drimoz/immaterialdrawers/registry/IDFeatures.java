@@ -66,6 +66,8 @@ public final class IDFeatures {
             if (this == ENERGY_DRAWER) {
                 items.add(IDContent.ENERGY_DRAWER.getLeft().get());
                 items.add(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
+            } else if (this == WIRELESS_CHARGER) {
+                items.add(IDContent.WIRELESS_CHARGER.get());
             }
             return items;
         }

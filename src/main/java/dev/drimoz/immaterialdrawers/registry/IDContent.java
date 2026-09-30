@@ -2,6 +2,7 @@ package dev.drimoz.immaterialdrawers.registry;
 
 import com.hrznstudio.titanium.module.DeferredRegistryHelper;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.augment.WirelessChargerItem;
 import dev.drimoz.immaterialdrawers.block.energy.EnergyDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
 import dev.drimoz.immaterialdrawers.recipe.FramedEnergyDrawerRecipe;
@@ -46,6 +47,9 @@ public final class IDContent {
 
     public static Pair<RegistryObject<Block>, RegistryObject<BlockEntityType<?>>> FRAMED_ENERGY_DRAWER;
 
+    /** A utility upgrade our energy drawer's own tick acts on - see {@code WirelessChargerItem}. */
+    public static RegistryObject<Item> WIRELESS_CHARGER;
+
     /** Ours, because Functional Storage 1.20.1's framing recipe only accepts its own blocks. */
     public static RegistryObject<RecipeSerializer<?>> FRAMED_RECIPE;
 
@@ -72,6 +76,9 @@ public final class IDContent {
                 block -> () -> new EnergyDrawerBlock.EnergyDrawerItem(
                         (EnergyDrawerBlock) block.get(), new Item.Properties()),
                 ImmaterialDrawers.TAB);
+
+        WIRELESS_CHARGER = registries.registerGeneric(ForgeRegistries.ITEMS.getRegistryKey(), "wireless_charger",
+                WirelessChargerItem::new);
 
         FRAMED_RECIPE = registries.registerGeneric(ForgeRegistries.RECIPE_SERIALIZERS.getRegistryKey(), "framed_recipe",
                 () -> new SimpleCraftingRecipeSerializer<>(FramedEnergyDrawerRecipe::new));

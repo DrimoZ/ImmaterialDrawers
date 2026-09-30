@@ -1,6 +1,7 @@
 package dev.drimoz.immaterialdrawers.datagen;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
@@ -27,5 +28,7 @@ public class IDItemModelProvider extends ItemModelProvider {
             getBuilder(ForgeRegistries.BLOCKS.getKey(block).getPath())
                     .parent(new ModelFile.UncheckedModelFile(IDBlockStateProvider.modelFor(block)));
         }
+        // Flat, like every upgrade in Functional Storage.
+        basicItem(IDContent.WIRELESS_CHARGER.get());
     }
 }
