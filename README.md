@@ -31,6 +31,9 @@ sourcelinks treat like a Source Jar. Also optional.
 | Mekanism *(optional)* | 10.7+, for the Chemical Drawers |
 | Ars Nouveau *(optional)* | 5.13+, for the Source Drawer |
 
+On the `1.20.1` branch: Minecraft 1.20.1, **Forge** 47.2+, Functional Storage 1.2.14+, Titanium
+3.8.35+, Mekanism 10.4, Ars Nouveau 4.12 (relays do not connect there - see CHANGELOG).
+
 ## Building
 
 ```

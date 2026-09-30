@@ -2,6 +2,31 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## 0.2.0+1.20.1 — unreleased
+
+The same drawers as 0.2.0 for 1.21.1, on Forge 1.20.1 with Functional Storage 1.2.14. What
+differs comes from the older mods it runs beside.
+
+### Added
+- Energy Drawer and its framed twin, with storage upgrades, the Storage Controller reaching every
+  drawer on its network, pushing into neighbours, Functional Storage's Redstone Upgrade, the
+  Wireless Charger, and Jade / The One Probe bars.
+- Chemical Drawers, when Mekanism 10.4 is installed: 1x1, 1x2 and 2x2, framed or not. One drawer
+  holds any of Mekanism's four chemical types - gases, infuse types, pigments, slurries; a tank takes
+  the type of whatever enters it first. Pipes of every type connect, and so does a Storage Controller.
+- Source Drawer, when Ars Nouveau 4.12 is installed, framed or not. The enchanting apparatus,
+  imbuement and sourcelinks find it like a Source Jar.
+
+### Notes
+- **Ars relays do not connect to the Source Drawer on 1.20.1.** In Ars 4.12 a relay only moves
+  Source between Ars's own machines, which a Functional Storage drawer cannot be. On 1.21.1 they do.
+- The framed drawers are framed with the usual crafting grid, through a recipe of this mod's:
+  Functional Storage 1.20.1's own framing recipe only accepts its own blocks.
+- The Iron downgrade does not go into these drawers, as it does not go into Functional Storage's
+  fluid drawer on 1.20.1.
+- Registry names and saved data match 1.21.1, so drawers placed on 1.20.1 are still there after the
+  world moves to 1.21.1.
+
 ## 0.2.0+1.21.1 — 2026-09-29
 
 Two new kinds of drawer, each arriving with the mod it belongs to, and two fixes every 0.1.0 player
