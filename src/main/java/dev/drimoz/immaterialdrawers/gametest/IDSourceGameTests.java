@@ -2,118 +2,71 @@ package dev.drimoz.immaterialdrawers.gametest;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.FluidDrawerTile;
-import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
-import com.buuz135.functionalstorage.item.LinkingToolItem;
+import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
-import com.hollingsworth.arsnouveau.api.source.ISourceCap;
 import com.hollingsworth.arsnouveau.api.source.ISpecialSourceProvider;
 import com.hollingsworth.arsnouveau.api.source.SourceManager;
 import com.hollingsworth.arsnouveau.api.util.SourceUtil;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.block.IDFramedBlock;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
+import dev.drimoz.immaterialdrawers.recipe.FramedDrawerRecipe;
 import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
-import dev.drimoz.immaterialdrawers.storage.source.SourceCapabilities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * The Source Drawer, tested against Ars Nouveau's own code paths.
+ * The Source Drawer against Ars Nouveau 4.12's own paths. <b>Ars Nouveau only</b> - registered by
+ * {@code IDSourceContent.init} through {@code RegisterGameTestsEvent}, never as a holder.
  *
- * <p><b>Ars Nouveau only - see {@code compat.Mods}.</b> Registered by {@code IDSourceContent.init}
- * through {@code RegisterGameTestsEvent}, for the reason {@code IDChemicalGameTests} gives.
- *
- * <p>The tests that matter most call {@link SourceUtil} - exactly what the enchanting apparatus,
- * imbuement and sourcelinks call - rather than our storage directly. A drawer that holds Source but
- * that Ars never finds would pass every other test here.
+ * <p>The tests that matter call {@link SourceUtil} - what the enchanting apparatus, imbuement and
+ * sourcelinks call - rather than our storage. There is no relay test on this branch: a 4.12 relay only
+ * moves Source between Ars's own {@code AbstractSourceMachine}s (see {@code SourceDrawerTile}).
  */
 @PrefixGameTestTemplate(false)
 public final class IDSourceGameTests {
 
     private static final String NS = ImmaterialDrawers.MOD_ID;
     private static final String PLATFORM = "energy_platform";
-    private static final String WALL = "drawer_wall";
 
     private static final BlockPos DRAWER = new BlockPos(1, 1, 1);
     private static final BlockPos BESIDE = new BlockPos(0, 1, 1);
-    private static final BlockPos CONTROLLER = new BlockPos(5, 1, 5);
 
     /** Well inside the range any Ars consumer searches. */
     private static final int RANGE = 5;
 
-    /**
-     * A freshly placed block entity is queued and loaded on the next tick - which is when {@code onLoad}
-     * runs and the drawer joins Ars's {@code SourceManager}. Anything asserting on that registry has to
-     * wait for it, as a player always does.
-     */
+    /** {@code onLoad} - where the drawer joins SourceManager - runs the tick after the block is placed. */
     private static final int LOAD_TICKS = 2;
 
     private IDSourceGameTests() {
     }
 
-    /** Ours is Ars's instance, by name - see {@code SourceCapabilities}. */
-    @GameTest(templateNamespace = NS, template = PLATFORM)
-    public static void weSpeakArsOwnCapability(GameTestHelper helper) {
-        helper.assertTrue(SourceCapabilities.BLOCK
-                        == com.hollingsworth.arsnouveau.setup.registry.CapabilityRegistry.SOURCE_CAPABILITY,
-                "our Source BlockCapability is not Ars Nouveau's instance");
-        helper.succeed();
-    }
-
-    @GameTest(templateNamespace = NS, template = PLATFORM)
-    public static void bothDrawersHaveTheCapabilityFromEverySide(GameTestHelper helper) {
-        for (var drawer : IDSourceContent.all()) {
-            helper.setBlock(DRAWER, drawer.getBlock());
-            for (Direction side : Direction.values()) {
-                helper.assertTrue(capability(helper, side) != null,
-                        drawer.getBlock() + " has no Source capability from " + side);
-            }
-        }
-        helper.succeed();
-    }
-
     @GameTest(templateNamespace = NS, template = PLATFORM)
     public static void countsAsAnItemDrawerButHoldsNoItems(GameTestHelper helper) {
         SourceDrawerTile tile = place(helper);
-        helper.assertTrue(tile instanceof com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile<?>,
-                "SourceDrawerTile is not an ItemControllableDrawerTile - the controller will drop it");
-        helper.assertValueEqual(tile.getStorage().getSlots(), 0, "item slots on a source drawer");
+        helper.assertTrue(tile instanceof ItemControllableDrawerTile<?>, "not an item drawer to Functional Storage");
+        assertEquals(helper, tile.getStorage().getSlots(), 0, "item slots on a source drawer");
         helper.succeed();
     }
 
-    /** What a relay does: through the capability, in and out. */
-    @GameTest(templateNamespace = NS, template = PLATFORM)
-    public static void storesWhatARelayGivesIt(GameTestHelper helper) {
-        place(helper);
-        ISourceCap cap = capability(helper, null);
-        helper.assertValueEqual(cap.receiveSource(5000, false), 5000, "Source accepted");
-        helper.assertValueEqual(cap.extractSource(2000, false), 2000, "Source extracted");
-        helper.assertValueEqual(cap.getSource(), 3000, "Source left");
-        helper.succeed();
-    }
-
-    /**
-     * The enchanting apparatus's path: {@code SourceUtil.takeSourceMultiple} around a position, which
-     * only knows Ars's jars and {@code SourceManager}. If the drawer did not join the manager, this
-     * returns null and every Ars consumer ignores it.
-     */
+    /** The apparatus's path: {@code SourceUtil.takeSource} around a position, through SourceManager. */
     @GameTest(templateNamespace = NS, template = PLATFORM)
     public static void arsConsumersFindTheDrawer(GameTestHelper helper) {
         SourceDrawerTile tile = place(helper);
         tile.getSourceStorage().receiveSource(5000, false);
         helper.startSequence().thenIdle(LOAD_TICKS).thenExecute(() -> {
-        List<ISpecialSourceProvider> taken = SourceUtil.takeSourceMultiple(
-                helper.absolutePos(BESIDE), helper.getLevel(), RANGE, 3000);
-        helper.assertTrue(taken != null, "Ars found no Source near a drawer holding 5000");
-        helper.assertValueEqual(tile.getSourceStorage().getStoredRaw(), 2000, "Source left after Ars took 3000");
+            ISpecialSourceProvider taken = SourceUtil.takeSource(helper.absolutePos(BESIDE), helper.getLevel(), RANGE, 3000);
+            helper.assertTrue(taken != null, "Ars found no Source near a drawer holding 5000");
+            assertEquals(helper, tile.getSourceStorage().getStoredRaw(), 2000, "Source left after Ars took 3000");
         }).thenSucceed();
     }
 
@@ -122,40 +75,25 @@ public final class IDSourceGameTests {
     public static void sourcelinksCanFillTheDrawer(GameTestHelper helper) {
         place(helper);
         helper.startSequence().thenIdle(LOAD_TICKS).thenExecute(() -> {
-        BlockPos drawer = helper.absolutePos(DRAWER);
-        boolean listed = SourceUtil.canGiveSource(helper.absolutePos(BESIDE), helper.getLevel(), RANGE).stream()
-                .anyMatch(provider -> provider.getCurrentPos().equals(drawer));
-        helper.assertTrue(listed, "a sourcelink nearby would not see the drawer as somewhere to put Source");
+            BlockPos drawer = helper.absolutePos(DRAWER);
+            boolean listed = SourceUtil.canGiveSource(helper.absolutePos(BESIDE), helper.getLevel(), RANGE).stream()
+                    .anyMatch(provider -> provider.getCurrentPos().equals(drawer));
+            helper.assertTrue(listed, "a sourcelink nearby would not see the drawer as somewhere to put Source");
         }).thenSucceed();
     }
 
-    /**
-     * A creative drawer really supplies through Ars's path. {@code takeSourceMultiple} counts
-     * {@code before - after} as taken, so a creative storage that read full both times would give
-     * nothing - see {@code BigSourceStorage.TileView}.
-     */
+    /** A creative drawer supplies Ars, and keeps supplying. */
     @GameTest(templateNamespace = NS, template = PLATFORM)
     public static void aCreativeDrawerSuppliesArs(GameTestHelper helper) {
         SourceDrawerTile tile = place(helper);
         tile.getStorageUpgrades().insertItem(0, new ItemStack(FunctionalStorage.CREATIVE_UPGRADE.get()), false);
         helper.assertTrue(tile.isCreative(), "the creative upgrade did not take");
         helper.startSequence().thenIdle(LOAD_TICKS).thenExecute(() -> {
-        for (int round = 0; round < 2; round++) {
-            helper.assertTrue(SourceUtil.takeSourceMultiple(
-                            helper.absolutePos(BESIDE), helper.getLevel(), RANGE, 1_000_000) != null,
-                    "a creative drawer did not supply Ars, round " + round);
-        }
+            for (int round = 0; round < 2; round++) {
+                helper.assertTrue(SourceUtil.takeSource(helper.absolutePos(BESIDE), helper.getLevel(), RANGE, 1_000_000) != null,
+                        "a creative drawer did not supply Ars, round " + round);
+            }
         }).thenSucceed();
-    }
-
-    /** A simulated removal through the tile interface changes nothing - the published default would. */
-    @GameTest(templateNamespace = NS, template = PLATFORM)
-    public static void aSimulatedRemovalLeavesTheSource(GameTestHelper helper) {
-        SourceDrawerTile tile = place(helper);
-        tile.getSourceStorage().receiveSource(1000, false);
-        tile.getSourceStorage().asTile().removeSource(600, true);
-        helper.assertValueEqual(tile.getSourceStorage().getStoredRaw(), 1000, "Source after a simulated removal");
-        helper.succeed();
     }
 
     /** Once broken, the drawer's entry in Ars's registry reports itself invalid, so Ars drops it. */
@@ -163,14 +101,13 @@ public final class IDSourceGameTests {
     public static void aBrokenDrawerLeavesArsRegistry(GameTestHelper helper) {
         place(helper);
         helper.startSequence().thenIdle(LOAD_TICKS).thenExecute(() -> {
-        BlockPos drawer = helper.absolutePos(DRAWER);
-        List<ISpecialSourceProvider> ours = SourceManager.INSTANCE.getCopySetForLevel(helper.getLevel()).stream()
-                .filter(provider -> provider.getCurrentPos().equals(drawer) && provider.isValid())
-                .toList();
-        helper.assertValueEqual(ours.size(), 1, "valid registry entries for a placed drawer");
-
-        helper.setBlock(DRAWER, Blocks.AIR);
-        helper.assertTrue(!ours.getFirst().isValid(), "a broken drawer still claims to hold Source");
+            BlockPos drawer = helper.absolutePos(DRAWER);
+            List<ISpecialSourceProvider> ours = SourceManager.INSTANCE.getCopySetForLevel(helper.getLevel()).stream()
+                    .filter(provider -> provider.getCurrentPos().equals(drawer) && provider.isValid())
+                    .toList();
+            assertEquals(helper, ours.size(), 1, "valid registry entries for a placed drawer");
+            helper.setBlock(DRAWER, Blocks.AIR);
+            helper.assertTrue(!ours.get(0).isValid(), "a broken drawer still claims to hold Source");
         }).thenSucceed();
     }
 
@@ -179,22 +116,19 @@ public final class IDSourceGameTests {
         SourceDrawerTile tile = place(helper);
         tile.getUtilityUpgrades().insertItem(0, new ItemStack(FunctionalStorage.VOID_UPGRADE.get()), false);
         int capacity = tile.getSourceStorage().getSourceCapacity();
-        helper.assertValueEqual(capability(helper, null).receiveSource(capacity + 5000, false), capacity + 5000,
+        assertEquals(helper, tile.getSourceStorage().receiveSource(capacity + 5000, false), capacity + 5000,
                 "Source reported accepted by a void drawer");
-        helper.assertValueEqual(tile.getSourceStorage().getStoredRaw(), capacity, "Source kept, capped at capacity");
+        assertEquals(helper, tile.getSourceStorage().getStoredRaw(), capacity, "Source kept, capped at capacity");
         helper.succeed();
     }
 
-    /**
-     * The fluid drawer's capacity at the base, and every storage slot adding to it without passing
-     * the int ceiling of Ars's API.
-     */
+    /** The fluid drawer's capacity at the base, and every storage slot adding to it inside an int. */
     @GameTest(templateNamespace = NS, template = PLATFORM)
     public static void capacityFollowsTheFluidCurveAndFitsAnInt(GameTestHelper helper) {
         SourceDrawerTile tile = place(helper);
-        helper.setBlock(BESIDE, FunctionalStorage.FLUID_DRAWER_1.getBlock());
+        helper.setBlock(BESIDE, FunctionalStorage.FLUID_DRAWER_1.getLeft().get());
         FluidDrawerTile fluid = (FluidDrawerTile) helper.getBlockEntity(BESIDE);
-        helper.assertValueEqual(tile.getSourceStorage().getSourceCapacity(), fluid.getFluidHandler().getTankCapacity(0),
+        assertEquals(helper, tile.getSourceStorage().getSourceCapacity(), fluid.getFluidHandler().getTankCapacity(0),
                 "base capacity, next to a fluid drawer's");
 
         int previous = tile.getSourceStorage().getSourceCapacity();
@@ -221,83 +155,25 @@ public final class IDSourceGameTests {
         helper.succeed();
     }
 
-    /** A relay aimed at the Storage Controller reaches every source drawer on its network. */
-    @GameTest(templateNamespace = NS, template = WALL, timeoutTicks = 300)
-    public static void theControllerMovesSourceForItsWholeNetwork(GameTestHelper helper) {
-        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
-        List<BlockPos> placed = new ArrayList<>();
-        for (int x = 0; x < 3; x++) {
-            BlockPos pos = new BlockPos(x, 1, 0);
-            helper.setBlock(pos, IDSourceContent.SOURCE_DRAWER.getBlock());
-            placed.add(pos);
-        }
-        StorageControllerTile<?> controller = (StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
-        controller.addConnectedDrawers(LinkingToolItem.ActionMode.ADD,
-                placed.stream().map(helper::absolutePos).toArray(BlockPos[]::new));
-
-        helper.startSequence()
-                .thenIdle(10)
-                .thenExecute(() -> {
-                    ISourceCap network = helper.getLevel().getCapability(
-                            SourceCapabilities.BLOCK, helper.absolutePos(CONTROLLER), null);
-                    helper.assertTrue(network != null, "the Storage Controller has no Source capability");
-                    int perDrawer = ((SourceDrawerTile) helper.getBlockEntity(placed.getFirst()))
-                            .getSourceStorage().getSourceCapacity();
-                    helper.assertValueEqual(network.getSourceCapacity(), perDrawer * 3, "capacity across the network");
-                    helper.assertValueEqual(network.receiveSource(perDrawer * 2, false), perDrawer * 2,
-                            "Source accepted, spilling into a second drawer");
-                    helper.assertValueEqual(network.extractSource(perDrawer, false), perDrawer, "Source extracted");
-                    helper.assertValueEqual(network.getSource(), perDrawer, "Source left in the network");
-                })
-                .thenSucceed();
-    }
-
-    /**
-     * A real Ars relay, linked the way a player links it with the Dominion Wand: take from one drawer,
-     * send to the other. Ars moves the Source on its own tick, every 20, through the capability both
-     * ways - and nothing may be created on the way.
-     */
-    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 300)
-    public static void anArsRelayMovesSourceBetweenDrawers(GameTestHelper helper) {
-        BlockPos left = new BlockPos(0, 1, 1);
-        BlockPos middle = new BlockPos(1, 1, 1);
-        BlockPos right = new BlockPos(2, 1, 1);
-        helper.setBlock(left, IDSourceContent.SOURCE_DRAWER.getBlock());
-        helper.setBlock(right, IDSourceContent.SOURCE_DRAWER.getBlock());
-        helper.setBlock(middle, net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ars_nouveau", "relay")));
-        SourceDrawerTile from = (SourceDrawerTile) helper.getBlockEntity(left);
-        SourceDrawerTile to = (SourceDrawerTile) helper.getBlockEntity(right);
-        from.getSourceStorage().receiveSource(10_000, false);
-
-        helper.startSequence()
-                .thenIdle(LOAD_TICKS)
-                .thenExecute(() -> {
-                    var relay = (com.hollingsworth.arsnouveau.common.block.tile.RelayTile) helper.getBlockEntity(middle);
-                    helper.assertTrue(relay.setTakeFrom(helper.absolutePos(left)), "the relay refused to take from a drawer");
-                    helper.assertTrue(relay.setSendTo(helper.absolutePos(right)), "the relay refused to send to a drawer");
-                })
-                .thenIdle(100)
-                .thenExecute(() -> {
-                    int a = from.getSourceStorage().getStoredRaw();
-                    int b = to.getSourceStorage().getStoredRaw();
-                    int inRelay = ((com.hollingsworth.arsnouveau.common.block.tile.RelayTile) helper.getBlockEntity(middle)).getSource();
-                    helper.assertTrue(b > 0, "the relay delivered no Source to the second drawer");
-                    helper.assertTrue(a < 10_000, "the relay took no Source from the first drawer");
-                    helper.assertTrue(a + b + inRelay <= 10_000,
-                            "Source was created on the way: " + a + " + " + b + " + " + inRelay + " > 10000");
-                })
-                .thenSucceed();
+    /** The framed Source Drawer is framed by the same recipe as the energy one: it is an IDFramedBlock. */
+    @GameTest(templateNamespace = NS, template = PLATFORM)
+    public static void theFramedSourceDrawerIsFramable(GameTestHelper helper) {
+        ItemStack drawer = new ItemStack(IDSourceContent.FRAMED_SOURCE_DRAWER.getLeft().get());
+        helper.assertTrue(IDSourceContent.FRAMED_SOURCE_DRAWER.getLeft().get() instanceof IDFramedBlock,
+                "the framed Source Drawer is not an IDFramedBlock");
+        helper.assertTrue(FramedDrawerRecipe.matches(new ItemStack(Items.OAK_PLANKS), new ItemStack(Items.STONE), drawer),
+                "the framing recipe rejected the framed Source Drawer");
+        helper.succeed();
     }
 
     private static SourceDrawerTile place(GameTestHelper helper) {
-        helper.setBlock(DRAWER, IDSourceContent.SOURCE_DRAWER.getBlock());
+        helper.setBlock(DRAWER, IDSourceContent.SOURCE_DRAWER.getLeft().get());
         BlockEntity be = helper.getBlockEntity(DRAWER);
         helper.assertTrue(be instanceof SourceDrawerTile, "the source drawer has no tile behind it");
         return (SourceDrawerTile) be;
     }
 
-    private static ISourceCap capability(GameTestHelper helper, Direction side) {
-        return helper.getLevel().getCapability(SourceCapabilities.BLOCK, helper.absolutePos(DRAWER), side);
+    private static void assertEquals(GameTestHelper helper, Object actual, Object expected, String name) {
+        helper.assertTrue(Objects.equals(actual, expected), "Expected " + name + " to be " + expected + ", but was " + actual);
     }
 }

@@ -42,7 +42,7 @@ public class IDRecipeProvider extends RecipeProvider {
                 .define('E', Items.ENDER_PEARL);
         charger.save(output);
 
-        // A "special" recipe: no ingredients in the JSON, the logic is FramedEnergyDrawerRecipe.
+        // A "special" recipe: no ingredients in the JSON, the logic is FramedDrawerRecipe.
         SpecialRecipeBuilder.special((SimpleCraftingRecipeSerializer<?>) IDContent.FRAMED_RECIPE.get())
                 .save(output, ImmaterialDrawers.MOD_ID + ":framed");
     }

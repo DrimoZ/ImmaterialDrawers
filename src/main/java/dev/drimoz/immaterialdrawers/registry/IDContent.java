@@ -5,7 +5,7 @@ import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.augment.WirelessChargerItem;
 import dev.drimoz.immaterialdrawers.block.energy.EnergyDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
-import dev.drimoz.immaterialdrawers.recipe.FramedEnergyDrawerRecipe;
+import dev.drimoz.immaterialdrawers.recipe.FramedDrawerRecipe;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
@@ -81,6 +81,6 @@ public final class IDContent {
                 WirelessChargerItem::new);
 
         FRAMED_RECIPE = registries.registerGeneric(ForgeRegistries.RECIPE_SERIALIZERS.getRegistryKey(), "framed_recipe",
-                () -> new SimpleCraftingRecipeSerializer<>(FramedEnergyDrawerRecipe::new));
+                () -> new SimpleCraftingRecipeSerializer<>(FramedDrawerRecipe::new));
     }
 }

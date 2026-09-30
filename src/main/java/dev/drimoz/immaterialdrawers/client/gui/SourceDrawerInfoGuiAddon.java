@@ -33,10 +33,10 @@ public class SourceDrawerInfoGuiAddon extends BasicScreenAddon {
     private static final int TILE = 48;
     private static final Rect2i WELL = new Rect2i(9, 9, 30, 30);
 
-    private static final ResourceLocation INNER = ResourceLocation.fromNamespaceAndPath(
+    private static final ResourceLocation INNER = new ResourceLocation(
             ImmaterialDrawers.MOD_ID, "textures/block/drawer_inner.png");
     private static final ResourceLocation SOURCE_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Mods.ARS_NOUVEAU, "block/mana_still");
+            new ResourceLocation(Mods.ARS_NOUVEAU, "block/mana_still");
 
     private final ResourceLocation front;
     private final Supplier<BigSourceStorage> storage;

@@ -3,6 +3,7 @@ package dev.drimoz.immaterialdrawers.registry;
 import com.google.gson.JsonObject;
 import dev.drimoz.immaterialdrawers.IDConfig;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
@@ -68,6 +69,8 @@ public final class IDFeatures {
                 items.add(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get());
             } else if (this == WIRELESS_CHARGER) {
                 items.add(IDContent.WIRELESS_CHARGER.get());
+            } else if (this == SOURCE_DRAWER && Mods.arsNouveau()) {
+                IDSourceContent.all().forEach(drawer -> items.add(drawer.getLeft().get()));
             }
             return items;
         }

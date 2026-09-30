@@ -7,6 +7,14 @@
     {
       "id": "immaterialdrawers:framed_energy_drawer",
       "required": false
+    },
+    {
+      "id": "immaterialdrawers:source_drawer",
+      "required": false
+    },
+    {
+      "id": "immaterialdrawers:framed_source_drawer",
+      "required": false
     }
   ]
 }

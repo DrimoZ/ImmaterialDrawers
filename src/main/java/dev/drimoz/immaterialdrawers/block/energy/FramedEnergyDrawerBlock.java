@@ -1,14 +1,11 @@
 package dev.drimoz.immaterialdrawers.block.energy;
 
-import com.buuz135.functionalstorage.block.FramedDrawerBlock;
-import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
-import com.hrznstudio.titanium.util.TileUtil;
+import dev.drimoz.immaterialdrawers.block.IDFramedBlock;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.registry.IDFeatures;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.network.chat.Component;
@@ -34,18 +31,11 @@ import java.util.function.Consumer;
  * The framed energy drawer.
  *
  * <p>Modelled on Functional Storage 1.20.1's {@code block/FramedDrawerBlock}.
- * Copyright (c) 2021 Buuz135, Rid - MIT. See NOTICE.
- *
- * <p>On 1.20.1 Functional Storage's framing is written against its own classes, so the parts it
- * would do for us on 1.21.1 are here: the style read off the placed stack, written onto the dropped
- * one, and put on the pick-block stack. Their static helpers do the NBT -
- * {@link FramedDrawerBlock#getDrawerModelData} and the {@code Style} key are theirs, so a framed
- * drawer of ours and one of theirs carry their design the same way. The crafting recipe that frames
- * it is ours too: see {@code FramedEnergyDrawerRecipe}.
+ * Copyright (c) 2021 Buuz135, Rid - MIT. See NOTICE. On 1.20.1 their framing is written against
+ * their own classes, so the design handling is ours - in {@link IDFramedBlock}, shared with every
+ * framed drawer of ours.
  */
-public class FramedEnergyDrawerBlock extends EnergyDrawerBlock {
-
-    private static final String STYLE_TAG = "Style";
+public class FramedEnergyDrawerBlock extends EnergyDrawerBlock implements IDFramedBlock {
 
     public FramedEnergyDrawerBlock(Properties properties) {
         super(properties);
@@ -62,41 +52,26 @@ public class FramedEnergyDrawerBlock extends EnergyDrawerBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        FramedDrawerModelData design = FramedDrawerBlock.getDrawerModelData(stack);
-        if (design != null) {
-            TileUtil.getTileEntity(level, pos, FramedEnergyDrawerTile.class)
-                    .ifPresent(tile -> tile.setFramedDrawerModelData(design));
-        }
+        IDFramedBlock.applyStyle(level, pos, stack);
     }
 
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
         List<ItemStack> drops = super.getDrops(state, builder);
-        if (builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY) instanceof FramedEnergyDrawerTile tile) {
-            writeStyle(drops.get(0), tile);
-        }
+        IDFramedBlock.writeStyle(drops.get(0), builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY));
         return drops;
     }
 
     @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
         ItemStack stack = super.getCloneItemStack(state, target, level, pos, player);
-        if (level.getBlockEntity(pos) instanceof FramedEnergyDrawerTile tile) {
-            writeStyle(stack, tile);
-        }
+        IDFramedBlock.writeStyle(stack, level.getBlockEntity(pos));
         return stack;
-    }
-
-    private static void writeStyle(ItemStack stack, FramedEnergyDrawerTile tile) {
-        FramedDrawerModelData design = tile.getFramedDrawerModelData();
-        if (design != null && !design.getDesign().isEmpty()) {
-            stack.getOrCreateTag().put(STYLE_TAG, design.serializeNBT());
-        }
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("frameddrawer.use").withStyle(ChatFormatting.GRAY));
+        tooltip.add(IDFramedBlock.frameTooltip());
         super.appendHoverText(stack, level, tooltip, flag);
     }
 

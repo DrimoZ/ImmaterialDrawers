@@ -1,18 +1,14 @@
 package dev.drimoz.immaterialdrawers.client;
 
-import com.hrznstudio.titanium.module.BlockWithTile;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
 import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
-import net.minecraft.client.color.block.BlockColor;
-import net.minecraft.client.color.item.ItemColor;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 
-/**
- * The Source Drawer's client registrations. <b>Ars Nouveau only - see {@code compat.Mods}.</b>
- * Called from {@link IDClientSetup} and {@link IDColors} behind the guard, like {@link ChemicalClient}.
- */
+/** Client registration for the Source Drawers. <b>Ars Nouveau only</b>: called behind {@code Mods.arsNouveau()}. */
 public final class SourceClient {
 
     private SourceClient() {
@@ -20,18 +16,20 @@ public final class SourceClient {
 
     @SuppressWarnings("unchecked")
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        for (BlockWithTile drawer : IDSourceContent.all()) {
+        for (var drawer : IDSourceContent.all()) {
             event.registerBlockEntityRenderer(
-                    (BlockEntityType<? extends SourceDrawerTile>) drawer.type().get(),
+                    (BlockEntityType<? extends SourceDrawerTile>) drawer.getRight().get(),
                     context -> new SourceDrawerRenderer());
         }
     }
 
-    public static void registerBlockColors(RegisterColorHandlersEvent.Block event, BlockColor handler) {
-        event.register(handler, IDSourceContent.FRAMED_SOURCE_DRAWER.getBlock());
+    public static void setRenderLayers() {
+        for (var drawer : IDSourceContent.all()) {
+            ItemBlockRenderTypes.setRenderLayer(drawer.getLeft().get(), RenderType.cutout());
+        }
     }
 
-    public static void registerItemColors(RegisterColorHandlersEvent.Item event, ItemColor handler) {
-        event.register(handler, IDSourceContent.FRAMED_SOURCE_DRAWER.getBlock());
+    public static Block framedBlock() {
+        return IDSourceContent.FRAMED_SOURCE_DRAWER.getLeft().get();
     }
 }

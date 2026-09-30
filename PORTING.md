@@ -347,3 +347,25 @@ hook and `EnergyView.of(long, long)` as Jade 15, but its server provider is
 `Accessor`. TOP's API and Titanium's `@FeaturePlugin` gate are unchanged. Both mods are in the dev run;
 the game test server loads them with 20/20, and the log shows `IDTopPlugin` constructed and executed.
 The bars themselves have not been looked at in a client.
+
+### 1.20.1, step 6: the Source Drawer (30 September 2026)
+
+**29/29 with Ars Nouveau 4.12, 20/20 without it** (`-PnoArs`, no class-loading error). Client log clean with
+Ars loaded; not looked at by eye.
+
+- **Relays do not connect to it on 1.20.1** - the one real loss against 1.21.1. In 4.12, `RelayTile`
+  moves Source only between blocks that are `instanceof AbstractSourceMachine` (read in the bytecode),
+  an Ars block entity class a Functional Storage drawer cannot extend. 1.21.1's relays go through the
+  `ars_nouveau:source` capability, which 4.12 does not have. Everything that goes through
+  `SourceManager` works: the enchanting apparatus, imbuement, sourcelinks filling the drawer
+  (`takeSource` / `canGiveSource`, tested).
+- **Simpler storage, as estimated**: `BigSourceStorage` *is* the `ISourceTile`; no `TileView`, and the
+  published jar's `simulate` trap of 5.13 does not exist in 4.12, which has no simulated variants.
+  No controller aggregate either: nothing in 4.12 would ask a controller for Source.
+- **The framing became shared, as on 1.21.1**: `IDFramedBlock` / `IDFramedTile` stand in for FS 1.21's
+  `FramedBlock` / `FramedTile`, so one recipe (`FramedDrawerRecipe`) and one tint handler serve every
+  framed drawer of ours.
+- **Test trap: a mock player that ticks.** With Ars in the run, its mana tick sends every ticking
+  player a packet and casts to `ServerPlayer`: `makeMockPlayer` + `addFreshEntity` crashes the server,
+  and `makeMockServerPlayerInLevel` throws on a null channel. Forge's `FakePlayer` works - a
+  `ServerPlayer` whose network handler swallows packets.

@@ -9,6 +9,8 @@ import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.datagen.IDDataGenerators;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.registry.IDFeatures;
+import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.storage.ControllerEnergyStorage;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -58,6 +60,11 @@ public class ImmaterialDrawers extends ModuleController {
         NBTManager.getInstance().scanTileClassForAnnotations(FramedEnergyDrawerTile.class);
 
         IDFeatures.init(FMLJavaModLoadingContext.get().getModEventBus());
+        // The Source Drawers exist only with Ars Nouveau, and nothing that touches its classes may run
+        // without it - see compat.Mods. The registration half is in initModules.
+        if (Mods.arsNouveau()) {
+            IDSourceContent.init(FMLJavaModLoadingContext.get().getModEventBus());
+        }
         MinecraftForge.EVENT_BUS.addGenericListener(BlockEntity.class, ImmaterialDrawers::attachControllerEnergy);
     }
 
@@ -70,6 +77,9 @@ public class ImmaterialDrawers extends ModuleController {
     @Override
     protected void initModules() {
         IDContent.register(getRegistries());
+        if (Mods.arsNouveau()) {
+            IDSourceContent.register(getRegistries());
+        }
         addCreativeTab("main", () -> new ItemStack(IDContent.ENERGY_DRAWER.getLeft().get()), MOD_ID, TAB);
     }
 

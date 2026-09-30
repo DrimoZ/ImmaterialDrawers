@@ -12,7 +12,7 @@ import dev.drimoz.immaterialdrawers.IDConfig;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.FramedEnergyDrawerTile;
-import dev.drimoz.immaterialdrawers.recipe.FramedEnergyDrawerRecipe;
+import dev.drimoz.immaterialdrawers.recipe.FramedDrawerRecipe;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.storage.EnergyScaling;
@@ -30,7 +30,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import com.mojang.authlib.GameProfile;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.crafting.conditions.ICondition;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * The blocking spike of the 1.20.1 backport (PORTING.md §6, step 1), written as tests.
@@ -433,8 +436,8 @@ public final class IDGameTests {
         ItemStack side = new ItemStack(Items.OAK_PLANKS);
         ItemStack front = new ItemStack(Items.STONE);
 
-        helper.assertTrue(FramedEnergyDrawerRecipe.matches(side, front, drawer), "our framing recipe rejected our framed drawer");
-        helper.assertTrue(!FramedEnergyDrawerRecipe.matches(side, front, new ItemStack(IDContent.ENERGY_DRAWER.getLeft().get())),
+        helper.assertTrue(FramedDrawerRecipe.matches(side, front, drawer), "our framing recipe rejected our framed drawer");
+        helper.assertTrue(!FramedDrawerRecipe.matches(side, front, new ItemStack(IDContent.ENERGY_DRAWER.getLeft().get())),
                 "our framing recipe accepted the unframed drawer");
 
         ItemStack framed = FramedDrawerBlock.fill(side, front, drawer, new ItemStack(Items.DEEPSLATE));
@@ -545,7 +548,11 @@ public final class IDGameTests {
         final int seeded = 50_000;
         tile.getEnergyStorage().receiveEnergy(seeded, false);
 
-        Player player = helper.makeMockPlayer();
+        // Forge's FakePlayer, added to the level so getEntitiesOfClass sees it. Not makeMockPlayer: once Ars
+        // is in the run, its mana tick sends every ticking player a packet and casts to ServerPlayer.
+        // Not makeMockServerPlayerInLevel: its connection has no channel, and the first packet throws.
+        // A FakePlayer is a ServerPlayer whose network handler swallows packets.
+        Player player = FakePlayerFactory.get(helper.getLevel(), new GameProfile(UUID.randomUUID(), "charger_test"));
         player.setPos(helper.absoluteVec(new Vec3(DRAWER.getX() + 0.5, DRAWER.getY(), DRAWER.getZ() + 0.5)));
         helper.getLevel().addFreshEntity(player);
         ItemStack cell = new ItemStack(battery);
@@ -564,6 +571,7 @@ public final class IDGameTests {
                                     + "utility slots, or it does not find the player");
                     assertEquals(helper, inDrawer + inBattery, (long) seeded,
                             "total FE across the drawer and the battery it charged");
+                    player.discard();
                 })
                 .thenSucceed();
     }

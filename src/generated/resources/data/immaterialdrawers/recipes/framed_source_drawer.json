@@ -1,0 +1,47 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:and",
+          "values": [
+            {
+              "type": "forge:item_exists",
+              "item": "immaterialdrawers:framed_source_drawer"
+            }
+          ]
+        },
+        {
+          "type": "forge:mod_loaded",
+          "modid": "ars_nouveau"
+        },
+        {
+          "type": "immaterialdrawers:feature_enabled",
+          "feature": "source_drawer"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "category": "misc",
+        "key": {
+          "J": {
+            "item": "ars_nouveau:source_jar"
+          },
+          "P": {
+            "item": "minecraft:iron_nugget"
+          }
+        },
+        "pattern": [
+          "PPP",
+          "PJP",
+          "PPP"
+        ],
+        "result": {
+          "item": "immaterialdrawers:framed_source_drawer"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

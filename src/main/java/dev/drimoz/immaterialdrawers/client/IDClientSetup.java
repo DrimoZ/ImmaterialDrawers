@@ -2,6 +2,7 @@ package dev.drimoz.immaterialdrawers.client;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -31,6 +32,9 @@ public final class IDClientSetup {
                     (BlockEntityType<? extends EnergyDrawerTile>) drawer.getRight().get(),
                     context -> new EnergyDrawerRenderer());
         }
+        if (Mods.arsNouveau()) {
+            SourceClient.registerRenderers(event);
+        }
     }
 
     /**
@@ -51,5 +55,8 @@ public final class IDClientSetup {
     public static void setRenderLayers(FMLClientSetupEvent event) {
         ItemBlockRenderTypes.setRenderLayer(IDContent.ENERGY_DRAWER.getLeft().get(), RenderType.cutout());
         ItemBlockRenderTypes.setRenderLayer(IDContent.FRAMED_ENERGY_DRAWER.getLeft().get(), RenderType.cutout());
+        if (Mods.arsNouveau()) {
+            SourceClient.setRenderLayers();
+        }
     }
 }

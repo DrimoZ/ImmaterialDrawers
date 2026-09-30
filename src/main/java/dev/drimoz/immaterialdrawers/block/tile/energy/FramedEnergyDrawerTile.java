@@ -3,6 +3,7 @@ package dev.drimoz.immaterialdrawers.block.tile.energy;
 import com.buuz135.functionalstorage.client.model.FramedDrawerModelData;
 import com.hrznstudio.titanium.annotation.Save;
 import com.hrznstudio.titanium.block.BasicTileBlock;
+import dev.drimoz.immaterialdrawers.block.tile.IDFramedTile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,7 +24,7 @@ import java.util.HashMap;
  * their {@code framedblock} model loader reads {@link FramedDrawerModelData#FRAMED_PROPERTY} off
  * whatever {@code ModelData} the tile hands it, whoever owns the tile.
  */
-public class FramedEnergyDrawerTile extends EnergyDrawerTile {
+public class FramedEnergyDrawerTile extends EnergyDrawerTile implements IDFramedTile {
 
     @Save
     private FramedDrawerModelData framedDrawerModelData;

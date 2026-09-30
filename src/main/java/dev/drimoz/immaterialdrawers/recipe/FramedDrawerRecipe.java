@@ -1,7 +1,7 @@
 package dev.drimoz.immaterialdrawers.recipe;
 
 import com.buuz135.functionalstorage.block.FramedDrawerBlock;
-import dev.drimoz.immaterialdrawers.block.energy.FramedEnergyDrawerBlock;
+import dev.drimoz.immaterialdrawers.block.IDFramedBlock;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +14,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 /**
- * Frames one of our framed drawers in a crafting grid: side block, front block, drawer, optional
+ * Frames any framed drawer of ours ({@link IDFramedBlock}) in a crafting grid: side block, front block, drawer, optional
  * divider - the same grid as Functional Storage's framing.
  *
  * <p>Adapted from Functional Storage 1.20.1's {@code recipe/FramedDrawerRecipe}.
@@ -25,9 +25,9 @@ import net.minecraft.world.level.Level;
  * it tests the {@code FramedBlock} marker, and needs nothing from us). The stack it builds is theirs:
  * {@link FramedDrawerBlock#fill} writes the {@code Style} tag their loader and ours both read.
  */
-public class FramedEnergyDrawerRecipe extends CustomRecipe {
+public class FramedDrawerRecipe extends CustomRecipe {
 
-    public FramedEnergyDrawerRecipe(ResourceLocation id, CraftingBookCategory category) {
+    public FramedDrawerRecipe(ResourceLocation id, CraftingBookCategory category) {
         super(id, category);
     }
 
@@ -35,7 +35,7 @@ public class FramedEnergyDrawerRecipe extends CustomRecipe {
         return side.getItem() instanceof BlockItem
                 && front.getItem() instanceof BlockItem
                 && drawer.getItem() instanceof BlockItem blockItem
-                && blockItem.getBlock() instanceof FramedEnergyDrawerBlock;
+                && blockItem.getBlock() instanceof IDFramedBlock;
     }
 
     @Override

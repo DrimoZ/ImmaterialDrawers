@@ -1,7 +1,9 @@
 package dev.drimoz.immaterialdrawers.datagen;
 
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
+import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.registry.IDContent;
+import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
 import net.minecraft.data.PackOutput;
 import net.minecraftforge.common.data.LanguageProvider;
 
@@ -19,6 +21,12 @@ public class IDLangProvider extends LanguageProvider {
         add("gui.immaterialdrawers.capacity", "Capacity: ");
         addBlock(IDContent.ENERGY_DRAWER.getLeft(), "Energy Drawer");
         addBlock(IDContent.FRAMED_ENERGY_DRAWER.getLeft(), "Framed Energy Drawer");
+        add("gui.immaterialdrawers.source", "Source: ");
+        // Datagen runs with Ars, so the keys are always generated; a pack without it never asks for them.
+        if (Mods.arsNouveau()) {
+            addBlock(IDSourceContent.SOURCE_DRAWER.getLeft(), "Source Drawer");
+            addBlock(IDSourceContent.FRAMED_SOURCE_DRAWER.getLeft(), "Framed Source Drawer");
+        }
         addItem(IDContent.WIRELESS_CHARGER, "Wireless Charger");
         add("augment.immaterialdrawers.wireless_charger.desc", "Charges what nearby players carry, within %s blocks");
         add("augment.immaterialdrawers.wireless_charger.energy_only", "Only does anything in an Energy Drawer");
