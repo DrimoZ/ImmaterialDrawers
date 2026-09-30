@@ -127,6 +127,8 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
             if (stack.isEmpty()) {
                 continue;
             }
+            Rect2i area = contentRect(slot, slots);
+            float centreX = x + area.getX() + area.getWidth() / 2f;
             int textX = x + type.getSlotPosition().apply(slot).getLeft();
             int textY = y + type.getSlotPosition().apply(slot).getRight();
             String amount = ChemicalFormat.format(stack.getAmount()) + "/"
@@ -135,7 +137,11 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
             graphics.pose().translate(0, 0, 200);
             graphics.pose().scale(scale, scale, scale);
             graphics.drawString(Minecraft.getInstance().font, amount,
-                    (int) ((textX + 17 - Minecraft.getInstance().font.width(amount) / 2f) * (1 / scale)),
+                    // The 2x2 keeps Functional Storage's placement, which lands right in its quarters; the other
+                    // layouts centre on their tank, the half-scale width counted at half scale.
+                    slots == 4
+                            ? (int) ((textX + 17 - Minecraft.getInstance().font.width(amount) / 2f) * (1 / scale))
+                            : (int) (centreX / scale - Minecraft.getInstance().font.width(amount) / 2f),
                     (int) ((textY + 12) * (1 / scale)), 0xFFFFFF, true);
             graphics.pose().scale(1 / scale, 1 / scale, 1 / scale);
             graphics.pose().translate(0, 0, -200);

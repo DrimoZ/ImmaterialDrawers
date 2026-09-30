@@ -97,7 +97,7 @@ public class EnergyDrawerInfoGuiAddon extends BasicScreenAddon {
             graphics.pose().translate(0, 0, 200);
             graphics.pose().scale(scale, scale, scale);
             graphics.drawString(Minecraft.getInstance().font, amount,
-                    (int) ((x + 17 - Minecraft.getInstance().font.width(amount) / 2f) * (1 / scale)),
+                    (int) ((x + TILE / 2f) / scale - Minecraft.getInstance().font.width(amount) / 2f),
                     (int) ((y + 28) * (1 / scale)), 0xFFFFFF, true);
             graphics.pose().scale(1 / scale, 1 / scale, 1 / scale);
             graphics.pose().translate(0, 0, -200);

@@ -2,6 +2,13 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## Unreleased (1.21.1)
+
+### Fixed
+- The amount on the drawer screens sat off-centre, to the left of the drawer front: its width was
+  counted at full scale for text drawn at half scale. Energy, Source, and the 1x1 and 1x2 chemical
+  drawers; the 2x2 was already placed right. Found while checking the 1.20.1 backport in game.
+
 ## 0.2.0+1.21.1 — 2026-09-29
 
 Two new kinds of drawer, each arriving with the mod it belongs to, and two fixes every 0.1.0 player
