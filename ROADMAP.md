@@ -61,6 +61,10 @@ each for its own reason:
 
 ## Still open
 
+- **At the 1.20.1 release, update the store page and the wiki.** Both are right for 1.21.1 and wrong for
+  1.20.1 in four places: the requirements (Forge 1.20.1, FS 1.2.14, Mekanism 10.4, Ars 4.12), the FAQ
+  line saying there is no other version, the Mana line (Botania exists on 1.20.1; the drawer is on
+  hold), and relays reaching the Source Drawer (true on 1.21.1 only).
 - **Mana (Botania).** Botania has no release for 1.21.1 (the latest is 1.20.1-456; its port is an
   unreleased branch), so the Mana Drawer belongs to the **1.20.1 backport**, where Botania exists.
   Built the way the Source Drawer was: capability plus its own network event, never a mixin.
