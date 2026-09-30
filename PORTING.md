@@ -217,10 +217,10 @@ One branch per game version. Each keeps getting files; none replaces another.
 
 | branch | what it is |
 |---|---|
-| `main` | documentation and planning, and 1.21.1 until a port ships. |
-| `1.20.1` | the backport. Branched from `main`. Toolchain in place, compiles to 683 errors. |
-| `26.1` | the port. Branched from `main`. Toolchain in place, compiles to 206 errors. |
-| `1.21.1` | to create when `main` moves on, so 1.21.1 hotfixes have somewhere to live. |
+| `main` | **always the latest Minecraft version** the mod ships for - today 1.21.1 - and the base every future port branches from. When a newer port ships (26.1), it becomes `main`. |
+| `1.21.1` | 1.21.1, created 30 September 2026. Equal to `main` while 1.21.1 is the latest; keeps 1.21.1 hotfixes once `main` moves on. |
+| `1.20.1` | the backport (Forge). All eight steps but the Mana Drawer done. |
+| `26.1` | the port, on hold. Toolchain in place, compiles to 206 errors. |
 
 A fix to shared logic (scaling, formatting, conservation) lands on the version where it was found, then
 is cherry-picked. Nothing is merged across versions wholesale.
