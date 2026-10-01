@@ -2,10 +2,10 @@ package dev.drimoz.immaterialdrawers.storage.chemical;
 
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import dev.drimoz.immaterialdrawers.block.tile.chemical.ChemicalDrawerTile;
+import dev.drimoz.immaterialdrawers.storage.ControllerNetwork;
 import mekanism.api.Action;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.gas.GasStack;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -57,12 +57,9 @@ public final class ControllerChemicalHandler extends ChemicalTanks {
             return tanks;
         }
         List<Tank> found = new ArrayList<>();
-        for (Long packed : controller.getConnectedDrawers().getConnectedDrawers()) {
-            BlockPos pos = BlockPos.of(packed);
-            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof ChemicalDrawerTile drawer) {
-                for (int index = 0; index < drawer.getChemicalHandler().tanks(); index++) {
-                    found.add(new Tank(drawer, index));
-                }
+        for (ChemicalDrawerTile drawer : ControllerNetwork.drawersOf(controller, ChemicalDrawerTile.class)) {
+            for (int index = 0; index < drawer.getChemicalHandler().tanks(); index++) {
+                found.add(new Tank(drawer, index));
             }
         }
         this.tanks = found;

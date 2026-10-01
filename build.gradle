@@ -61,6 +61,9 @@ sourceSets.main.java {
     include 'dev/drimoz/immaterialdrawers/client/gui/ChemicalDrawerInfoGuiAddon.java'
     include 'dev/drimoz/immaterialdrawers/util/ChemicalFormat.java'
     include 'dev/drimoz/immaterialdrawers/gametest/IDChemicalGameTests.java'
+    // Shared by every drawer: their screen layout and the controller's network walk.
+    include 'dev/drimoz/immaterialdrawers/client/gui/DrawerFaceGuiAddon.java'
+    include 'dev/drimoz/immaterialdrawers/storage/ControllerNetwork.java'
 }
 
 legacyForge {

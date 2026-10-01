@@ -2,6 +2,14 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## Unreleased (1.20.1)
+
+### Notes
+- The three drawer screens share one layout, which reads Functional Storage's slot and hover
+  rectangles instead of carrying copies of them. Comparator and Redstone Upgrade handling, the walk
+  over a controller's network, and the number and indicator on chemical and Source drawer fronts
+  are each written once instead of per drawer - the same cleanup as 1.21.1. No behaviour change.
+
 ## 0.2.0+1.20.1 — 2026-09-30
 
 The same drawers as 0.2.0 for 1.21.1, on Forge 1.20.1 with Functional Storage 1.2.14. What

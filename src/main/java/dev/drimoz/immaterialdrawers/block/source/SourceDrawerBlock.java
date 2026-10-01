@@ -1,8 +1,6 @@
 package dev.drimoz.immaterialdrawers.block.source;
 
-import com.buuz135.functionalstorage.FunctionalStorage;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
-import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
 import dev.drimoz.immaterialdrawers.compat.Mods;
@@ -10,18 +8,13 @@ import dev.drimoz.immaterialdrawers.registry.IDFeatures;
 import dev.drimoz.immaterialdrawers.registry.IDSourceContent;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.crafting.conditions.ModLoadedCondition;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -54,28 +47,7 @@ public class SourceDrawerBlock extends ImmaterialDrawerBlock<SourceDrawerTile> {
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        return signalFor(TileUtil.getTileEntity(level, pos, SourceDrawerTile.class).orElse(null));
-    }
-
-    /** Functional Storage's Redstone Upgrade, reading the Source level - the comparator's number. */
-    @Override
-    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        SourceDrawerTile tile = TileUtil.getTileEntity(level, pos, SourceDrawerTile.class).orElse(null);
-        if (tile != null) {
-            for (int slot = 0; slot < tile.getUtilityUpgrades().getSlots(); slot++) {
-                if (tile.getUtilityUpgrades().getStackInSlot(slot).is(FunctionalStorage.REDSTONE_UPGRADE.get())) {
-                    return signalFor(tile);
-                }
-            }
-        }
-        return 0;
-    }
-
-    private static int signalFor(SourceDrawerTile tile) {
-        if (tile == null) {
-            return 0;
-        }
+    protected int signalFor(SourceDrawerTile tile) {
         int capacity = tile.getSourceStorage().getSourceCapacity();
         int stored = tile.getSourceStorage().getSource();
         return comparatorSignal(capacity <= 0 ? 0 : stored / (double) capacity, capacity > 0 && stored > 0);

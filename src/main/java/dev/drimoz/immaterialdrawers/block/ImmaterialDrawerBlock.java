@@ -244,6 +244,43 @@ public abstract class ImmaterialDrawerBlock<T extends ImmaterialDrawerTile<T>> e
         return true;
     }
 
+    /** How full this drawer is, on vanilla's 0-15 scale - usually through {@link #comparatorSignal}. */
+    protected abstract int signalFor(T tile);
+
+    /**
+     * What Functional Storage's Redstone Upgrade emits: the comparator's number, so two ways of
+     * asking a drawer how full it is agree. A drawer with several slots overrides this to read the
+     * slot in the upgrade's {@code Slot} tag.
+     */
+    protected int redstoneSignal(T tile, ItemStack upgrade) {
+        return signalFor(tile);
+    }
+
+    /** Their {@code DrawerBlock} reads the item handler, which on ours has no slots: zero, always. */
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        return TileUtil.getTileEntity(level, pos, tileClass).map(this::signalFor).orElse(0);
+    }
+
+    /**
+     * Functional Storage's own Redstone Upgrade, reading our contents instead of a stack count. On
+     * 1.20.1 their upgrade is an item compared by identity, not a behaviour: their tile's
+     * {@code serverTick} already updates the neighbours for it, so only the number is ours.
+     */
+    @Override
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        T tile = TileUtil.getTileEntity(level, pos, tileClass).orElse(null);
+        if (tile != null) {
+            for (int slot = 0; slot < tile.getUtilityUpgrades().getSlots(); slot++) {
+                ItemStack upgrade = tile.getUtilityUpgrades().getStackInSlot(slot);
+                if (upgrade.is(FunctionalStorage.REDSTONE_UPGRADE.get())) {
+                    return redstoneSignal(tile, upgrade);
+                }
+            }
+        }
+        return 0;
+    }
+
     /**
      * Vanilla's container shape, which is also Functional Storage's: anything at all lights the
      * comparator to 1, full reads 15.

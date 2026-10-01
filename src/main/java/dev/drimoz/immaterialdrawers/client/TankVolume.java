@@ -1,7 +1,13 @@
 package dev.drimoz.immaterialdrawers.client;
 
+import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
+import com.buuz135.functionalstorage.client.DrawerRenderer;
+import com.buuz135.functionalstorage.item.ConfigurationToolItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -30,6 +36,30 @@ public final class TankVolume {
         float time = (level == null ? 0 : level.getGameTime() % 72000L) + partialTicks;
         float phase = Math.floorMod(pos.asLong() * 31L, 360L);
         return Mth.sin(time * BREATH_SPEED + phase) * BREATH_HEIGHT;
+    }
+
+    /**
+     * The amount and the fill indicator on a tank's front, where {@code FluidDrawerRenderer.renderFluidStack}
+     * puts them - its 0.84 / 0.453, its 0.007 text scale, its half-slot shift and squeeze for a 2x2.
+     * Both are drawn by Functional Storage's own {@code DrawerRenderer} widgets.
+     */
+    public static void renderLabel(PoseStack matrixStack, MultiBufferSource bufferIn, int light, int overlay,
+                                   String amount, float fill, ControllableDrawerTile.DrawerOptions options, boolean half) {
+        if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_NUMBERS)) {
+            matrixStack.pushPose();
+            matrixStack.translate(half ? 0.25 : 0.5, 0.84, 0.97);
+            DrawerRenderer.renderText(matrixStack, bufferIn, overlay,
+                    Component.literal(ChatFormatting.WHITE + amount), Direction.NORTH, 0.007f);
+            matrixStack.popPose();
+        }
+        matrixStack.pushPose();
+        matrixStack.translate(0.5, 0.453, 0.97);
+        if (half) {
+            matrixStack.scale(0.5f, 0.65f, 0.5f);
+            matrixStack.translate(-0.5, -0.18, 0);
+        }
+        DrawerRenderer.renderIndicator(matrixStack, bufferIn, light, overlay, fill, options);
+        matrixStack.popPose();
     }
 
     public static void render(PoseStack matrixStack, MultiBufferSource bufferIn, TextureAtlasSprite sprite, int rgb,

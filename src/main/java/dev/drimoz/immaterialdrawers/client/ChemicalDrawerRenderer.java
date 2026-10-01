@@ -12,7 +12,6 @@ import dev.drimoz.immaterialdrawers.storage.chemical.BigChemicalHandler;
 import dev.drimoz.immaterialdrawers.util.ChemicalFormat;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.ChemicalType;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -20,7 +19,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.InventoryMenu;
 
 /**
@@ -33,7 +31,6 @@ import net.minecraft.world.inventory.InventoryMenu;
  */
 public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawerTile> {
 
-    private static final float TEXT_SCALE = 0.007f;
     private static final float GAS_ALPHA = 0.8f;
     private static final float GHOST_ALPHA = 0.3f;
 
@@ -123,24 +120,6 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
                     alpha, gas ? LightTexture.FULL_BRIGHT : light, overlay);
         }
 
-        if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_NUMBERS)) {
-            matrixStack.pushPose();
-            matrixStack.translate(0.5, 0.84, 0.97);
-            if (half) {
-                matrixStack.translate(-0.25, 0, 0);
-            }
-            DrawerRenderer.renderText(matrixStack, bufferIn, overlay,
-                    Component.literal(ChatFormatting.WHITE + ChemicalFormat.format(amount)), Direction.NORTH, TEXT_SCALE);
-            matrixStack.popPose();
-        }
-
-        matrixStack.pushPose();
-        matrixStack.translate(0.5, 0.453, 0.97);
-        if (half) {
-            matrixStack.scale(0.5f, 0.65f, 0.5f);
-            matrixStack.translate(-0.5, -0.18, 0);
-        }
-        DrawerRenderer.renderIndicator(matrixStack, bufferIn, light, overlay, fill, options);
-        matrixStack.popPose();
+        TankVolume.renderLabel(matrixStack, bufferIn, light, overlay, ChemicalFormat.format(amount), fill, options, half);
     }
 }

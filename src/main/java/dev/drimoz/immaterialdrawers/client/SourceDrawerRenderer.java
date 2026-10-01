@@ -8,14 +8,12 @@ import com.mojang.math.Axis;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 
@@ -29,7 +27,6 @@ import net.minecraft.world.inventory.InventoryMenu;
 public class SourceDrawerRenderer implements BlockEntityRenderer<SourceDrawerTile> {
 
     private static final ResourceLocation SOURCE_TEXTURE = new ResourceLocation(Mods.ARS_NOUVEAU, "block/mana_still");
-    private static final float TEXT_SCALE = 0.007f;
     private static final float SOURCE_ALPHA = 0.9f;
 
     @Override
@@ -76,19 +73,8 @@ public class SourceDrawerRenderer implements BlockEntityRenderer<SourceDrawerTil
                     SOURCE_ALPHA, LightTexture.FULL_BRIGHT, combinedOverlayIn);
         }
 
-        if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_NUMBERS)) {
-            matrixStack.pushPose();
-            matrixStack.translate(0.5, 0.84, 0.97);
-            DrawerRenderer.renderText(matrixStack, bufferIn, combinedOverlayIn,
-                    Component.literal(ChatFormatting.WHITE + EnergyFormat.format(storage.getStoredRaw())),
-                    Direction.NORTH, TEXT_SCALE);
-            matrixStack.popPose();
-        }
-
-        matrixStack.pushPose();
-        matrixStack.translate(0.5, 0.453, 0.97);
-        DrawerRenderer.renderIndicator(matrixStack, bufferIn, light, combinedOverlayIn, fill, options);
-        matrixStack.popPose();
+        TankVolume.renderLabel(matrixStack, bufferIn, light, combinedOverlayIn,
+                EnergyFormat.format(storage.getStoredRaw()), fill, options, false);
 
         matrixStack.pushPose();
         matrixStack.translate(0, 0, 0.9688);

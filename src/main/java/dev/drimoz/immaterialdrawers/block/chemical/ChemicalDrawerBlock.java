@@ -2,7 +2,6 @@ package dev.drimoz.immaterialdrawers.block.chemical;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
-import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.block.ImmaterialDrawerBlock;
 import dev.drimoz.immaterialdrawers.block.tile.chemical.ChemicalDrawerTile;
 import dev.drimoz.immaterialdrawers.compat.Mods;
@@ -12,8 +11,6 @@ import dev.drimoz.immaterialdrawers.storage.chemical.BigChemicalHandler;
 import dev.drimoz.immaterialdrawers.util.ChemicalFormat;
 import mekanism.api.chemical.ChemicalStack;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -22,10 +19,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.crafting.conditions.ModLoadedCondition;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -59,11 +53,7 @@ public class ChemicalDrawerBlock extends ImmaterialDrawerBlock<ChemicalDrawerTil
 
     /** The average fill of the tanks, on vanilla's container scale - as a fluid drawer reports. */
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
-        ChemicalDrawerTile tile = TileUtil.getTileEntity(level, pos, ChemicalDrawerTile.class).orElse(null);
-        if (tile == null) {
-            return 0;
-        }
+    protected int signalFor(ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
         double fullness = 0;
         boolean hasContents = false;
@@ -80,23 +70,15 @@ public class ChemicalDrawerBlock extends ImmaterialDrawerBlock<ChemicalDrawerTil
 
     /** Functional Storage's Redstone Upgrade: the tank in its {@code Slot} tag, as their fluid drawer reads it. */
     @Override
-    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
-        ChemicalDrawerTile tile = TileUtil.getTileEntity(level, pos, ChemicalDrawerTile.class).orElse(null);
-        if (tile != null) {
-            for (int slot = 0; slot < tile.getUtilityUpgrades().getSlots(); slot++) {
-                ItemStack upgrade = tile.getUtilityUpgrades().getStackInSlot(slot);
-                if (upgrade.is(FunctionalStorage.REDSTONE_UPGRADE.get())) {
-                    int watched = upgrade.getOrCreateTag().getInt("Slot");
-                    BigChemicalHandler handler = tile.getChemicalHandler();
-                    if (watched < handler.tanks()) {
-                        long capacity = handler.capacity(watched);
-                        return capacity <= 0 ? 0 : (int) Math.floor(
-                                Math.min(1D, handler.stored(watched).getAmount() / (double) capacity) * 15);
-                    }
-                }
-            }
+    protected int redstoneSignal(ChemicalDrawerTile tile, ItemStack upgrade) {
+        int watched = upgrade.getOrCreateTag().getInt("Slot");
+        BigChemicalHandler handler = tile.getChemicalHandler();
+        if (watched >= handler.tanks()) {
+            return 0;
         }
-        return 0;
+        long capacity = handler.capacity(watched);
+        return capacity <= 0 ? 0 : (int) Math.floor(
+                Math.min(1D, handler.stored(watched).getAmount() / (double) capacity) * 15);
     }
 
     /** Planks around Mekanism's pressurized tubes, in Functional Storage's fluid drawer patterns. */
