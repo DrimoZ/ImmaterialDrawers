@@ -1106,6 +1106,16 @@ Capability recréée par son nom comme pour Mekanism (`CapabilityRegistry` est d
   **[vérifié]** `aSimulatedRemovalLeavesTheSource`. Leçon : lire le bytecode du jar, pas seulement la branche.
 - **`onLoad()` arrive au tick suivant la pose**, pas pendant `setBlock` : un test qui interroge
   `SourceManager` juste après avoir posé le tiroir le trouve absent. Les tests attendent 2 ticks.
+- **Un tiroir porte moins loin qu'une jarre.** `SourceUtil` trouve les jarres par `withinManhattan`
+  (distance incluse) et les providers de `SourceManager` par `closerThan` (distance **exclue**). Rien à
+  corriger chez nous, mais ça compte pour l'Imbuement Chamber (rayon 2) : une jarre à 2 blocs marche, un
+  tiroir doit être collé ou en diagonale. Sinon la chambre crafte avec sa production passive (10 Source/s)
+  et le tiroir a l'air ignoré. Trouvé en jeu le 1er oct. 2026 ; l'Apparatus (rayon 10) n'est pas concerné.
+
+**Test en jeu :** `/function drawertest:source` dans la sauvegarde `run/saves/Drawer Test`. Ça
+construit six stations (relais, contrôleur + extension, Imbuement, Apparatus, Sourcelink, tourelle) et
+affiche OK / ATTENTE / MANUEL 30 s plus tard (`drawertest:source_check` pour relancer). S1, S2, S3 et S5
+ont été vérifiés par RCON sur un serveur dédié ; S4 et S6 demandent un joueur.
 
 ### Capacité
 
