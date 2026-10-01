@@ -2,7 +2,10 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## Unreleased (1.21.1)
+## 0.2.1+1.21.1 — 2026-10-01
+
+The amount on every drawer screen now sits where it should: centred on the drawer, at the height
+Functional Storage uses on its own fluid drawer.
 
 ### Fixed
 - The amount on the drawer screens sat off-centre, to the left of the drawer front: its width was
