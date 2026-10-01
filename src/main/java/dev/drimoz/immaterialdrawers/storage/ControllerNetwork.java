@@ -3,9 +3,7 @@ package dev.drimoz.immaterialdrawers.storage;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,16 +25,8 @@ public final class ControllerNetwork {
         if (level == null) {
             return List.of();
         }
-        List<T> found = new ArrayList<>();
-        for (Long packed : controller.getConnectedDrawers().getConnectedDrawers()) {
-            BlockPos pos = BlockPos.of(packed);
-            if (level.isLoaded(pos)) {
-                BlockEntity drawer = level.getBlockEntity(pos);
-                if (type.isInstance(drawer)) {
-                    found.add(type.cast(drawer));
-                }
-            }
-        }
-        return found;
+        return controller.getConnectedDrawers().getConnectedDrawers().stream()
+                .map(BlockPos::of).filter(level::isLoaded).map(level::getBlockEntity)
+                .filter(type::isInstance).map(type::cast).toList();
     }
 }

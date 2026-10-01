@@ -45,9 +45,7 @@ public class SourceDrawerInfoGuiAddon extends DrawerFaceGuiAddon {
     @Override
     protected String amount(int slot) {
         BigSourceStorage source = storage.get();
-        return source.getSourceCapacity() > 0
-                ? EnergyFormat.format(source.getStoredRaw()) + "/" + EnergyFormat.format(source.getSourceCapacity())
-                : null;
+        return EnergyFormat.format(source.getStoredRaw()) + "/" + EnergyFormat.format(source.getSourceCapacity());
     }
 
     @Override

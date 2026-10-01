@@ -44,9 +44,7 @@ public class EnergyDrawerInfoGuiAddon extends DrawerFaceGuiAddon {
     @Override
     protected String amount(int slot) {
         BigEnergyStorage energy = storage.get();
-        return energy.getCapacityLong() > 0
-                ? EnergyFormat.format(energy.getStoredLong()) + "/" + EnergyFormat.format(energy.getCapacityLong())
-                : null;
+        return EnergyFormat.format(energy.getStoredLong()) + "/" + EnergyFormat.format(energy.getCapacityLong());
     }
 
     @Override
