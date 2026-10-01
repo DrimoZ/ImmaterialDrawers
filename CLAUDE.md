@@ -1177,6 +1177,11 @@ Ce qui change la donne, à ne pas redécouvrir :
   `instanceof FramedDrawerBlock` : il nous faut la nôtre.
 - **Mekanism 10.4 a quatre handlers** (gaz, infusion, pigment, slurry) ; le modèle est leur
   `MergedChemicalTank`. **Ars 4.12 n'a pas `ISourceCap`** : le tile implémente `ISourceTile` directement.
+- **Jade / TOP / WTHIT lisent nos tiroirs chimiques par l'intégration de Mekanism**, qui affiche chaque
+  réservoir de chacune des quatre vues, vides compris : 16 lignes sur un 2x2 (0.2.0+1.20.1). Les vues de
+  `ChemicalTanks` sont des `IMekanismChemicalHandler` dont `getChemicalTanks` ne sert qu'à l'affichage
+  (vérifié dans le jar : hors handlers de Mekanism, seuls `LookingAtUtils` et le Dropper le lisent) :
+  une ligne par slot. Tout le reste reste indexé par slot. **[vérifié]** `probesSeeOneRowPerSlot`.
 - **Sur 26.1, `EnergyHandler` expose `getAmountAsLong()`** : le plafond int du §11bis disparaît côté
   capability standard (insert/extract restent int). `BigEnergyStorage` devient transactionnel
   (`SnapshotJournal`, comme `BigFluidHandler` chez FS) — c'est la seule classe où une erreur crée ou

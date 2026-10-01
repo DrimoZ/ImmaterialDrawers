@@ -11,9 +11,12 @@ import dev.drimoz.immaterialdrawers.block.tile.chemical.ChemicalDrawerTile;
 import dev.drimoz.immaterialdrawers.recipe.FramedDrawerRecipe;
 import dev.drimoz.immaterialdrawers.registry.IDChemicalContent;
 import dev.drimoz.immaterialdrawers.storage.chemical.ChemicalCapabilities;
+import dev.drimoz.immaterialdrawers.storage.chemical.ChemicalTanks;
 import mekanism.api.Action;
 import mekanism.api.MekanismAPI;
 import mekanism.api.chemical.ChemicalType;
+import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.IMekanismChemicalHandler;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
 import mekanism.api.chemical.infuse.IInfusionHandler;
@@ -93,6 +96,31 @@ public final class IDChemicalGameTests {
         assertEquals(helper, infusion.insertChemical(redstone(500), Action.EXECUTE).getAmount(), 0L,
                 "redstone left over, with the second tank free");
         assertEquals(helper, infusion.getChemicalInTank(1).getAmount(), 500L, "redstone in the second tank");
+        helper.succeed();
+    }
+
+    /**
+     * What Mekanism's Jade / TOP integration lists: one row per slot across the four views, not four
+     * rows per slot. Two gases and an infusion in a 2x2 leave one slot empty, shown once, by the gas
+     * view. Pipes still see every tank in every view - the display list must not change their indices.
+     */
+    @GameTest(templateNamespace = NS, template = PLATFORM)
+    public static void probesSeeOneRowPerSlot(GameTestHelper helper) {
+        ChemicalTanks tanks = place(helper, FunctionalStorage.DrawerType.X_4).getChemicalHandler();
+        tanks.insert(0, hydrogen(1000), Action.EXECUTE);
+        tanks.insert(1, oxygen(1000), Action.EXECUTE);
+        tanks.insert(2, redstone(500), Action.EXECUTE);
+
+        int rows = 0;
+        for (ChemicalType type : ChemicalType.values()) {
+            IChemicalHandler<?, ?> view = tanks.view(type);
+            helper.assertTrue(view instanceof IMekanismChemicalHandler<?, ?, ?>, type + " view is not what Mekanism's probes read");
+            rows += ((IMekanismChemicalHandler<?, ?, ?>) view).getChemicalTanks(null).size();
+            assertEquals(helper, view.getTanks(), 4, "tanks a pipe sees in the " + type + " view");
+        }
+        assertEquals(helper, rows, 4, "rows across the four views");
+        assertEquals(helper, ((IMekanismChemicalHandler<?, ?, ?>) tanks.gas).getChemicalTanks(null).size(), 3,
+                "gas rows (two gases and the empty slot)");
         helper.succeed();
     }
 

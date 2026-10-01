@@ -2,9 +2,15 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## Unreleased (1.20.1)
+## 0.2.1+1.20.1 — 2026-10-01
+
+### Fixed
+- Jade, The One Probe and WTHIT listed a chemical drawer as four rows per slot - one per Mekanism
+  chemical type, empty ones included - so a 2x2 read as sixteen rows, mostly "Empty". They now show
+  one row per slot: what it holds, or that it is empty. Pipes are unaffected.
 
 ### Notes
+- The screen fixes 0.2.1 brings to 1.21.1 were already in 0.2.0+1.20.1.
 - The three drawer screens share one layout, which reads Functional Storage's slot and hover
   rectangles instead of carrying copies of them. Comparator and Redstone Upgrade handling, the walk
   over a controller's network, and the number and indicator on chemical and Source drawer fronts

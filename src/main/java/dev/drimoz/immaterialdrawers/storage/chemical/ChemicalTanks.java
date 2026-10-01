@@ -1,10 +1,13 @@
 package dev.drimoz.immaterialdrawers.storage.chemical;
 
 import mekanism.api.Action;
+import mekanism.api.AutomationType;
 import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.ChemicalType;
 import mekanism.api.chemical.IChemicalHandler;
+import mekanism.api.chemical.IChemicalTank;
+import mekanism.api.chemical.IMekanismChemicalHandler;
 import mekanism.api.chemical.gas.Gas;
 import mekanism.api.chemical.gas.GasStack;
 import mekanism.api.chemical.gas.IGasHandler;
@@ -17,6 +20,12 @@ import mekanism.api.chemical.pigment.PigmentStack;
 import mekanism.api.chemical.slurry.ISlurryHandler;
 import mekanism.api.chemical.slurry.Slurry;
 import mekanism.api.chemical.slurry.SlurryStack;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tanks that hold any of Mekanism 10.4's four chemical types, seen through four typed handlers.
@@ -91,13 +100,165 @@ public abstract class ChemicalTanks {
         return !a.isEmpty() && !b.isEmpty() && a.getType() == b.getType();
     }
 
-    /** One type's window on the tanks. */
-    private abstract class View<C extends Chemical<C>, S extends ChemicalStack<C>> implements IChemicalHandler<C, S> {
+    /**
+     * One type's window on the tanks.
+     *
+     * <p><b>Why it is an {@link IMekanismChemicalHandler}.</b> For a chemical block that is not one of
+     * its own, Mekanism's Jade / TOP / WTHIT integration walks each of the four typed capabilities and
+     * shows every tank of each - empty ones included - so a 2x2 drawer read as sixteen rows, mostly
+     * "Empty". For an {@code IMekanismChemicalHandler} it shows {@link #getChemicalTanks} instead, and
+     * that list is display only (checked in the 10.4 jar: outside Mekanism's own handlers, only
+     * {@code LookingAtUtils} and the Dropper - which works on Mekanism's tiles - read it). So the list
+     * is one row per slot across the four views: each view lists the slots holding its type, and the
+     * gas view also lists the empty ones. Every sided method is redirected to the slot-indexed ones
+     * below, so pipes see exactly what they saw before.
+     */
+    private abstract class View<C extends Chemical<C>, S extends ChemicalStack<C>>
+            implements IMekanismChemicalHandler<C, S, IChemicalTank<C, S>> {
 
         private final ChemicalType type;
 
         View(ChemicalType type) {
             this.type = type;
+        }
+
+        @Override
+        public List<IChemicalTank<C, S>> getChemicalTanks(@Nullable Direction side) {
+            List<IChemicalTank<C, S>> shown = new ArrayList<>();
+            for (int tank = 0; tank < tanks(); tank++) {
+                ChemicalStack<?> held = stored(tank);
+                if (mine(held) || (type == ChemicalType.GAS && held.isEmpty())) {
+                    shown.add(new SlotTank(tank));
+                }
+            }
+            return shown;
+        }
+
+        @Override
+        public IChemicalTank<C, S> getChemicalTank(int tank, @Nullable Direction side) {
+            return tank >= 0 && tank < tanks() ? new SlotTank(tank) : null;
+        }
+
+        @Override
+        public void onContentsChanged() {
+            // The drawer marks itself dirty and syncs on every change already.
+        }
+
+        // ---- The sided half, redirected to the slot-indexed half: a side changes nothing here. ----
+
+        @Override
+        public int getTanks(@Nullable Direction side) {
+            return getTanks();
+        }
+
+        @Override
+        public S getChemicalInTank(int tank, @Nullable Direction side) {
+            return getChemicalInTank(tank);
+        }
+
+        @Override
+        public void setChemicalInTank(int tank, S stack, @Nullable Direction side) {
+            setChemicalInTank(tank, stack);
+        }
+
+        @Override
+        public long getTankCapacity(int tank, @Nullable Direction side) {
+            return getTankCapacity(tank);
+        }
+
+        @Override
+        public boolean isValid(int tank, S stack, @Nullable Direction side) {
+            return isValid(tank, stack);
+        }
+
+        @Override
+        public S insertChemical(int tank, S stack, @Nullable Direction side, Action action) {
+            return insertChemical(tank, stack, action);
+        }
+
+        @Override
+        public S extractChemical(int tank, long amount, @Nullable Direction side, Action action) {
+            return extractChemical(tank, amount, action);
+        }
+
+        @Override
+        public S insertChemical(S stack, @Nullable Direction side, Action action) {
+            return insertChemical(stack, action);
+        }
+
+        @Override
+        public S extractChemical(long amount, @Nullable Direction side, Action action) {
+            return extractChemical(amount, action);
+        }
+
+        @Override
+        public S extractChemical(S stack, @Nullable Direction side, Action action) {
+            return extractChemical(stack, action);
+        }
+
+        /** One slot, seen as a tank of this view's type - what {@link #getChemicalTanks} hands out. */
+        private final class SlotTank implements IChemicalTank<C, S> {
+
+            private final int slot;
+
+            SlotTank(int slot) {
+                this.slot = slot;
+            }
+
+            @Override
+            public S getEmptyStack() {
+                return View.this.getEmptyStack();
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public S createStack(S stored, long size) {
+                return (S) copyWithAmount(stored, size);
+            }
+
+            @Override
+            public S getStack() {
+                return getChemicalInTank(slot);
+            }
+
+            @Override
+            public void setStack(S stack) {
+                setChemicalInTank(slot, stack);
+            }
+
+            @Override
+            public void setStackUnchecked(S stack) {
+                setChemicalInTank(slot, stack);
+            }
+
+            @Override
+            public S insert(S stack, Action action, AutomationType automationType) {
+                return insertChemical(slot, stack, action);
+            }
+
+            @Override
+            public S extract(long amount, Action action, AutomationType automationType) {
+                return extractChemical(slot, amount, action);
+            }
+
+            @Override
+            public long getCapacity() {
+                return getTankCapacity(slot);
+            }
+
+            @Override
+            public boolean isValid(S stack) {
+                return View.this.isValid(slot, stack);
+            }
+
+            @Override
+            public void onContentsChanged() {
+            }
+
+            @Override
+            public void deserializeNBT(CompoundTag nbt) {
+                // A view, not a store: the drawer saves its own tanks.
+            }
         }
 
         private boolean mine(ChemicalStack<?> stack) {
