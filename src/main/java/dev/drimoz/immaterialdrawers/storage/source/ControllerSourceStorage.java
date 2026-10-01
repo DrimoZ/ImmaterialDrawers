@@ -3,10 +3,8 @@ package dev.drimoz.immaterialdrawers.storage.source;
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.hollingsworth.arsnouveau.api.source.ISourceCap;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
+import dev.drimoz.immaterialdrawers.storage.ControllerNetwork;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,18 +40,8 @@ public final class ControllerSourceStorage implements ISourceCap {
     }
 
     private List<BigSourceStorage> drawers() {
-        Level level = controller.getLevel();
-        if (level == null) {
-            return List.of();
-        }
-        List<BigSourceStorage> found = new ArrayList<>();
-        for (Long packed : controller.getConnectedDrawers().getConnectedDrawers()) {
-            BlockPos pos = BlockPos.of(packed);
-            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof SourceDrawerTile drawer) {
-                found.add(drawer.getSourceStorage());
-            }
-        }
-        return found;
+        return ControllerNetwork.drawersOf(controller, SourceDrawerTile.class).stream()
+                .map(SourceDrawerTile::getSourceStorage).toList();
     }
 
     @Override

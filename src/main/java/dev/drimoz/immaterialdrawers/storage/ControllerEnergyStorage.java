@@ -2,11 +2,8 @@ package dev.drimoz.immaterialdrawers.storage;
 
 import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import dev.drimoz.immaterialdrawers.block.tile.energy.EnergyDrawerTile;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -88,18 +85,7 @@ public class ControllerEnergyStorage implements IEnergyStorage {
     }
 
     private List<EnergyDrawerTile> drawers() {
-        Level level = controller.getLevel();
-        if (level == null) {
-            return List.of();
-        }
-        List<EnergyDrawerTile> found = new ArrayList<>();
-        for (Long packed : controller.getConnectedDrawers().getConnectedDrawers()) {
-            BlockPos pos = BlockPos.of(packed);
-            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof EnergyDrawerTile drawer) {
-                found.add(drawer);
-            }
-        }
-        return found;
+        return ControllerNetwork.drawersOf(controller, EnergyDrawerTile.class);
     }
 
     /**

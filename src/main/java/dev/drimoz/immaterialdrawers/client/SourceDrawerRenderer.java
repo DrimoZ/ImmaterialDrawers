@@ -1,18 +1,14 @@
 package dev.drimoz.immaterialdrawers.client;
 
 import com.buuz135.functionalstorage.client.BaseDrawerRenderer;
-import com.buuz135.functionalstorage.client.DrawerRenderer;
 import com.buuz135.functionalstorage.item.ConfigurationToolItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.drimoz.immaterialdrawers.block.tile.source.SourceDrawerTile;
 import dev.drimoz.immaterialdrawers.compat.Mods;
 import dev.drimoz.immaterialdrawers.util.EnergyFormat;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 
@@ -36,8 +32,6 @@ public class SourceDrawerRenderer extends BaseDrawerRenderer<SourceDrawerTile> {
 
     /** See {@code ChemicalDrawerRenderer.FLUID_FRAME_Z}. */
     private static final float FLUID_FRAME_Z = 1f - 0.5f / 16f;
-
-    private static final float TEXT_SCALE = 0.007f;
 
     private static final float SOURCE_ALPHA = 0.9f;
 
@@ -63,18 +57,8 @@ public class SourceDrawerRenderer extends BaseDrawerRenderer<SourceDrawerTile> {
                     SOURCE_ALPHA, LightTexture.FULL_BRIGHT, combinedOverlayIn);
         }
 
-        if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_NUMBERS)) {
-            matrixStack.pushPose();
-            matrixStack.translate(0.5, 0.84, 0.97);
-            DrawerRenderer.renderText(matrixStack, bufferIn, combinedOverlayIn,
-                    Component.literal(ChatFormatting.WHITE + EnergyFormat.format(storage.getStoredRaw())),
-                    Direction.NORTH, TEXT_SCALE);
-            matrixStack.popPose();
-        }
-        matrixStack.pushPose();
-        matrixStack.translate(0.5, 0.453, 0.97);
-        DrawerRenderer.renderIndicator(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn, fill, options);
-        matrixStack.popPose();
+        TankVolume.renderLabel(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn,
+                EnergyFormat.format(storage.getStoredRaw()), fill, options, false);
 
         // BaseDrawerRenderer pushes; the subclass pops.
         matrixStack.popPose();

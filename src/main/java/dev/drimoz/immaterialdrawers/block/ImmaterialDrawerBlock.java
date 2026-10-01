@@ -5,6 +5,8 @@ import com.buuz135.functionalstorage.block.Drawer;
 import com.buuz135.functionalstorage.block.DrawerBlock;
 import com.buuz135.functionalstorage.block.FramedBlock;
 import com.buuz135.functionalstorage.item.FSAttachments;
+import com.buuz135.functionalstorage.item.component.EmitRedstoneBehavior;
+import com.hrznstudio.titanium.util.TileUtil;
 import dev.drimoz.immaterialdrawers.ImmaterialDrawers;
 import dev.drimoz.immaterialdrawers.block.tile.ImmaterialDrawerTile;
 import net.minecraft.ChatFormatting;
@@ -16,6 +18,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -119,6 +122,57 @@ public abstract class ImmaterialDrawerBlock<T extends ImmaterialDrawerTile<T>> e
         if (this instanceof FramedBlock) {
             tooltip.add(Component.translatable("frameddrawer.use").withStyle(ChatFormatting.GRAY));
         }
+    }
+
+    /** How full this drawer is, on vanilla's 0-15 scale - usually through {@link #comparatorSignal}. */
+    protected abstract int signalFor(T tile);
+
+    /**
+     * What Functional Storage's Redstone Upgrade emits: the comparator's number, so two ways of
+     * asking a drawer how full it is do not disagree. A drawer with several slots overrides this to
+     * read the slot the upgrade was configured for ({@code FSAttachments.SLOT}).
+     */
+    protected int redstoneSignal(T tile, ItemStack upgrade) {
+        return signalFor(tile);
+    }
+
+    /**
+     * Redefined because Functional Storage's dispatch cannot know about us.
+     *
+     * <p>{@code Drawer.getAnalogOutputSignal} branches on {@code FluidDrawerTile} then on
+     * {@code ItemControllableDrawerTile}. We are the second, so without this override every drawer of
+     * ours would report the fill level of its deliberately empty item handler: zero, always, whatever
+     * it is holding. See CLAUDE.md §11.
+     */
+    @Override
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        return TileUtil.getTileEntity(level, pos, getTileClass()).map(this::signalFor).orElse(0);
+    }
+
+    /**
+     * Functional Storage's own Redstone Upgrade, reading our contents instead of a stack count.
+     *
+     * <p>No augment of ours for this. {@code EmitRedstoneBehavior} already ticks the neighbours and
+     * already reports {@code canConnectRedstone} for us - we are an {@code ItemControllableDrawerTile},
+     * which is what it checks. The one half that cannot work is the signal itself: it reads
+     * {@code getStorage()}, our handler has no slots, and its item branch yields -1. Their
+     * {@code Drawer.getSignal} reads -1 as "this upgrade has nothing to say" and returns 0, so the
+     * upgrade slots in, connects, and sits dead. So the upgrade stays theirs and only the number is
+     * ours.
+     */
+    @Override
+    public int getSignal(BlockState state, BlockGetter blockGetter, BlockPos pos, Direction dir) {
+        T tile = TileUtil.getTileEntity(blockGetter, pos, getTileClass()).orElse(null);
+        if (tile != null) {
+            for (int slot = 0; slot < tile.getUtilityUpgrades().getSlots(); slot++) {
+                ItemStack upgrade = tile.getUtilityUpgrades().getStackInSlot(slot);
+                if (upgrade.get(FSAttachments.FUNCTIONAL_BEHAVIOR) instanceof EmitRedstoneBehavior) {
+                    return redstoneSignal(tile, upgrade);
+                }
+            }
+        }
+        // Anything else in the utility slots is theirs to answer, including our own augments.
+        return super.getSignal(state, blockGetter, pos, dir);
     }
 
     /**

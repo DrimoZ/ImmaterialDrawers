@@ -8,6 +8,14 @@ Newest first. Versions are `{mod}+{minecraft}`.
 - The amount on the drawer screens sat off-centre, to the left of the drawer front: its width was
   counted at full scale for text drawn at half scale. Energy, Source, and the 1x1 and 1x2 chemical
   drawers; the 2x2 was already placed right. Found while checking the 1.20.1 backport in game.
+- On the 1x1 drawers (Energy, Source, Chemical 1x1) the amount now sits at the height Functional
+  Storage's own fluid drawer uses, in the middle of the window, instead of near its top.
+
+### Notes
+- The three drawer screens now share one layout, which reads Functional Storage's slot and hover
+  rectangles instead of carrying copies of them. Comparator and Redstone Upgrade handling, the walk
+  over a controller's network, and the number and indicator on chemical and Source drawer fronts
+  are each written once instead of per drawer. No behaviour change; covered by the 52 game tests.
 
 ## 0.2.0+1.21.1 — 2026-09-29
 

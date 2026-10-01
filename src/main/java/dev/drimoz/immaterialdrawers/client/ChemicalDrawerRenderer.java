@@ -3,25 +3,17 @@ package dev.drimoz.immaterialdrawers.client;
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
 import com.buuz135.functionalstorage.client.BaseDrawerRenderer;
-import com.buuz135.functionalstorage.client.DrawerRenderer;
 import com.buuz135.functionalstorage.item.ConfigurationToolItem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.drimoz.immaterialdrawers.block.tile.chemical.ChemicalDrawerTile;
 import dev.drimoz.immaterialdrawers.storage.chemical.BigChemicalHandler;
 import dev.drimoz.immaterialdrawers.util.ChemicalFormat;
 import mekanism.api.chemical.ChemicalStack;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
-import org.joml.Matrix4f;
 
 /**
  * Draws what a chemical drawer holds: each tank's chemical at its level behind the window, and the
@@ -48,9 +40,6 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
 
     /** Where {@code FluidDrawerRenderer}'s frame puts the front: 1 - 0.5/16. */
     private static final float FLUID_FRAME_Z = 1f - 0.5f / 16f;
-
-    /** Their scale for the amount on a fluid drawer, in every layout. */
-    private static final float TEXT_SCALE = 0.007f;
 
     /** A gas is seen through, but not so much that a pale one vanishes against the tank walls. */
     private static final float GAS_ALPHA = 0.8f;
@@ -116,25 +105,7 @@ public class ChemicalDrawerRenderer extends BaseDrawerRenderer<ChemicalDrawerTil
                     alpha, gas ? LightTexture.FULL_BRIGHT : light, overlay);
         }
 
-        // FluidDrawerRenderer.renderFluidStack, from here: the number, then the indicator.
-        if (options.isActive(ConfigurationToolItem.ConfigurationAction.TOGGLE_NUMBERS)) {
-            matrixStack.pushPose();
-            matrixStack.translate(0.5, 0.84, 0.97);
-            if (half) {
-                matrixStack.translate(-0.25, 0, 0);
-            }
-            DrawerRenderer.renderText(matrixStack, bufferIn, overlay,
-                    Component.literal(ChatFormatting.WHITE + ChemicalFormat.format(amount)), Direction.NORTH, TEXT_SCALE);
-            matrixStack.popPose();
-        }
-        matrixStack.pushPose();
-        matrixStack.translate(0.5, 0.453, 0.97);
-        if (half) {
-            matrixStack.scale(0.5f, 0.65f, 0.5f);
-            matrixStack.translate(-0.5, -0.18, 0);
-        }
-        DrawerRenderer.renderIndicator(matrixStack, bufferIn, light, overlay, fill, options);
-        matrixStack.popPose();
+        TankVolume.renderLabel(matrixStack, bufferIn, light, overlay, ChemicalFormat.format(amount), fill, options, half);
     }
 
 }
