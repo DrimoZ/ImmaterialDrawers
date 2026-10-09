@@ -35,7 +35,7 @@ the throwaway behaviour the plan called for, because it proves the same thing - 
 Storage really calls `work()` on an upgrade of ours - and leaves something behind.
 
 The three that were listed after it are settled rather than built - see **Then**. What is left before
-a release is a published file: the CurseForge page (logo, gallery, description) is filled in from STORE.md.
+a release is a published file: the CurseForge page (logo, gallery, description) is filled in from STORE.md, whose images are served from `docs/store-art/` on GitHub.
 
 **Chemical Drawers (Mekanism, optional).** Six blocks mirroring Functional Storage's fluid drawers,
 registered only when Mekanism is installed. Tested with Mekanism (35 game tests) and without it
@@ -74,7 +74,7 @@ each for its own reason:
 
 - The CurseForge project is created as `immaterial-drawers`, its page is filled in (logo, 14 screenshots,
   the STORE.md description), and it waits for approval with its first file. The same slug is still to
-  be reserved on Modrinth.
+  be reserved on Modrinth; every field is ready in STORE.md.
 
 ## Settled
 

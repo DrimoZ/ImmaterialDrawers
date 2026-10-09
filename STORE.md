@@ -1,12 +1,14 @@
 # Store copy
 
-Paste-ready text for the CurseForge (and later Modrinth) project page. Not documentation: this file
-sells the mod, the wiki explains it. Every claim here is something the mod does today — check it
-against CHANGELOG.md before changing a number.
+Paste-ready text for the CurseForge and Modrinth project pages. Not documentation: this file sells
+the mod, the wiki explains it. Every claim here is something the mod does today: check it against
+`CHANGELOG.md` before changing a number.
 
-Images are referenced by the URL CurseForge gave them on upload, through the description editor's image upload, which refuses anything wider than 850 px. The sources are generated, not
-committed: `run/store-screenshots/` for the in-game shots, the banner and headers from the showcase
-run (CLAUDE.md §4).
+Images live in `docs/store-art/` and the description links them from GitHub
+(`raw.githubusercontent.com`, `main`), never from the description editor: an image uploaded there
+joins the CurseForge gallery. Change an image, push, and both pages show it. The full-size captures
+behind them are in `run/store-screenshots/` (showcase run, CLAUDE.md §4), and only the gallery is
+uploaded by hand.
 
 
 ## Summary
@@ -15,108 +17,83 @@ run (CLAUDE.md §4).
 
 Functional Storage drawers for what isn't an item or a fluid: Energy (2 billion FE), Mekanism chemicals and Ars Nouveau Source. Same upgrades, same Storage Controller, framed variants for all.
 
-## Categories
-
-Main: **Addons** (it is one, of Functional Storage). Additional: Storage, Energy, Utility & QoL.
-
 ## Description
 
-<!-- Everything below this line is pasted into CurseForge's Markdown editor as-is. -->
+<!-- Everything below this line is pasted into the site's Markdown editor as-is. -->
 
-![Immaterial Drawers](https://media.forgecdn.net/attachments/description/1663641/description_5462394b-d19a-4074-8170-3fecd5ad8bf3.jpg)
+![Immaterial Drawers](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/banner.jpg)
 
 ### Functional Storage stores items and fluids. Immaterial Drawers stores everything else.
 
-A family of drawers for the things you can't pick up: power, Mekanism chemicals, Ars Nouveau
-Source, and whatever else your mods pipe around. Every one of them sits in your wall of drawers, takes the upgrades you
-already craft, and joins the Storage Controller like any other drawer. No new storage system to
-learn: if you know Functional Storage, you already know how to use this.
+Drawers for the things you can't pick up: power, Mekanism chemicals, Ars Nouveau Source. They sit
+in your wall of drawers, take the upgrades you already craft, and join the Storage Controller like
+any other drawer. If you know Functional Storage, you already know how to use this.
 
-![The family is growing](https://media.forgecdn.net/attachments/description/1663641/description_223ee9da-350a-423b-9b4d-307fca0e6461.jpg)
-
-The foundations are built once, for every kind of drawer: the Storage Controller link, the
-upgrades, the framed variants, the probe support, the numbers past two billion. Each kind of
-drawer is built on top of them, and three are here:
+![The family is growing](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_family.jpg)
 
 - ✅ **Energy Drawer**, Forge Energy. Works with every FE mod.
 - ✅ **Chemical Drawers**, for Mekanism gases, slurries, pigments and infuse types. *With Mekanism.*
 - ✅ **Source Drawer**, for Ars Nouveau Source. *With Ars Nouveau.*
 - 🔜 **Mana**, for Botania: planned.
-- 💡 More after that. Tell us what you want to store in the [issues](https://github.com/DrimoZ/ImmaterialDrawers/issues).
+- 💡 Want something else stored? Say so in the [issues](https://github.com/DrimoZ/ImmaterialDrawers/issues).
 
-![Drawer #1: Energy](https://media.forgecdn.net/attachments/description/1663641/description_3e24b98f-0bd2-4f37-bc1d-fc16cee86356.jpg)
+![Drawer #1: Energy](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_energy.jpg)
 
-The **Energy Drawer** holds Forge Energy the way a drawer holds cobblestone: a lot of it, in one
-block, right where you can see it.
+- **500,000 FE out of the box**, and Functional Storage's own Storage Upgrades take it to
+  **2,048,000,000 FE** with four Netherite. No new upgrade items.
+- **An energy cube turns inside every drawer**: no core when empty, faint when low, blazing when
+  full. Read a whole wall from across the room.
+- **Numbers that don't lie.** Counted in 64 bits: the drawer front, Jade and The One Probe show the
+  real total, even past the 2.1 billion where most FE blocks stop counting.
+- **Pushes power into its neighbours on its own** (configurable). Powah, Mekanism, Thermal:
+  anything with an FE cable connects.
 
-- **500,000 FE out of the box**, before a single upgrade.
-- **Grows with Functional Storage's own Storage Upgrades.** Four Netherite upgrades take one drawer
-  to **2,048,000,000 FE**. No new upgrade items, no new recipes to learn.
-- **An energy cube turns inside every drawer.** Its core is gone when the drawer is empty, faint
-  when it is low, and blazing when it is full, so you can read a whole wall from across the room.
-- **Numbers that don't lie.** Energy is counted in 64 bits, so the drawer front, Jade and The One
-  Probe show the real total, even past the 2.1 billion where most FE blocks quietly stop counting.
-- **Pushes power into its neighbours on its own.** Cables and machines placed next to it just
-  work, no extraction setup needed. (Configurable.)
-- **Standard Forge Energy.** Powah, Mekanism, Thermal: anything with an FE cable connects.
+![A charged wall, up close](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/energy_wall_close.jpg)
 
-![A charged wall, up close](https://media.forgecdn.net/attachments/description/1663641/description_acd4fc41-cd49-415e-848f-3c4c7fdf088b.jpg)
+![Jade shows the real total, past two billion](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/energy_jade.jpg)
 
-![Jade shows the real total, past two billion](https://media.forgecdn.net/attachments/description/1663641/description_e6d63940-c101-4f7f-8c38-5d2f5f4aea6e.jpg)
+![One wall, one battery](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_controller.jpg)
 
-![One wall, one battery](https://media.forgecdn.net/attachments/description/1663641/description_8b9f2641-d47c-46b9-b911-64b7cbdc6ac6.jpg)
+Link the drawers to a **Storage Controller** with the Linking Tool and put one cable on the
+controller: the whole wall charges and discharges as a single battery, and shows what it really
+holds.
 
-Link your Energy Drawers to a **Storage Controller** with Functional Storage's Linking Tool, then
-put one cable on the controller: the whole wall charges and discharges as a single battery. The
-controller adds up the entire network, in 64 bits, so a wall of full drawers is shown as what it
-really holds.
+![A Mekanism power room built around one Storage Controller](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/energy_power_room.jpg)
 
-![A Mekanism power room built around one Storage Controller](https://media.forgecdn.net/attachments/description/1663641/description_b43dcca6-0a37-4d1f-81c7-aa4153a5a2f8.jpg)
+![Drawer #2: Chemicals](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_chemicals.jpg)
 
-![Drawer #2: Chemicals](https://media.forgecdn.net/attachments/description/1663641/description_96c9bc93-f329-4c89-8301-9505ea9e7897.jpg)
+With **Mekanism**, Functional Storage's fluid drawers for chemicals: the same 1x1, 1x2 and 2x2
+layouts, capacities and upgrades.
 
-With **Mekanism** installed, **Chemical Drawers** join the family. They are Functional Storage's fluid
-drawers for chemicals: the same 1x1, 1x2 and 2x2 layouts, the same capacities, the same upgrades.
+- **Every Mekanism chemical:** hydrogen, chlorine, ore slurries, pigments, infuse types.
+- **Pressurized tubes connect from any side**, and a tube on a Storage Controller reaches every tank.
+- **Fill and empty by hand** with a chemical tank: right-click to pour in, left-click to fill back.
+- **Gases glow** and their surface breathes. **Lock, Void and Creative** work as on a fluid drawer.
 
-- **Every Mekanism chemical:** hydrogen, oxygen, chlorine, ore slurries, pigments, infuse types.
-- **Pressurized tubes connect from any side**, and a tube on a Storage Controller reaches every
-  tank on the wall.
-- **Fill and empty them by hand** with a Mekanism chemical tank: right-click to pour in, left-click
-  to fill back.
-- **Gases glow**, and their surface slowly breathes. Slurries and pigments sit still like a liquid.
-- **Lock, Void and Creative** behave as they do on a fluid drawer.
+![A Mekanism chemical plant feeding a wall of Chemical Drawers](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/chemical_plant.jpg)
 
-![A Mekanism chemical plant feeding a wall of Chemical Drawers](https://media.forgecdn.net/attachments/description/1663641/description_a50e5644-cfe6-4b02-98ef-08b51643e21d.jpg)
+![Gases, slurries and pigments, up close](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/chemical_close.jpg)
 
-![Gases, slurries and pigments, up close](https://media.forgecdn.net/attachments/description/1663641/description_989a6674-cdcc-4945-a306-a0886f6d63b7.jpg)
+![Drawer #3: Source](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_source.jpg)
 
-![Drawer #3: Source](https://media.forgecdn.net/attachments/description/1663641/description_bd8d0229-0bca-46d5-bab6-9b4e676c74f7.jpg)
+With **Ars Nouveau**, a drawer Ars treats like a Source Jar: sourcelinks fill it, the Enchanting
+Apparatus and Imbuement Chamber draw from it, and on 1.21.1 relays link to it with the Dominion
+Wand. 32,000 Source unupgraded, over two billion with four Netherite.
 
-With **Ars Nouveau** installed, the **Source Drawer** appears, and Ars treats it like a Source Jar:
-sourcelinks fill it, the Enchanting Apparatus and Imbuement Chamber draw from it, and on 1.21.1
-relays link to it with the Dominion Wand. 32,000 Source unupgraded, over two billion with four Netherite
-upgrades, glowing with Ars's own Source behind a violet window.
+![An Ars Nouveau sanctum around a wall of Source Drawers](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/source_sanctum.jpg)
 
-![An Ars Nouveau sanctum around a wall of Source Drawers](https://media.forgecdn.net/attachments/description/1663641/description_9023f336-af1e-48cd-9e78-30a80a260354.jpg)
+![Source Drawers, up close](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/source_close.jpg)
 
-![Source Drawers, up close](https://media.forgecdn.net/attachments/description/1663641/description_a0ecf3a6-8811-4f99-b0eb-3e3598baa27d.jpg)
+![The whole family in one wall](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/family_wall.jpg)
 
-![The whole family in one wall: energy, chemicals, Source, framed](https://media.forgecdn.net/attachments/description/1663641/description_36c98dd7-9f40-4df4-94b9-6bcfcb7fd069.jpg)
+![Framed](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_framed.jpg)
 
-**Without Mekanism or Ars Nouveau, their drawers simply do not exist** and nothing else changes:
-both are optional.
+Every drawer has a **framed** version that wears any block through Functional Storage's framing
+recipe. What the drawer holds still glows through the window.
 
-![Framed](https://media.forgecdn.net/attachments/description/1663641/description_57ae690a-b9df-480c-9fca-23970a13b99d.jpg)
+![Framed energy drawers hiding in a cherry cabinet](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/framed_cabinet.jpg)
 
-Every drawer has a **framed** version that wears any block you give it through Functional Storage's framing
-recipe, the same one you use for your framed item drawers. Cherry cabinets, quartz walls, copper
-panels: what the drawer holds still glows through the window.
-
-![Framed energy drawers hiding in a cherry cabinet](https://media.forgecdn.net/attachments/description/1663641/description_b758d909-d3d0-45be-820a-386bfbffde45.jpg)
-
-![Upgrades that already work](https://media.forgecdn.net/attachments/description/1663641/description_f3f6f568-499b-4cd0-b07d-02502a001469.jpg)
-
-Everything Functional Storage puts in a drawer's upgrade slots does what you would expect:
+![Upgrades that already work](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/header_upgrades.jpg)
 
 | Upgrade | On an Energy Drawer |
 |---|---|
@@ -126,41 +103,72 @@ Everything Functional Storage puts in a drawer's upgrade slots does what you wou
 | Creative Vending Upgrade | An endless source of power |
 | Configuration Tool | Hide the number, hide the cube, show a fill bar |
 
-**New: the Wireless Charger.** Slot it into a drawer's utility slots and the wall keeps the tools,
-armour and offhand item of every player within 8 blocks charged. Range, rate and interval are all
-in the config.
+**Wireless Charger**: in a drawer's utility slot, it keeps the tools, armour and offhand item of
+every player within 8 blocks charged (range, rate and interval in the config).
 
-![A solar shed at sunset](https://media.forgecdn.net/attachments/description/1663641/description_6afb557c-0b03-4996-8557-3d27e03a002a.jpg)
+![A solar shed at sunset](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/solar_shed.jpg)
 
 ### Requirements
 
 | | 1.21.1 | 1.20.1 |
 |---|---|---|
 | Loader | NeoForge 21.1+ | Forge 47.2+ |
-| [Functional Storage](https://www.curseforge.com/minecraft/mc-mods/functional-storage) | 1.5.7+ | 1.2.14+ |
-| [Titanium](https://www.curseforge.com/minecraft/mc-mods/titanium) | required by Functional Storage too | required by Functional Storage too |
-| [Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism) *(optional)* | 10.7+, for the Chemical Drawers | 10.4, for the Chemical Drawers |
-| [Ars Nouveau](https://www.curseforge.com/minecraft/mc-mods/ars-nouveau) *(optional)* | 5.13+, for the Source Drawer | 4.12, for the Source Drawer |
+| Functional Storage | 1.5.7+ | 1.2.14+ |
+| Titanium | required | required |
+| Mekanism *(optional)* | 10.7+ | 10.4 |
+| Ars Nouveau *(optional)* | 5.13+ | 4.12 |
 
 ### FAQ
 
-**Do I need Mekanism, Ars Nouveau or another mod?** No. The Energy Drawer works with any mod that
-produces or uses Forge Energy. Mekanism adds the Chemical Drawers and Ars Nouveau the Source
-Drawer; without them, those drawers are simply not there.
+**Do I need Mekanism or Ars Nouveau?** No. Without them their drawers are simply not there; the
+Energy Drawer works with any Forge Energy mod.
 
 **Can I put it in my modpack?** Yes, as long as you ship the published jar unmodified.
 
-**Fabric? Other versions?** No Fabric: Functional Storage is NeoForge on 1.21.1 and Forge on 1.20.1,
-and so is this. Both versions have the same drawers; on 1.20.1, Ars Nouveau relays do not connect
-to the Source Drawer (Ars 4.12 only lets them feed its own machines).
+**Fabric?** No: Functional Storage is NeoForge on 1.21.1 and Forge on 1.20.1, and so is this. On
+1.20.1, Ars Nouveau relays do not connect to the Source Drawer (Ars 4.12 only feeds its own machines).
 
-**Is every number configurable?** Yes: capacities, how upgrades scale them, whether and how fast
-a drawer pushes power, everything about the Wireless Charger, and a switch to turn off any drawer
-your pack does not want.
+**Is it configurable?** Capacities, upgrade scaling, pushing, the Wireless Charger, and a switch to
+turn off any drawer your pack does not want.
 
 ### Credits
 
-Built on [Functional Storage](https://www.curseforge.com/minecraft/mc-mods/functional-storage) by
-Buuz135 and Rid, and on Titanium. Source code on
-[GitHub](https://github.com/DrimoZ/ImmaterialDrawers). Found a bug or have an idea? Open an
-[issue](https://github.com/DrimoZ/ImmaterialDrawers/issues).
+Built on Functional Storage by Buuz135 and Rid, and on Titanium.
+[Source](https://github.com/DrimoZ/ImmaterialDrawers) ·
+[Wiki](https://github.com/DrimoZ/ImmaterialDrawers/wiki) ·
+[Report a bug](https://github.com/DrimoZ/ImmaterialDrawers/issues)
+
+<!-- End of the pasted description. -->
+
+
+## CurseForge
+
+Main category **Addons** (of Functional Storage). Additional: Storage, Energy, Utility & QoL.
+
+<https://www.curseforge.com/minecraft/mc-mods/immaterial-drawers>
+
+## Modrinth — creating the project
+
+Slug `immaterial-drawers` was still free on 9 Oct. 2026. Create at <https://modrinth.com/dashboard/projects>.
+
+| Field | Value |
+|---|---|
+| Name / slug | `Immaterial Drawers` / `immaterial-drawers` |
+| Summary | the one above |
+| Icon | `src/main/resources/logo.png` |
+| Categories | **storage**, **technology**, utility (`magic` once the Source Drawer is worth a tag) |
+| Environment | Client: required · Server: required |
+| License | Custom: `MIT (code) / All Rights Reserved (assets)`, URL `https://github.com/DrimoZ/ImmaterialDrawers/blob/main/LICENSE` |
+| Links | Source `https://github.com/DrimoZ/ImmaterialDrawers` · Issues `…/issues` · Wiki `…/wiki` |
+| Description | the block above, as-is |
+| Gallery | from `run/store-screenshots/` (full PNG, no 850 px limit): `02_out_hero_day`, `10_power_hero`, `05_jade_power`, `15_chem_wide`, `17_ars_wide`, `19_family`, `13_lib_hero`; first one featured |
+
+Versions: one file per Minecraft version, same jars as CurseForge, version number `{mod}+{minecraft}`,
+changelog from `CHANGELOG.md`, release type as on CurseForge.
+
+| Loader / game | Required | Optional |
+|---|---|---|
+| NeoForge / 1.21.1 | `functional-storage`, `titanium` | `mekanism`, `ars-nouveau`, `jade`, `the-one-probe` |
+| Forge / 1.20.1 | `functional-storage`, `titanium` | `mekanism`, `ars-nouveau`, `jade`, `the-one-probe` |
+
+Modrinth reviews a project before it goes public: submit it with its first version attached.

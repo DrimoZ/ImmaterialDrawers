@@ -89,7 +89,7 @@ Le futur Chemical Drawer doit pouvoir réutiliser la base sans refactor.
 | Plateforme | État |
 |---|---|
 | **CurseForge** | Projet approuvé et public. 0.2.0+1.21.1 le 29 sept. 2026, 0.2.0+1.20.1 le 30 sept., **0.2.1 pour les deux le 1er oct.** (1.21.1 : écrans ; 1.20.1 : lignes Jade/TOP des tiroirs chimiques). |
-| **Modrinth** | Libre (404 sur l'API), à réserver avec le même slug. |
+| **Modrinth** | Libre (404 sur l’API, 9 oct. 2026). Champs prêts dans `STORE.md`. |
 
 <https://www.curseforge.com/minecraft/mc-mods/immaterial-drawers>
 
@@ -198,7 +198,7 @@ Le pack de shaders n'est pas une dépendance Gradle : `run/shaderpacks/Complemen
 Les scènes (atelier, centrale Mekanism, bibliothèque framed, abri solaire) sont un datapack dans la
 sauvegarde `run/saves/Drawer Preview` : une fonction `preview:scene_*` construit, une fonction
 `preview:shot_*` place la caméra en spectateur. Les captures sélectionnées sont dans
-`run/store-screenshots/`.
+`run/store-screenshots/` ; les images de la description (850 px, JPG) sont dans `docs/store-art/`, servies par GitHub (STORE.md).
 
 **Piloter le jeu au clavier depuis un script est dangereux** : `SetForegroundWindow` ne garantit pas
 le focus, et des commandes destinées au chat du jeu ont atterri dans une autre application. Toute
@@ -876,7 +876,7 @@ ouverture, y compris ce qu'il n'est pas.**
 | `CHANGELOG.md` | en | Newest first, `Added`/`Changed`/`Fixed`/`Notes`, versions `{mod}+{minecraft}` | ✅ |
 | `SPIKE.md` | en | Le spike bloquant : analyse, puis ce qui s'est réellement passé | ✅ |
 | `NOTICE` | en | Attribution MIT que FS impose de préserver | ✅ |
-| `STORE.md` | en | Copie paste-ready CurseForge. Pas de la documentation. | ✅ publiée sur la page CurseForge (0.2.0, 29 sept. 2026) |
+| `STORE.md` | en | Copie paste-ready CurseForge et Modrinth (+ champs de création Modrinth). Images dans `docs/store-art/`. | ✅ publiée sur la page CurseForge (0.2.0, 29 sept. 2026) |
 | `PORTING.md` | en | Backport 1.20.1 et port 26.1 : analyse avant le code, puis ce qui s'est passé | ✅ analyse (29 sept. 2026) |
 | `LICENSE` / `LICENSE-ASSETS` | — | Code MIT / assets ARR | ✅ |
 
