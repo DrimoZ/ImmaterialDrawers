@@ -23,7 +23,7 @@ Functional Storage drawers for what isn't an item or a fluid: Energy (2 billion 
 
 ![Immaterial Drawers](https://raw.githubusercontent.com/DrimoZ/ImmaterialDrawers/main/docs/store-art/banner.jpg)
 
-### Functional Storage stores items and fluids. Immaterial Drawers stores everything else.
+**Functional Storage stores items and fluids. Immaterial Drawers stores everything else.**
 
 Drawers for the things you can't pick up: power, Mekanism chemicals, Ars Nouveau Source. They sit
 in your wall of drawers, take the upgrades you already craft, and join the Storage Controller like
