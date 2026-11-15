@@ -30,6 +30,10 @@ neoForge {
             if (project.hasProperty('quickPlay')) {
                 programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlay').toString()
             }
+            // `-PquickPlayServer=localhost:25565` joins a running `runServer` the same way.
+            if (project.hasProperty('quickPlayServer')) {
+                programArguments.addAll '--quickPlayMultiplayer', project.property('quickPlayServer').toString()
+            }
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
         server {

@@ -2,6 +2,15 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## Unreleased
+
+### Fixed
+- The Linking Tool (and the Configuration Tool) did nothing on Energy and Source Drawers: the drawer
+  swallowed the click before the tool saw it, so they could not be linked to a Storage Controller.
+  Chemical Drawers already let the tools through, which is why Source looked like the odd one out
+  ([#2](https://github.com/DrimoZ/ImmaterialDrawers/issues/2)). The guard now lives in the shared
+  drawer base. New game tests right-click the real tool on every kind of drawer.
+
 ## 0.2.1+1.21.1 — 2026-10-01
 
 The amount on every drawer screen now sits where it should: centred on the drawer, at the height

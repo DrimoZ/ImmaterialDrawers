@@ -221,6 +221,39 @@ public final class IDSourceGameTests {
         helper.succeed();
     }
 
+    /** The real Linking Tool, right-clicked on a source drawer, links it. */
+    @GameTest(templateNamespace = NS, template = PLATFORM)
+    public static void theLinkingToolLinksSourceDrawers(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+        List<String> failed = new ArrayList<>();
+        for (var drawer : IDSourceContent.all()) {
+            helper.setBlock(DRAWER, drawer.getBlock());
+            if (!IDGameTests.linkWithTheTool(helper, CONTROLLER, DRAWER)) {
+                failed.add(String.valueOf(drawer.getBlock()));
+            }
+        }
+        helper.assertTrue(failed.isEmpty(), "the Linking Tool did not link: " + failed);
+        helper.succeed();
+    }
+
+    /** Linked by the real tool, a source drawer stays linked through a rebuild and a save/load. */
+    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 200)
+    public static void aSourceDrawerLinkedWithTheToolStaysLinked(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+        helper.setBlock(DRAWER, IDSourceContent.SOURCE_DRAWER.getBlock());
+        IDGameTests.assertStaysLinked(helper, CONTROLLER, DRAWER);
+        helper.startSequence()
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    var controller = (StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
+                    helper.assertTrue(controller.getConnectedDrawers().getConnectedDrawers()
+                            .contains(helper.absolutePos(DRAWER).asLong()), "dropped from the network after a rebuild");
+                    helper.assertValueEqual(controller.getConnectedDrawers().getItemHandlers().size(), 1,
+                            "drawers counted by the controller after a rebuild");
+                })
+                .thenSucceed();
+    }
+
     /** A relay aimed at the Storage Controller reaches every source drawer on its network. */
     @GameTest(templateNamespace = NS, template = WALL, timeoutTicks = 300)
     public static void theControllerMovesSourceForItsWholeNetwork(GameTestHelper helper) {

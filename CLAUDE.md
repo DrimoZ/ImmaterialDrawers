@@ -933,6 +933,14 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
 - ✅ **La Redstone Upgrade de FS sur un tiroir d'énergie (tâche 7)** — leur upgrade se connecte, tick
   et pilote un signal tiré de la charge, sans augment de notre côté. Voir §12 tâche 7.
 
+- ✅ **Linking Tool / Configuration Tool sur nos tiroirs (issue #2, nov. 2026)** — `ItemControllableDrawerTile.onSlotActivated`
+  finit par un `SUCCESS` inconditionnel ; chaque tuile concrète de FS ouvre la méthode par un `PASS`
+  pour ces deux outils. Sans cette garde, le tiroir consomme le clic et `useOn` n'est jamais appelé :
+  énergie et Source ne pouvaient ni se lier ni se verrouiller (le chimique avait la garde, d'où
+  l'impression que seul Source était touché). Garde dans `ImmaterialDrawerTile`. **Piège de test :**
+  `addConnectedDrawers` ne passe pas par le clic ; il faut `IDGameTests.rightClick` (vrai
+  `ServerPlayerGameMode` via `FakePlayerFactory`). **Tout nouveau type de tiroir passe par cette base.**
+
 ### Toujours non vérifié
 
 - ✅ **Le slug sur CurseForge** — le projet existe sous `immaterial-drawers` (23 août 2026), en

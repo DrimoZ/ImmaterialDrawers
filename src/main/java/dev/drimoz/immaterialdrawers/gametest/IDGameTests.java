@@ -851,6 +851,127 @@ public final class IDGameTests {
         return capability(helper, side);
     }
 
+    /**
+     * A player's right click with the Linking Tool, the way the server runs it: the block's
+     * {@code useItemOn} first, and the item's {@code useOn} only if the block did not consume the
+     * click. Returns whether the controller ended up with the drawer on its network.
+     *
+     * <p>Every other test links through {@code addConnectedDrawers}, which is what the tool calls
+     * <i>after</i> it is reached - it cannot tell a drawer that swallows the click.
+     */
+    public static boolean linkWithTheTool(GameTestHelper helper, BlockPos controllerPos, BlockPos drawerPos) {
+        ItemStack tool = new ItemStack(FunctionalStorage.LINKING_TOOL.get());
+        tool.set(FSAttachments.CONTROLLER, helper.absolutePos(controllerPos));
+        rightClick(helper, drawerPos, tool);
+        BlockPos abs = helper.absolutePos(drawerPos);
+        StorageControllerTile<?> controller = (StorageControllerTile<?>) helper.getBlockEntity(controllerPos);
+        return controller.getConnectedDrawers().getConnectedDrawers().contains(abs.asLong());
+    }
+
+    /**
+     * A right click on the front of a drawer, through the server's own {@code ServerPlayerGameMode}
+     * - the code a connected player's click runs, not an imitation of it - with a NeoForge fake
+     * player (a real {@code ServerPlayer}, no connection).
+     */
+    public static void rightClick(GameTestHelper helper, BlockPos drawerPos, ItemStack held) {
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        player.setItemInHand(InteractionHand.MAIN_HAND, held);
+        BlockPos abs = helper.absolutePos(drawerPos);
+        Direction face = helper.getLevel().getBlockState(abs)
+                .getValue(com.buuz135.functionalstorage.block.Drawer.FACING_HORIZONTAL_CUSTOM);
+        player.setPos(Vec3.atCenterOf(abs).add(face.getStepX() * 2, -0.5, face.getStepZ() * 2));
+        var hit = new net.minecraft.world.phys.BlockHitResult(
+                Vec3.atCenterOf(abs).add(face.getStepX() * 0.5, 0, face.getStepZ() * 0.5), face, abs, false);
+        player.gameMode.useItemOn(player, helper.getLevel(), held, InteractionHand.MAIN_HAND, hit);
+    }
+
+    /**
+     * A drawer linked by the real tool must still be linked after the controller rebuilds its network
+     * and after both are written to disk and read back - the controller's list and the drawer's own
+     * pointer back to it. Returns the sequence's last step for the caller to finish.
+     */
+    public static void assertStaysLinked(GameTestHelper helper, BlockPos controllerPos, BlockPos drawerPos) {
+        helper.assertTrue(linkWithTheTool(helper, controllerPos, drawerPos), "not linked by the tool in the first place");
+        var registries = helper.getLevel().registryAccess();
+        BlockPos absController = helper.absolutePos(controllerPos);
+        BlockPos absDrawer = helper.absolutePos(drawerPos);
+
+        var controller = (StorageControllerTile<?>) helper.getBlockEntity(controllerPos);
+        var drawer = (com.buuz135.functionalstorage.block.tile.ControllableDrawerTile<?>) helper.getBlockEntity(drawerPos);
+
+        var controllerCopy = (StorageControllerTile<?>) BlockEntity.loadStatic(absController,
+                controller.getBlockState(), controller.saveWithFullMetadata(registries), registries);
+        helper.assertTrue(controllerCopy != null
+                        && controllerCopy.getConnectedDrawers().getConnectedDrawers().contains(absDrawer.asLong()),
+                "the controller forgot the drawer after a save and load");
+
+        var drawerCopy = (com.buuz135.functionalstorage.block.tile.ControllableDrawerTile<?>) BlockEntity.loadStatic(
+                absDrawer, drawer.getBlockState(), drawer.saveWithFullMetadata(registries), registries);
+        helper.assertTrue(drawerCopy != null && absController.equals(drawerCopy.getControllerPos()),
+                "the drawer forgot its controller after a save and load");
+    }
+
+    @GameTest(template = PLATFORM, timeoutTicks = 200)
+    public static void aDrawerLinkedWithTheToolStaysLinked(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+        helper.setBlock(DRAWER, IDContent.ENERGY_DRAWER.getBlock());
+        assertStaysLinked(helper, CONTROLLER, DRAWER);
+        helper.startSequence()
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    var controller = (StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
+                    helper.assertTrue(controller.getConnectedDrawers().getConnectedDrawers()
+                            .contains(helper.absolutePos(DRAWER).asLong()), "dropped from the network after a rebuild");
+                    helper.assertValueEqual(controller.getConnectedDrawers().getItemHandlers().size(), 1,
+                            "drawers counted by the controller after a rebuild");
+                })
+                .thenSucceed();
+    }
+
+    /** The Configuration Tool, in its default Locking mode, must toggle ours as it toggles theirs. */
+    @GameTest(template = PLATFORM)
+    public static void theConfigurationToolTogglesEveryDrawerLikeFunctionalStorageOwn(GameTestHelper helper) {
+        Map<String, Block> drawers = new java.util.LinkedHashMap<>();
+        drawers.put("functionalstorage item drawer", FunctionalStorage.DRAWER_TYPES
+                .get(FunctionalStorage.DrawerType.X_1).get(0).getBlock());
+        drawers.put("energy drawer", IDContent.ENERGY_DRAWER.getBlock());
+        drawers.put("framed energy drawer", IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+        List<String> failed = new ArrayList<>();
+        for (var entry : drawers.entrySet()) {
+            helper.setBlock(DRAWER, entry.getValue());
+            var tile = (com.buuz135.functionalstorage.block.tile.ControllableDrawerTile<?>) helper.getBlockEntity(DRAWER);
+            boolean before = tile.isLocked();
+            rightClick(helper, DRAWER, new ItemStack(FunctionalStorage.CONFIGURATION_TOOL.get()));
+            if (tile.isLocked() == before) {
+                failed.add(entry.getKey());
+            }
+        }
+        helper.assertTrue(failed.isEmpty(), "the Configuration Tool did not toggle: " + failed);
+        helper.succeed();
+    }
+
+    /** The Linking Tool must link ours exactly as it links theirs. */
+    @GameTest(template = PLATFORM)
+    public static void theLinkingToolLinksEveryDrawerLikeFunctionalStorageOwn(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, FunctionalStorage.DRAWER_CONTROLLER.getBlock());
+        Map<String, Block> drawers = new java.util.LinkedHashMap<>();
+        drawers.put("functionalstorage item drawer", FunctionalStorage.DRAWER_TYPES
+                .get(FunctionalStorage.DrawerType.X_1).get(0).getBlock());
+        drawers.put("functionalstorage fluid drawer", FunctionalStorage.FLUID_DRAWER_1.getBlock());
+        drawers.put("energy drawer", IDContent.ENERGY_DRAWER.getBlock());
+        drawers.put("framed energy drawer", IDContent.FRAMED_ENERGY_DRAWER.getBlock());
+
+        List<String> failed = new ArrayList<>();
+        for (var entry : drawers.entrySet()) {
+            helper.setBlock(DRAWER, entry.getValue());
+            if (!linkWithTheTool(helper, CONTROLLER, DRAWER)) {
+                failed.add(entry.getKey());
+            }
+        }
+        helper.assertTrue(failed.isEmpty(), "the Linking Tool did not link: " + failed);
+        helper.succeed();
+    }
+
     private static IEnergyStorage capability(GameTestHelper helper, Direction side) {
         return helper.getLevel().getCapability(
                 Capabilities.EnergyStorage.BLOCK, helper.absolutePos(DRAWER), side);
