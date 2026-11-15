@@ -88,7 +88,7 @@ Le futur Chemical Drawer doit pouvoir réutiliser la base sans refactor.
 
 | Plateforme | État |
 |---|---|
-| **CurseForge** | Projet approuvé et public. 0.2.0+1.21.1 le 29 sept. 2026, 0.2.0+1.20.1 le 30 sept., **0.2.1 pour les deux le 1er oct.** (1.21.1 : écrans ; 1.20.1 : lignes Jade/TOP des tiroirs chimiques). |
+| **CurseForge** | Projet approuvé et public. 0.2.0+1.21.1 le 29 sept. 2026, 0.2.0+1.20.1 le 30 sept., 0.2.1 pour les deux le 1er oct. (1.21.1 : écrans ; 1.20.1 : lignes Jade/TOP des tiroirs chimiques), **0.2.2 pour les deux le 16 nov.** (Linking/Configuration Tool sur énergie et Source, issue #2 ; envoyés, publication auto après approbation). Pas de 26.1 : la branche ne compile pas. |
 | **Modrinth** | Libre (404 sur l’API, 9 oct. 2026). Champs prêts dans `STORE.md`. |
 
 <https://www.curseforge.com/minecraft/mc-mods/immaterial-drawers>
