@@ -2,6 +2,15 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
+## Unreleased
+
+### Fixed
+- The Linking Tool (and the Configuration Tool) did nothing on Energy Drawers: the drawer swallowed the
+  click before the tool saw it, so they could not be linked to a Storage Controller
+  ([#2](https://github.com/DrimoZ/ImmaterialDrawers/issues/2)). The guard now lives in the shared drawer
+  base. Ported from 1.21.1 and 1.20.1 without being compiled: this branch does not build yet, see
+  PORTING.md. Re-check with a right-click on a real tool once the port compiles.
+
 ## 0.2.0+1.21.1 — 2026-09-29
 
 Two new kinds of drawer, each arriving with the mod it belongs to, and two fixes every 0.1.0 player

@@ -158,6 +158,28 @@ public abstract class ImmaterialDrawerTile<T extends ImmaterialDrawerTile<T>> ex
         }
     }
 
+    /**
+     * Lets Functional Storage's two tools through.
+     *
+     * <p>Every drawer tile of theirs opens {@code onSlotActivated} by answering {@code PASS} to the
+     * Linking Tool and the Configuration Tool, so the click falls through to the item's own
+     * {@code useOn}. {@code ItemControllableDrawerTile} does not - it ends in an unconditional
+     * {@code SUCCESS}, which the block reports as a consumed click - so a drawer that only inherits it
+     * can be placed, wired and filled, and can never be linked to a controller. The guard has to be in
+     * every concrete tile; this is the one place all of ours share.
+     */
+    @Override
+    public net.minecraft.world.InteractionResult onSlotActivated(net.minecraft.world.entity.player.Player player,
+                                                                 net.minecraft.world.InteractionHand hand,
+                                                                 net.minecraft.core.Direction facing,
+                                                                 double hitX, double hitY, double hitZ, int slot) {
+        ItemStack held = player.getItemInHand(hand);
+        if (held.is(FunctionalStorage.CONFIGURATION_TOOL.get()) || held.is(FunctionalStorage.LINKING_TOOL.get())) {
+            return net.minecraft.world.InteractionResult.PASS;
+        }
+        return super.onSlotActivated(player, hand, facing, hitX, hitY, hitZ, slot);
+    }
+
     /** Storage-upgrade slots, not content slots. Four, like every other drawer. */
     @Override
     public int getStorageSlotAmount() {
