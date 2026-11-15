@@ -41,6 +41,24 @@ public final class IDSourceGameTests {
     private static final BlockPos DRAWER = new BlockPos(1, 1, 1);
     private static final BlockPos BESIDE = new BlockPos(0, 1, 1);
 
+    private static final BlockPos CONTROLLER = new BlockPos(5, 1, 5);
+
+    /** The real Linking Tool, right-clicked on a source drawer, links it - and the link persists. */
+    @GameTest(templateNamespace = NS, template = PLATFORM, timeoutTicks = 200)
+    public static void aSourceDrawerLinkedWithTheToolStaysLinked(GameTestHelper helper) {
+        helper.setBlock(CONTROLLER, com.buuz135.functionalstorage.FunctionalStorage.DRAWER_CONTROLLER.getLeft().get());
+        helper.setBlock(DRAWER, dev.drimoz.immaterialdrawers.registry.IDSourceContent.SOURCE_DRAWER.getLeft().get());
+        IDGameTests.assertStaysLinked(helper, CONTROLLER, DRAWER);
+        helper.startSequence()
+                .thenIdle(40)
+                .thenExecute(() -> {
+                    var controller = (com.buuz135.functionalstorage.block.tile.StorageControllerTile<?>) helper.getBlockEntity(CONTROLLER);
+                    helper.assertTrue(controller.getConnectedDrawers().getConnectedDrawers()
+                            .contains(helper.absolutePos(DRAWER).asLong()), "dropped from the network after a rebuild");
+                })
+                .thenSucceed();
+    }
+
     /** Well inside the range any Ars consumer searches. */
     private static final int RANGE = 5;
 

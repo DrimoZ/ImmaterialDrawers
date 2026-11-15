@@ -932,6 +932,14 @@ des sources de Functional Storage (branche `1.21`, `mod_version` 1.5.8) et de Ti
   par un `UpgradeItem`, et appelé par le `serverTick` du tiroir. Voir §9.
 - ✅ **La Redstone Upgrade de FS sur un tiroir d'énergie (tâche 7)** — leur upgrade se connecte, tick
   et pilote un signal tiré de la charge, sans augment de notre côté. Voir §12 tâche 7.
+- ✅ **Linking Tool / Configuration Tool sur nos tiroirs (issue #2, nov. 2026)** — le
+  `onSlotActivated` d'`ItemControllableDrawerTile` finit par un `SUCCESS` inconditionnel (vérifié dans le
+  bytecode de FS 1.2.14) ; chaque tuile concrète de FS ouvre la méthode par un `PASS` pour ces deux
+  outils. Sans cette garde le tiroir consomme le clic et `useOn` n'est jamais appelé : énergie et Source
+  ne pouvaient ni se lier ni se verrouiller (le chimique avait la garde). Garde dans
+  `ImmaterialDrawerTile`. **Piège de test :** `addConnectedDrawers` ne passe pas par le clic ; il faut
+  `IDGameTests.rightClick` (vrai `ServerPlayerGameMode`, joueur factice Forge).
+  **Tout nouveau type de tiroir passe par cette base.**
 
 ### Toujours non vérifié
 
