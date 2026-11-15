@@ -2,7 +2,9 @@
 
 Newest first. Versions are `{mod}+{minecraft}`.
 
-## Unreleased
+## 0.2.2+1.21.1 — 2026-11-15
+
+Energy and Source Drawers can be linked to a Storage Controller again.
 
 ### Fixed
 - The Linking Tool (and the Configuration Tool) did nothing on Energy and Source Drawers: the drawer
